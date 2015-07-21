@@ -413,8 +413,7 @@ static int FindCallBack_DeleteMissing(FindData& findData, void *pUserParam)
 		else if (findData.fileMatched) {
 			if (!dst.Exists()) {
 				if (CheckFlag(MFF_DIFF_ONLY)) {
-					 if (!CheckFlag(MFF_NO_VERBOSE))
-						_tprintf(_T("File is required to be deleted from %s which is not present in %s\n"), findData.fullPath.c_str(), dst.c_str());
+					_tprintf(_T("File is required to be deleted from %s which is not present in %s\n"), findData.fullPath.c_str(), dst.c_str());
 					pMFData->nFilesCopied++;
 				}
 				else {
@@ -451,12 +450,18 @@ int DeleteMissing(LPCTSTR srcDir, LPCTSTR dstDir, LPCTSTR matchPattern = NULL, L
 			for (auto cit(citD->second.begin()); cit != citD->second.end(); ++cit) {
 				Path dstFilePath(*cit);
 				if (CheckFlag(MFF_DIFF_ONLY)) {
-					LogConsole(Trace, _T("File is required to be deleted from %s which is not present in %s\n"), dstFilePath.c_str(), dstDir);
+					LogConsole(Trace, _T("File is required to be deleted from %s which is not present in %s"), dstFilePath.c_str(), dstDir);
 					++nFiles;
 				}
-				else if (dstFilePath.DeleteFile()) {
-					dstFilePath.Parent().DeleteDirectory();
-					++nFiles;
+				else {
+					LogConsole(Trace, _T("Deleteing file %s as it is not present in %s"), dstFilePath.c_str(), dstDir);
+					if (dstFilePath.DeleteFile()) {
+						dstFilePath.Parent().DeleteDirectory();
+						++nFiles;
+						LogConsole(Trace, _T("Done"));
+					}
+					else
+						LogConsole(Info, _T("Failed to delete file '%s': Error: %d"), dstFilePath.c_str(), GetLastError());
 				}
 			}
 		}
