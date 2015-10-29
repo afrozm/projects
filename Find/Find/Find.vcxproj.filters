@@ -1,0 +1,560 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Preview">
+      <UniqueIdentifier>{9eb11667-bcbd-4409-ab19-1d749b185316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Preview">
+      <UniqueIdentifier>{014f8093-6c7c-4625-ac30-2aff38c640ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Preview\vlc">
+      <UniqueIdentifier>{130f5f37-3eb1-49a8-a901-235754d8e290}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Find">
+      <UniqueIdentifier>{35e8349e-b316-4f50-9eb9-12e1ec981b1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EmbedControls">
+      <UniqueIdentifier>{f4433c89-96ef-40d4-bc25-59862a7ffc68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\EmbedControls">
+      <UniqueIdentifier>{d9204382-6a3f-4e32-8675-13a9821a486c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities">
+      <UniqueIdentifier>{d52f0a53-e139-4f5e-9b99-80fe9043f632}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utilities">
+      <UniqueIdentifier>{4de6be6f-8408-487c-b9f0-94f51dcb3e1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Find">
+      <UniqueIdentifier>{44c8404a-6751-4300-b12d-e29ca3febea0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UtilControls">
+      <UniqueIdentifier>{e69c6d5c-8010-4247-bfc1-498e4f5be23e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Find\Server">
+      <UniqueIdentifier>{2df2da89-ea63-4268-bcd6-3672dae36727}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Find\Client">
+      <UniqueIdentifier>{46ce4e5a-c384-4c50-b6a9-051f0d23f227}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Find\Finder">
+      <UniqueIdentifier>{cc310bdf-767b-4483-a667-70e7484c4f31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Database">
+      <UniqueIdentifier>{3b5b59e8-9937-48dc-8782-4d3baf07bb39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Find\Client">
+      <UniqueIdentifier>{ef1ddebf-c960-4c1c-b228-e7a9e1ffb69d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Find\Finder">
+      <UniqueIdentifier>{c6bae0fa-12e4-4a16-9f75-301ceb5dd5ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Find\Sever">
+      <UniqueIdentifier>{d6350c00-624a-4181-be11-2becf0c32105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Database">
+      <UniqueIdentifier>{40e5ac26-67cc-4ce7-b945-0d711d744a33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UtilControls">
+      <UniqueIdentifier>{3d7ff006-67d9-4dd4-9aa2-1ec08b6e5aea}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="res\Find.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\Find.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\fullscreen.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Preview\vlc\deprecated.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_events.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media_discoverer.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media_library.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media_list.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media_list_player.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_media_player.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_structures.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_version.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\libvlc_vlm.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\vlc.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\vlc\vlcapiwrapper.h">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClInclude>
+    <ClInclude Include="Find.h">
+      <Filter>Header Files\Find</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files\Find</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files\Find</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\CAcroAXDocShim.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogMediaControl.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreview.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewBase.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewError.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewImages.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewMedia.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewPDF.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\PreviewController.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\VLCWrapper.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\VLCWrapperImpl.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="EmbedControls\EmbedComboBox.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="EmbedControls\EmbedEditControl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="EmbedControls\EmbedHeaderCtlrl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="EmbedControls\EmbedListCtrl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\Logger.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\LoggerFactory.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\StdUtils.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\SystemUtils.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\Path.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\AutoLock.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewExplorer.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\ExplorerPreviewManager.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\TextReader.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewText.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogHtmlPreviewBase.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewHtml.h">
+      <Filter>Header Files\Preview</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\FileIconMgr.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\SocketUitl.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\STLUtil.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\CountTimer.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CommitResultTimer.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="DupFileFilter.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FileDialogFind.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FileMetaDataProvider.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FindDlg.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FindOptionDlg.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FindReplaceDialogEx.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="Preferences.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="SaveListResultCtrl.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeCtrlDomain.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeCtrlIterator.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="Finder.h">
+      <Filter>Header Files\Find\Finder</Filter>
+    </ClInclude>
+    <ClInclude Include="IPEnumerator.h">
+      <Filter>Header Files\Find\Finder</Filter>
+    </ClInclude>
+    <ClInclude Include="NetWorkFinder.h">
+      <Filter>Header Files\Find\Finder</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdEditCtrl.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="FindServerDlg.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchHistory.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerStatusDlg.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="FindDataBase.h">
+      <Filter>Header Files\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="CombinedButton.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="ControlResizer.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawer.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="EditFindCtrl.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrlUtil.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="ResizeBar.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterDuplicateDialog.h">
+      <Filter>Header Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MD5.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeOut.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="NamedLock.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Percentage.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="STLUtils.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="StringMatcher.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadManager.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files\Find</Filter>
+    </ClInclude>
+    <ClInclude Include="LogEditCtrl.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\ReadWriteLock.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="FileContentFinder.h">
+      <Filter>Header Files\Find\Finder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\RefCountObj.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Preview\CAcroAXDocShim.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogMediaControl.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreview.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewBase.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewError.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewImages.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewMedia.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewPDF.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\PreviewController.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\VLCWrapper.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\VLCWrapperImpl.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\vlc\vlcapiwrapper.cpp">
+      <Filter>Header Files\Preview\vlc</Filter>
+    </ClCompile>
+    <ClCompile Include="EmbedControls\EmbedComboBox.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="EmbedControls\EmbedEditControl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="EmbedControls\EmbedHeaderCtlrl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="EmbedControls\EmbedListCtrl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files\Find</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\Logger.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\LoggerFactory.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\StdUtils.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\SystemUtils.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\AutoLock.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\Path.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewExplorer.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\ExplorerPreviewManager.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\TextReader.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewText.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogHtmlPreviewBase.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewHtml.cpp">
+      <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\FileIconMgr.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\SocketUtil.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\CountTimer.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrlUtil.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawer.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="EditFindCtrl.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="CombinedButton.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="ResizeBar.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="CmdEditCtrl.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="CommitResultTimer.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlResizer.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="DupFileFilter.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FileDialogFind.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FileMetaDataProvider.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterDuplicateDialog.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FindDataBase.cpp">
+      <Filter>Source Files\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="FindDlg.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="Finder.cpp">
+      <Filter>Source Files\Find\Finder</Filter>
+    </ClCompile>
+    <ClCompile Include="FindOptionDlg.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FindReplaceDialogEx.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FindServerDlg.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="IPEnumerator.cpp">
+      <Filter>Source Files\Find\Finder</Filter>
+    </ClCompile>
+    <ClCompile Include="MD5.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="NamedLock.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="NetWorkFinder.cpp">
+      <Filter>Source Files\Find\Finder</Filter>
+    </ClCompile>
+    <ClCompile Include="Percentage.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Preferences.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="SaveListResultCtrl.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="SearchHistory.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerStatusDlg.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="StringMatcher.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadManager.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeOut.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeCtrlDomain.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeCtrlIterator.cpp">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="Find.cpp">
+      <Filter>Source Files\Find</Filter>
+    </ClCompile>
+    <ClCompile Include="LogEditCtrl.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\ReadWriteLock.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="FileContentFinder.cpp">
+      <Filter>Source Files\Find\Finder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\RefCountObj.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Find.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

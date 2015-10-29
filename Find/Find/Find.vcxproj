@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1E941131-07A0-4F03-A902-AECEB7F14B0A}</ProjectGuid>
+    <RootNamespace>Find</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Database.lib;Unzip.lib;Version.lib;UxTheme.lib;Psapi.lib;Mpr.lib;Gdiplus.lib;adsiid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Database.lib;Unzip.lib;Version.lib;UxTheme.lib;Psapi.lib;Mpr.lib;Gdiplus.lib;adsiid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="res\Find.ico" />
+    <None Include="res\Find.rc2" />
+    <None Include="res\fullscreen.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Utilites\AutoLock.h" />
+    <ClInclude Include="..\Utilites\CountTimer.h" />
+    <ClInclude Include="..\Utilites\FileIconMgr.h" />
+    <ClInclude Include="..\Utilites\Logger.h" />
+    <ClInclude Include="..\Utilites\LoggerFactory.h" />
+    <ClInclude Include="..\Utilites\Path.h" />
+    <ClInclude Include="..\Utilites\ReadWriteLock.h" />
+    <ClInclude Include="..\Utilites\RefCountObj.h" />
+    <ClInclude Include="..\Utilites\SocketUitl.h" />
+    <ClInclude Include="..\Utilites\StdUtils.h" />
+    <ClInclude Include="..\Utilites\STLUtil.h" />
+    <ClInclude Include="..\Utilites\SystemUtils.h" />
+    <ClInclude Include="..\Utilites\TextReader.h" />
+    <ClInclude Include="CmdEditCtrl.h" />
+    <ClInclude Include="CombinedButton.h" />
+    <ClInclude Include="CommitResultTimer.h" />
+    <ClInclude Include="ControlResizer.h" />
+    <ClInclude Include="Drawer.h" />
+    <ClInclude Include="DupFileFilter.h" />
+    <ClInclude Include="EditFindCtrl.h" />
+    <ClInclude Include="EmbedControls\EmbedComboBox.h" />
+    <ClInclude Include="EmbedControls\EmbedEditControl.h" />
+    <ClInclude Include="EmbedControls\EmbedHeaderCtlrl.h" />
+    <ClInclude Include="EmbedControls\EmbedListCtrl.h" />
+    <ClInclude Include="FileContentFinder.h" />
+    <ClInclude Include="FileDialogFind.h" />
+    <ClInclude Include="FileMetaDataProvider.h" />
+    <ClInclude Include="FilterDuplicateDialog.h" />
+    <ClInclude Include="Find.h" />
+    <ClInclude Include="FindDataBase.h" />
+    <ClInclude Include="FindDlg.h" />
+    <ClInclude Include="Finder.h" />
+    <ClInclude Include="FindOptionDlg.h" />
+    <ClInclude Include="FindReplaceDialogEx.h" />
+    <ClInclude Include="FindServerDlg.h" />
+    <ClInclude Include="IPEnumerator.h" />
+    <ClInclude Include="ListCtrlUtil.h" />
+    <ClInclude Include="LogEditCtrl.h" />
+    <ClInclude Include="MD5.h" />
+    <ClInclude Include="NamedLock.h" />
+    <ClInclude Include="NetWorkFinder.h" />
+    <ClInclude Include="Percentage.h" />
+    <ClInclude Include="Preferences.h" />
+    <ClInclude Include="Preview\CAcroAXDocShim.h" />
+    <ClInclude Include="Preview\DialogHtmlPreviewBase.h" />
+    <ClInclude Include="Preview\DialogMediaControl.h" />
+    <ClInclude Include="Preview\DialogPreview.h" />
+    <ClInclude Include="Preview\DialogPreviewBase.h" />
+    <ClInclude Include="Preview\DialogPreviewError.h" />
+    <ClInclude Include="Preview\DialogPreviewExplorer.h" />
+    <ClInclude Include="Preview\DialogPreviewHtml.h" />
+    <ClInclude Include="Preview\DialogPreviewImages.h" />
+    <ClInclude Include="Preview\DialogPreviewMedia.h" />
+    <ClInclude Include="Preview\DialogPreviewPDF.h" />
+    <ClInclude Include="Preview\DialogPreviewText.h" />
+    <ClInclude Include="Preview\ExplorerPreviewManager.h" />
+    <ClInclude Include="Preview\PreviewController.h" />
+    <ClInclude Include="Preview\VLCWrapper.h" />
+    <ClInclude Include="Preview\VLCWrapperImpl.h" />
+    <ClInclude Include="Preview\vlc\deprecated.h" />
+    <ClInclude Include="Preview\vlc\libvlc.h" />
+    <ClInclude Include="Preview\vlc\libvlc_events.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media_discoverer.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media_library.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media_list.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media_list_player.h" />
+    <ClInclude Include="Preview\vlc\libvlc_media_player.h" />
+    <ClInclude Include="Preview\vlc\libvlc_structures.h" />
+    <ClInclude Include="Preview\vlc\libvlc_version.h" />
+    <ClInclude Include="Preview\vlc\libvlc_vlm.h" />
+    <ClInclude Include="Preview\vlc\vlc.h" />
+    <ClInclude Include="Preview\vlc\vlcapiwrapper.h" />
+    <ClInclude Include="ResizeBar.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="SaveListResultCtrl.h" />
+    <ClInclude Include="SearchHistory.h" />
+    <ClInclude Include="ServerStatusDlg.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="STLUtils.h" />
+    <ClInclude Include="StringMatcher.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadManager.h" />
+    <ClInclude Include="TimeOut.h" />
+    <ClInclude Include="TreeCtrlDomain.h" />
+    <ClInclude Include="TreeCtrlIterator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Utilites\AutoLock.cpp" />
+    <ClCompile Include="..\Utilites\CountTimer.cpp" />
+    <ClCompile Include="..\Utilites\FileIconMgr.cpp" />
+    <ClCompile Include="..\Utilites\Logger.cpp" />
+    <ClCompile Include="..\Utilites\LoggerFactory.cpp" />
+    <ClCompile Include="..\Utilites\Path.cpp" />
+    <ClCompile Include="..\Utilites\ReadWriteLock.cpp" />
+    <ClCompile Include="..\Utilites\RefCountObj.cpp" />
+    <ClCompile Include="..\Utilites\SocketUtil.cpp" />
+    <ClCompile Include="..\Utilites\StdUtils.cpp" />
+    <ClCompile Include="..\Utilites\SystemUtils.cpp" />
+    <ClCompile Include="..\Utilites\TextReader.cpp" />
+    <ClCompile Include="CmdEditCtrl.cpp" />
+    <ClCompile Include="CombinedButton.cpp" />
+    <ClCompile Include="CommitResultTimer.cpp" />
+    <ClCompile Include="ControlResizer.cpp" />
+    <ClCompile Include="Drawer.cpp" />
+    <ClCompile Include="DupFileFilter.cpp" />
+    <ClCompile Include="EditFindCtrl.cpp" />
+    <ClCompile Include="EmbedControls\EmbedComboBox.cpp" />
+    <ClCompile Include="EmbedControls\EmbedEditControl.cpp" />
+    <ClCompile Include="EmbedControls\EmbedHeaderCtlrl.cpp" />
+    <ClCompile Include="EmbedControls\EmbedListCtrl.cpp" />
+    <ClCompile Include="FileContentFinder.cpp" />
+    <ClCompile Include="FileDialogFind.cpp" />
+    <ClCompile Include="FileMetaDataProvider.cpp" />
+    <ClCompile Include="FilterDuplicateDialog.cpp" />
+    <ClCompile Include="Find.cpp" />
+    <ClCompile Include="FindDataBase.cpp" />
+    <ClCompile Include="FindDlg.cpp" />
+    <ClCompile Include="Finder.cpp" />
+    <ClCompile Include="FindOptionDlg.cpp" />
+    <ClCompile Include="FindReplaceDialogEx.cpp" />
+    <ClCompile Include="FindServerDlg.cpp" />
+    <ClCompile Include="IPEnumerator.cpp" />
+    <ClCompile Include="ListCtrlUtil.cpp" />
+    <ClCompile Include="LogEditCtrl.cpp" />
+    <ClCompile Include="MD5.cpp" />
+    <ClCompile Include="NamedLock.cpp" />
+    <ClCompile Include="NetWorkFinder.cpp" />
+    <ClCompile Include="Percentage.cpp" />
+    <ClCompile Include="Preferences.cpp" />
+    <ClCompile Include="Preview\CAcroAXDocShim.cpp" />
+    <ClCompile Include="Preview\DialogHtmlPreviewBase.cpp" />
+    <ClCompile Include="Preview\DialogMediaControl.cpp" />
+    <ClCompile Include="Preview\DialogPreview.cpp" />
+    <ClCompile Include="Preview\DialogPreviewBase.cpp" />
+    <ClCompile Include="Preview\DialogPreviewError.cpp" />
+    <ClCompile Include="Preview\DialogPreviewExplorer.cpp" />
+    <ClCompile Include="Preview\DialogPreviewHtml.cpp" />
+    <ClCompile Include="Preview\DialogPreviewImages.cpp" />
+    <ClCompile Include="Preview\DialogPreviewMedia.cpp" />
+    <ClCompile Include="Preview\DialogPreviewPDF.cpp" />
+    <ClCompile Include="Preview\DialogPreviewText.cpp" />
+    <ClCompile Include="Preview\ExplorerPreviewManager.cpp" />
+    <ClCompile Include="Preview\PreviewController.cpp" />
+    <ClCompile Include="Preview\VLCWrapper.cpp" />
+    <ClCompile Include="Preview\VLCWrapperImpl.cpp" />
+    <ClCompile Include="Preview\vlc\vlcapiwrapper.cpp" />
+    <ClCompile Include="ResizeBar.cpp" />
+    <ClCompile Include="SaveListResultCtrl.cpp" />
+    <ClCompile Include="SearchHistory.cpp" />
+    <ClCompile Include="ServerStatusDlg.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StringMatcher.cpp" />
+    <ClCompile Include="ThreadManager.cpp" />
+    <ClCompile Include="TimeOut.cpp" />
+    <ClCompile Include="TreeCtrlDomain.cpp" />
+    <ClCompile Include="TreeCtrlIterator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Find.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="Find.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

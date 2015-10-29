@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 13.00
+# Visual Studio 2015
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Find", "Find\Find.vcxproj", "{1E941131-07A0-4F03-A902-AECEB7F14B0A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A9873A3C-104D-4AB1-834B-6CAEF5BED87C} = {A9873A3C-104D-4AB1-834B-6CAEF5BED87C}
+		{39E416FF-9E4E-4DB0-A5CD-789EC5B54326} = {39E416FF-9E4E-4DB0-A5CD-789EC5B54326}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "Database\Database.vcxproj", "{39E416FF-9E4E-4DB0-A5CD-789EC5B54326}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Unzip", "Unzip\Unzip.vcxproj", "{A9873A3C-104D-4AB1-834B-6CAEF5BED87C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E941131-07A0-4F03-A902-AECEB7F14B0A}.Debug|x64.ActiveCfg = Debug|x64
+		{1E941131-07A0-4F03-A902-AECEB7F14B0A}.Debug|x64.Build.0 = Debug|x64
+		{1E941131-07A0-4F03-A902-AECEB7F14B0A}.Release|x64.ActiveCfg = Release|x64
+		{1E941131-07A0-4F03-A902-AECEB7F14B0A}.Release|x64.Build.0 = Release|x64
+		{39E416FF-9E4E-4DB0-A5CD-789EC5B54326}.Debug|x64.ActiveCfg = Debug|x64
+		{39E416FF-9E4E-4DB0-A5CD-789EC5B54326}.Debug|x64.Build.0 = Debug|x64
+		{39E416FF-9E4E-4DB0-A5CD-789EC5B54326}.Release|x64.ActiveCfg = Release|x64
+		{39E416FF-9E4E-4DB0-A5CD-789EC5B54326}.Release|x64.Build.0 = Release|x64
+		{A9873A3C-104D-4AB1-834B-6CAEF5BED87C}.Debug|x64.ActiveCfg = Debug|x64
+		{A9873A3C-104D-4AB1-834B-6CAEF5BED87C}.Debug|x64.Build.0 = Debug|x64
+		{A9873A3C-104D-4AB1-834B-6CAEF5BED87C}.Release|x64.ActiveCfg = Release|x64
+		{A9873A3C-104D-4AB1-834B-6CAEF5BED87C}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
