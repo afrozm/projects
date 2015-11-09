@@ -231,7 +231,8 @@ LRESULT CFindDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				CPreferences prefDlg;
 				prefDlg.LoadPreference(mPreferenceName);
 			}
-			mResizeBar->HideControl();
+            if (wParam == 0)
+			    mResizeBar->HideControl();
 			StartThreadOperation(THREAD_OP_LOAD_LAST_RESULT);
 		}
 		break;
@@ -662,6 +663,7 @@ HTREEITEM CFindDlg::SearchForNetWorkPC(const CString &inFullPath)
 		mTreeCtrlDomain->SetFocus();
 		mTreeCtrlDomain->SelectItem(hItem);
 		mTreeCtrlDomain->SelectSetFirstVisible(hItem);
+		mResizeBar->HideControl(false); // Show tree view
 	}
 	else {
 		statusText += networkPath + _T(" not found.");
@@ -1051,6 +1053,8 @@ void CFindDlg::SaveSearchKeyWords()
 		}
 		mFindOptionDlg.SaveDefault(prefDataBase);
 		mListResult->SaveDefault(prefDataBase);
+        CString isTreeDomainVisible(mTreeCtrlDomain->GetStyle() & WS_VISIBLE ? L"1" : L"0");
+        prefDataBase.SetProperty(L"isTreeDomainVisible", isTreeDomainVisible);
 		prefDataBase.Commit();
 	}
 }
@@ -1082,8 +1086,9 @@ void CFindDlg::LoadSearchKeyWords()
 		mTreeCtrlDomain->EnableSearchInZip(mFindOptionDlg.IsSearchZipEnabled());
 		mListResult->LoadDefault(prefDataBase);
 	}
+    bool isTreeVisible = prefDataBase.GetProperty(L"isTreeDomainVisible") == L"1";
 	prefDataBase.Close();
-	PostMessage(WM_ON_FIRST_SHOW);
+	PostMessage(WM_ON_FIRST_SHOW, isTreeVisible);
 }
 bool FileContainsLine(FILE *fp, LPCTSTR path)
 {

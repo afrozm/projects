@@ -72,6 +72,7 @@ void CDialogPreviewPDF::OnSize(UINT nType, int cx, int cy)
 	case SIZE_MINIMIZED:
 		break;
 	default:
+        if (mPDFCtrl.GetSafeHwnd() != NULL)
 		{
 			RECT rc;
 			GetClientRect(&rc);
