@@ -262,7 +262,7 @@ void CFindServerDlg::LoadDefault()
 		_T("Code"), _T("*.c;*.h;*.vcproj;*.sln;*.xcode"), _T(""), _T(""), _T(""), _T(""), true,
 		_T("Images"), _T("*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.png;*.dib"), _T(""), _T(""), _T(""), _T(""), true,
 #else
-		_T("Movies"), _T("*.mov;*.mpg;*.mpeg;*.div;*.avi;*.vlc;*.vob;*.wmv;*.flv"), _T(""), _T("300M"), _T(""), _T(">="), true,
+        _T("Movies"), _T("*.mp4;.mov;*.mpg;*.mpeg;*.div;*.avi;*.vlc;*.vob;*.wmv;*.flv"), _T(""), _T("300M"), _T(""), _T(">="), true,
 		_T("Music"), _T("*.mp3"), _T(""), _T("2M"), _T(""), _T(">="), true,
 #endif
 		_T("Softwares"), _T("*.msi;*.dmg;*.exe;*.zip;*.rar"), _T(""), _T(""), _T(""), _T(""), false,
