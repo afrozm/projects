@@ -2,6 +2,11 @@
 //
 
 #include "stdafx.h"
+#include "BinaryFind.h"
+#include "Progress.h"
+#include "Path.h"
+
+typedef std::vector<char> VecChar;
 
 static wchar_t getHexChar(char ch)
 {
@@ -10,11 +15,32 @@ static wchar_t getHexChar(char ch)
         return 'A' + ch;
     return '0' + ch;
 }
+static char getHexByte(wchar_t ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    if (ch >= 'A' && ch <= 'F')
+        return 0xA + ch - 'A';
+    if (ch >= 'a' && ch <= 'f')
+        return 0xA + ch - 'a';
+    return (char)ch;
+}
 static void getHexStr(char ch, wchar_t *outHex)
 {
     outHex[0] = getHexChar(ch >> 4);
     outHex[1] = getHexChar(ch);
     outHex[2] = 0;
+}
+static char getHexByte(const wchar_t *inStr)
+{
+    char ch = 0;
+    if (inStr) {
+        for (int i = 0; i < 2 && inStr[i]; ++i) {
+            ch <<= 4;
+            ch |= getHexByte(inStr[i]);
+        }
+    }
+    return ch;
 }
 
 #define HEX_WITH 16
@@ -54,51 +80,149 @@ static long long getLLfromStr(const TCHAR *str)
     return retVal;
 }
 
+#define STR_IS_VALID_PTR(p) (p&&*p)
+#define STR_INR_PTR(p) if(STR_IS_VALID_PTR(p)) ++p
+#define STR_CHAR_IS_SPACE(c) ((c)==' ' || (c)=='\t' || (c)=='\n' || (c)=='\r')
+#define STR_SKIP_SPACE(p) while(STR_IS_VALID_PTR(p)&&STR_CHAR_IS_SPACE(*p)) ++p
+
+static size_t StrToBuffer(const TCHAR *pStr, VecChar &outBuffer, bool asString = false)
+{
+    if (pStr != NULL)
+    {
+        while (*pStr)
+        {
+            if (!asString) {
+                STR_SKIP_SPACE(pStr);
+                if (!STR_IS_VALID_PTR(pStr))
+                    continue;
+                outBuffer.push_back(getHexByte(pStr));
+                STR_INR_PTR(pStr);
+            }
+            else
+                outBuffer.push_back((char)*pStr);
+            STR_INR_PTR(pStr);
+        }
+    }
+    return outBuffer.size();
+}
+
+
+int FindArg(int argc, _TCHAR* argv[], const TCHAR * arg)
+{
+    size_t len(_tcslen(arg));
+    while (--argc > 0) {
+        if (_tcsncicmp(argv[argc], arg, len) == 0)
+            break;
+    }
+    return argc;
+}
+const TCHAR* FindArgValue(int argc, _TCHAR* argv[], const TCHAR * arg)
+{
+    int argPos(FindArg(argc, argv, arg));
+    if (argPos > 0)
+        return argv[argPos] + _tcslen(arg);
+    return NULL;
+}
+int FindNextArg(int argc, _TCHAR* argv[], int startArg)
+{
+    while (++startArg < argc) {
+        if (argv[startArg][0] != '-')
+            break;
+    }
+    if (startArg >= argc)
+        startArg = 0;
+    return startArg;
+}
+void Help()
+{
+    _tprintf(_T("Usage:\nHexDump <file or string> [-o=<offset>] [-s=<size>] [-f=<find buffer> [-fs]]\n"));
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
     int retVal(0);
-    if (argc < 2)
+    int arg = FindNextArg(argc, argv, 0);
+    if (arg <= 0)
     {
-        _tprintf(_T("Usage:\nHexDump <file or string> [offset] [size]\n"));
+        Help();
         retVal = 1;
     }
     else
     {
+        BinaryFind bf;
+        {
+            VecChar findBuffer;
+            StrToBuffer(FindArgValue(argc, argv, _T("-f=")), findBuffer, FindArgValue(argc, argv, _T("-fs")) != NULL);
+            if (!findBuffer.empty())
+                bf.SetFindPattern(&findBuffer[0], findBuffer.size());
+        }
+        const TCHAR *fileOrString(argv[arg]);
         FILE *fp = NULL;
-        _tfopen_s(&fp, argv[1], _T("rb"));
+        _tfopen_s(&fp, fileOrString, _T("rb"));
         if (fp != NULL)
         {
-            if (argc > 2) {
-                long long offset(getLLfromStr(argv[2]));
+            Progress prog;
+            const TCHAR *argStr = FindArgValue(argc, argv, _T("-o="));
+            if (argStr != NULL) {
+                long long offset(getLLfromStr(argStr));
                 _fseeki64(fp, offset, offset >= 0 ? SEEK_SET : SEEK_END);
             }
-            long long sizeToRead(-1);
-            if (argc > 3)
-                sizeToRead = getLLfromStr(argv[3]);
-            long long sa(_ftelli64(fp));
-            while (true)
+            long long fileOffset(_ftelli64(fp));
+            long long sizeToRead(Path(fileOrString).GetSize());
+            argStr = FindArgValue(argc, argv, _T("-s="));
+            if (argStr != NULL) {
+                long long szRead = getLLfromStr(argStr);
+                if (fileOffset + szRead > sizeToRead)
+                    sizeToRead = sizeToRead - fileOffset;
+                else
+                    sizeToRead = szRead;
+            }
+            prog.SetTask(sizeToRead);
+            VecChar buffer;
+            buffer.resize(4 * 1024 * 1024);
+            while (sizeToRead > 0)
             {
-                char buffer[4096];
-                size_t cRead = _countof(buffer);
+                size_t cRead = buffer.size();
                 if (sizeToRead > 0) {
                     if ((long long)cRead > sizeToRead)
                         cRead = sizeToRead;
                 }
-                cRead = fread_s(buffer, sizeof(buffer), sizeof(buffer[0]), cRead, fp);
-                sa = HexDump(buffer, cRead, sa);
-                if (cRead == 0)
+                cRead = fread_s(&buffer[0], buffer.size(), sizeof(char), cRead, fp);
+                if (cRead <= 0)
                     break;
-                if (sizeToRead > 0) {
-                    sizeToRead -= cRead;
-                    if (sizeToRead <= 0)
-                        break;
+                sizeToRead -= cRead;
+                if (bf.HasFindPattern()) {
+                    bf.SetFindBuffer(&buffer[0], cRead);
+                    while (true)
+                    {
+                        long long findPos = bf.FindNext();
+                        if (findPos >= 0)
+                            _tprintf(_T("%08llX\n"), fileOffset + findPos);
+                        else break;
+                    }
                 }
+                else
+                    fileOffset = HexDump(&buffer[0], cRead, fileOffset);
+                if (prog.UpdateProgress(prog.GetCurrentDone() + cRead))
+                    _tprintf(_T("\r%02.02f%%\r"), prog.GetCurrentPercentageDone());
             }
+            _tprintf(_T("\r            \r"));
             fclose(fp);
         }
         else
         {
-            HexDump((const void *)argv[1], _tcslen(argv[1])*sizeof(argv[1][0]));
+            if (bf.HasFindPattern()) {
+                bf.SetFindBuffer((const void *)fileOrString, _tcslen(fileOrString)*sizeof(fileOrString[0]));
+                while (true)
+                {
+                    long long findPos = bf.FindNext();
+                    if (findPos >= 0)
+                        _tprintf(_T("%08llX\n"), findPos);
+                    else break;
+                }
+            }
+            else
+                HexDump((const void *)fileOrString, _tcslen(fileOrString)*sizeof(fileOrString[0]));
         }
     }
     return retVal;
