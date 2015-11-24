@@ -154,8 +154,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_INDIA
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,8
- PRODUCTVERSION 1,0,0,8
+ FILEVERSION 1,0,0,9
+ PRODUCTVERSION 1,0,0,9
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -170,12 +170,12 @@ BEGIN
     BEGIN
         BLOCK "400904b0"
         BEGIN
-            VALUE "FileVersion", "1.0.0.8"
+            VALUE "FileVersion", "1.0.0.9"
             VALUE "InternalName", "SalT.exe"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "SalT.exe"
             VALUE "ProductName", "SalT"
-            VALUE "ProductVersion", "1.0.0.8"
+            VALUE "ProductVersion", "1.0.0.9"
         END
     END
     BLOCK "VarFileInfo"

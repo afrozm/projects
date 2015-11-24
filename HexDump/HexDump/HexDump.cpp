@@ -12,7 +12,7 @@ static wchar_t getHexChar(char ch)
 {
     ch &= 0xf;
     if (ch > 9)
-        return 'A' + ch;
+        return 'A' + ch - 0xA;
     return '0' + ch;
 }
 static char getHexByte(wchar_t ch)
@@ -49,20 +49,25 @@ static long long HexDump(const void *buffer, size_t size, long long startAddress
 {
     const char *buf((const char *)buffer);
     for (size_t i = 0; i < size;) {
-        _tprintf(_T("%08llX   "), startAddress+i);
+        _tprintf(_T("%08llX  "), startAddress+i);
         size_t s = i;
         const char *sBuf(buf);
         for (int j = 0; j < HEX_WITH && s < size; ++j, ++s, ++buf) {
-            wchar_t hexStr[4] = { 0 };
-            getHexStr(*buf, hexStr);
-            _tprintf(_T("%s "), hexStr);
+            if (j%4==0)
+                _tprintf(_T(" "));
             if (j == (HEX_WITH >> 1))
                 _tprintf(_T(" "));
+            wchar_t hexStr[4] = { 0 };
+            getHexStr(*buf, hexStr);
+            _tprintf(_T("%s"), hexStr);
         }
         _tprintf(_T("   "));
         s = i;
-        for (int j = 0; j < HEX_WITH && s < size; ++j, ++s, ++sBuf)
+        for (int j = 0; j < HEX_WITH && s < size; ++j, ++s, ++sBuf) {
+            if (j == (HEX_WITH >> 1))
+                _tprintf(_T(" "));
             _tprintf(_T("%c"), isprint((unsigned char)*sBuf) ? *sBuf : '.');
+        }
         i = s;
         _tprintf(_T("\n"));
     }
@@ -169,6 +174,7 @@ int _tmain(int argc, _TCHAR* argv[])
             }
             long long fileOffset(_ftelli64(fp));
             long long sizeToRead(Path(fileOrString).GetSize());
+            const long long fileSize(sizeToRead);
             argStr = FindArgValue(argc, argv, _T("-s="));
             if (argStr != NULL) {
                 long long szRead = getLLfromStr(argStr);
@@ -197,7 +203,7 @@ int _tmain(int argc, _TCHAR* argv[])
                     {
                         long long findPos = bf.FindNext();
                         if (findPos >= 0)
-                            _tprintf(_T("%08llX\n"), fileOffset + findPos);
+                            _tprintf(_T("%08llX=-%08llX\n"), fileOffset + findPos, fileSize - (fileOffset + findPos));
                         else break;
                     }
                 }

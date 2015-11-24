@@ -19,7 +19,7 @@
 
 #include <shlobj.h>
 #include <shlwapi.h>
-
+#include <Psapi.h>
 #include <time.h>
 
 #include <gdiplus.h>
