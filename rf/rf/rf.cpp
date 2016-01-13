@@ -139,7 +139,7 @@ const TCHAR *timeNames[] = {
 	_T("millisecond"),
 };
 const __int64 timeDuration[] = {
-	1000UL*60UL*60UL*24UL*365UL,
+	1000LL*60LL*60LL*24LL*365LL,
 	1000*60*60*24*30UL,
 	1000*60*60*24,
 	1000*60*60,
