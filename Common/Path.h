@@ -23,6 +23,7 @@ public:
 	int Compare(const Path &p) const;
 	Path GetRoot() const;
 	static Path GetSpecialFolderPath(int inFolderID, bool inCreate = false);
+    static Path GetModuleFilePath(HMODULE hModule = NULL);
 	Path MakeFullPath() const;
 	bool IsRelativePath() const;
 	Path Canonicalize() const;
@@ -57,6 +58,7 @@ struct FindData {
 	FindData(WIN32_FIND_DATA *pFD, const lstring &fp, bool fm)
 		: pFindData(pFD), fullPath(fp), fileMatched(fm)
 	{}
+    long long GetFileSize() const;
 };
 #define FCBRV_CONTINUE 0
 #define FCBRV_ABORT 1

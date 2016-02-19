@@ -15,12 +15,10 @@ void BinaryData::SetData(const void *pBuffer /*= NULL*/, size_t bufLen /*= 0*/, 
     mSize = bufLen;
     if (!bStore) {
         m_pBuffer = pBuffer;
-        if (m_pBuffer == NULL) {
-            if (mSize > 0)
-                mSize = 0;
-        }
-        else if (mSize == 0)
+        if (mSize <= 0)
             m_pBuffer = NULL;
+        if (m_pBuffer == NULL)
+            mSize = 0;
     }
     else
     {
@@ -62,9 +60,9 @@ bool BinaryData::operator<(const BinaryData & inData) const
 
 int BinaryData::Compare(const BinaryData & inData) const
 {
-    int diff((int)inData.Size() - (int)Size());
+    int diff((int)Size() - (int)inData.Size());
     if (!diff && Size() > 0)
-        diff = memcmp((const void *)inData, (const void *)*this, Size());
+        diff = memcmp((const void *)*this, (const void *)inData, Size());
     return diff;
 }
 
@@ -74,6 +72,13 @@ unsigned char BinaryData::operator[](size_t index) const
     if (index < Size())
         ch = ((const unsigned char *)((const void *)*this))[index];
     return ch;
+}
+
+const void* BinaryData::operator+(size_t inOffset)
+{
+    if (inOffset < Size())
+        return (const unsigned char *)((const void *)*this) + inOffset;
+    return NULL;
 }
 
 size_t BinaryData::BuildFromString(const TCHAR * pStr, bool asString)
@@ -87,7 +92,7 @@ size_t BinaryData::ReadFromFile(FILE *pFile, size_t nBytesRead /* = 0 */, long l
 {
     if (pFile == NULL)
         return 0;
-    if (nBytesRead == 0 || nBytesRead > Size())
+    if (nBytesRead <= 0 || nBytesRead > Size())
         nBytesRead = Size();
     if (nBytesRead == 0)
         return 0;
@@ -95,6 +100,52 @@ size_t BinaryData::ReadFromFile(FILE *pFile, size_t nBytesRead /* = 0 */, long l
         _fseeki64(pFile, fileOffset, SEEK_SET);
     nBytesRead = fread_s(*this, Size(), 1, nBytesRead, pFile);
     return nBytesRead;
+}
+
+size_t BinaryData::ReadFromFile(HANDLE hFile, size_t nBytesRead, long long fileOffset)
+{
+    if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
+        return 0;
+    if (nBytesRead <= 0 || nBytesRead > Size())
+        nBytesRead = Size();
+    if (nBytesRead == 0)
+        return 0;
+    if (fileOffset >= 0) {
+        LARGE_INTEGER li;
+        li.QuadPart = fileOffset;
+        SetFilePointerEx(hFile, li, NULL, FILE_BEGIN);
+    }
+    DWORD dwRead(0);
+    ReadFile(hFile, *this, (DWORD)Size(), &dwRead, NULL);
+    nBytesRead = dwRead;
+    return nBytesRead;
+}
+
+size_t BinaryData::ReadFromResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hModule /* = NULL */)
+{
+    SetData();
+    HRSRC hRSRC(FindResource(hModule, lpName, lpType));
+    if (hRSRC != NULL) {
+        HGLOBAL hRes(LoadResource(hModule, hRSRC));
+        if (hRes != NULL) {
+            LPVOID pData(LockResource(hRes));
+            if (pData != NULL) {
+                SetData(pData, SizeofResource(hModule, hRSRC), true);
+            }
+        }
+    }
+    return Size();
+}
+
+BinaryData BinaryData::GetDataRef(size_t offset, size_t inSize)
+{
+    if (inSize < 0 || inSize > Size())
+        inSize = Size();
+    if (offset > Size())
+        offset = Size();
+    if (offset + inSize > Size())
+        inSize = Size() - offset;
+    return BinaryData(*this + offset, inSize, false);
 }
 
 ////////////////////////////// BinaryFind //////////////////////////////
@@ -145,6 +196,11 @@ long long BinaryFind::FindNext()
     return findPos;
 }
 
+void BinaryFind::SetFindPattern(const BinaryData & inFindPatter)
+{
+    SetFindPattern(inFindPatter, inFindPatter.Size());
+}
+
 void BinaryFind::SetFindPattern(const void *pBuffer, size_t bufLen)
 {
     mFindPatternIndex = 0;
@@ -154,8 +210,7 @@ void BinaryFind::SetFindPattern(const void *pBuffer, size_t bufLen)
 
 void BinaryFind::SetFindBuffer(const void * buffer, size_t size)
 {
-    const char *target((const char *)buffer);
-    m_pCurrentBuffer = target;
+    m_pCurrentBuffer = (const unsigned char *)buffer;
     mCurrentBufferIndex = 0;
     if (m_pCurrentBuffer == NULL || size <= 0) {
         m_pCurrentBuffer = NULL;
@@ -168,10 +223,27 @@ void BinaryFind::SetFindBuffer(const void * buffer, size_t size)
 
 void BinaryFind::SetFindBuffer(const std::vector<char> &buffer)
 {
-    SetFindPattern(buffer.size() > 0 ? &buffer[0] : NULL, buffer.size());
+    SetFindBuffer(buffer.size() > 0 ? &buffer[0] : NULL, buffer.size());
 }
 
-char BinaryFind::GetAt(size_t index)
+void BinaryFind::SetFindBuffer(const BinaryData &inFindBuffer)
+{
+    SetFindBuffer(inFindBuffer, inFindBuffer.Size());
+}
+
+size_t BinaryFind::GetCurrentBufferIndex() const
+{
+    return mCurrentBufferIndex;
+}
+
+void BinaryFind::SetCurrentBufferIndex(size_t currentIndex)
+{
+    mCurrentBufferIndex = currentIndex;
+    if (mCurrentBufferIndex > mCurrentBufferSize)
+        mCurrentBufferIndex = mCurrentBufferSize;
+}
+
+unsigned char BinaryFind::GetAt(size_t index)
 {
     return m_pCurrentBuffer[index];
 }

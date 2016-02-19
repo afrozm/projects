@@ -1,6 +1,10 @@
 #pragma once
 
 #include "StringUtils.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif // _WIN32
+
 
 typedef std::vector<unsigned char> VecChar;
 
@@ -16,8 +20,14 @@ public:
     bool operator < (const BinaryData &inData) const;
     int Compare(const BinaryData &inData) const;
     unsigned char operator[](size_t index) const;
+    const void* operator + (size_t inOffset);
     size_t BuildFromString(const TCHAR *pStr, bool asString = false);
     size_t ReadFromFile(FILE *pFile, size_t nBytesToRead = 0, long long fileOffset = -1);
+#ifdef _WIN32
+    size_t ReadFromFile(HANDLE hFile, size_t nBytesToRead = 0, long long fileOffset = -1);
+    size_t ReadFromResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hModule = NULL);
+#endif // _WIN32
+    BinaryData GetDataRef(size_t offset = 0, size_t inSize = -1);
 private:
     VecChar mBuffer;
     const void *m_pBuffer;
@@ -33,18 +43,22 @@ public:
     BinaryFind(const void *pBuffer = NULL, size_t bufLen = 0);
     ~BinaryFind();
     long long FindNext();
+    void SetFindPattern(const BinaryData &inFindPatter);
     void SetFindPattern(const void *pBuffer, size_t bufLen);
     bool HasFindPattern() const { return mFindPattern.Size() > 0; }
-    void SetFindBuffer(const void *buffer, size_t size);
+    void SetFindBuffer(const void *buffer = NULL, size_t size = 0);
     void SetFindBuffer(const std::vector<char> &buffer);
+    void SetFindBuffer(const BinaryData &inFindBuffer);
+    size_t GetCurrentBufferIndex() const; // get position index to find pattern
+    void SetCurrentBufferIndex(size_t currentIndex); // set start position to start find pattern
 private:
-    char GetAt(size_t index);
+    unsigned char GetAt(size_t index);
     size_t GetTotalBufferSize() const { return mCurrentBufferSize; }
     void ComputeKMPTable();
     BinaryData mFindPattern;
     std::vector<int> mVecKMPTable;
     long long mOffSet;
-    const char *m_pCurrentBuffer;
+    const unsigned char *m_pCurrentBuffer;
     size_t mCurrentBufferSize;
     size_t mCurrentBufferIndex;
     size_t mFindPatternIndex; // This represent start index in mFindPattern in FindeNext calls

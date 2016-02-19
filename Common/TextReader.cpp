@@ -4,55 +4,65 @@
 #define API_FAIL_EXIT(x) if (x) {bEndOfFileReached = true; goto API_EXIT;}
 
 CTextReader::CTextReader(LPCTSTR fileName)
-:mFileEncoding(FileEncoding_ANSI), bEndOfFileReached(false)
 {
-	m_hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL,
-		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (m_hFile == INVALID_HANDLE_VALUE)
-		return;
-	int encoding = 0;
-	DWORD nBytesRead = 0;
-	ReadFile(m_hFile, &encoding, sizeof(int), &nBytesRead, NULL);
-	switch (encoding & 0xffff) {
-	case 0xbbef:
-		if ((encoding >> 16 & 0xff) == 0xbf) {
-			mFileEncoding = FileEncoding_UTF8;
-			SetFilePos(3);
-		}
-		else
-			SetFilePos(0);
-		break;
-	case 0xFFFE:
-		mFileEncoding = FileEncoding_UNICODE_BIG;
-		SetFilePos(2);
-		break;
-	case 0xFEFF:
-		mFileEncoding = FileEncoding_UNICODE;
-		SetFilePos(2);
-		break;
-	default: // Assume ANSI
-		if ((encoding & 0xff00ff00)== 0)
-			mFileEncoding = FileEncoding_UNICODE;
-		else if ((encoding & 0x00ff00ff) == 0)
-			mFileEncoding = FileEncoding_UNICODE_BIG;
-		SetFilePos(0);
-	}
+    SetInput(fileName);
 }
 
-CTextReader::~CTextReader(void)
+CTextReader::CTextReader(const BinaryData *pData)
 {
-	if (m_hFile != INVALID_HANDLE_VALUE)
-		CloseHandle(m_hFile);
+    SetInput(NULL, pData);
+}
+
+BOOL CTextReader::SetInput(LPCTSTR fileName /* = NULL */, const BinaryData *pData /* = NULL */)
+{
+    mFileEncoding = FileEncoding_ANSI;
+    bEndOfFileReached = false;
+    m_pDataReader = NULL;
+    mFileDataReader.SetFile(fileName);
+    if (mFileDataReader.GetSize() == 0) {
+        mBinaryDataReader.SetData(pData);
+        if (mBinaryDataReader.GetSize() > 0)
+            m_pDataReader = &mBinaryDataReader;
+    }
+    else
+        m_pDataReader = &mFileDataReader;
+    if (m_pDataReader == NULL)
+        return FALSE;
+    int encoding = 0;
+    m_pDataReader->Read(&encoding, sizeof(int));
+    switch (encoding & 0xffff) {
+    case 0xbbef:
+        if ((encoding >> 16 & 0xff) == 0xbf) {
+            mFileEncoding = FileEncoding_UTF8;
+            SetFilePos(3);
+        }
+        else
+            SetFilePos(0);
+        break;
+    case 0xFFFE:
+        mFileEncoding = FileEncoding_UNICODE_BIG;
+        SetFilePos(2);
+        break;
+    case 0xFEFF:
+        mFileEncoding = FileEncoding_UNICODE;
+        SetFilePos(2);
+        break;
+    default: // Assume ANSI
+        if ((encoding & 0xff00ff00) == 0)
+            mFileEncoding = FileEncoding_UNICODE;
+        else if ((encoding & 0x00ff00ff) == 0)
+            mFileEncoding = FileEncoding_UNICODE_BIG;
+        SetFilePos(0);
+    }
+    return TRUE;
 }
 
 LONGLONG CTextReader::SetFilePos(LONGLONG filePos, DWORD dwMoveMethod)
 {
-	LARGE_INTEGER fp;
-	fp.QuadPart = filePos;
+
 	LARGE_INTEGER newFilePos = {0};
-	if (m_hFile != INVALID_HANDLE_VALUE) {
-		SetFilePointerEx(m_hFile, fp, &newFilePos, dwMoveMethod);
-	}
+	if (m_pDataReader)
+        newFilePos.QuadPart = m_pDataReader->SetPointer(filePos, dwMoveMethod);
 	bEndOfFileReached = false;
 	return newFilePos.QuadPart;
 }
@@ -64,46 +74,34 @@ LONGLONG CTextReader::GetFilePos()
 LONGLONG CTextReader::GetFileSize()
 {
 	LARGE_INTEGER fileSize = {0};
-	::GetFileSizeEx(m_hFile, &fileSize);
+    if (m_pDataReader)
+        fileSize.QuadPart = m_pDataReader->GetSize();
 	return fileSize.QuadPart;
 }
 TCHAR CTextReader::ReadChar()
 {
 	TCHAR tch = 0;
 	DWORD nBytesRead = 0;
-	API_FAIL_EXIT(bEndOfFileReached);
+	API_FAIL_EXIT(m_pDataReader == NULL);
 	switch (mFileEncoding) {
 	case FileEncoding_ANSI:
 	case FileEncoding_UTF8:
 		{
 			unsigned char ch[2];
-			ReadFile(m_hFile, ch, sizeof(char), &nBytesRead, NULL);
+            nBytesRead = (DWORD)m_pDataReader->Read(ch, sizeof(char));
 			API_FAIL_EXIT(nBytesRead == 0);
 			tch = ch[0];
-#if 0//defined(_UNICODE) || defined(UNICODE)
-			if (mFileEncoding == FileEncoding_UTF8
-				&& ch[0] > 127) {
-				ReadFile(m_hFile, ch+1, sizeof(char), &nBytesRead, NULL);
-				API_FAIL_EXIT(nBytesRead == 0);
-				tch |= ((TCHAR)ch[1]) << 8;
-			}
-#endif
 		}
 		break;
 	case FileEncoding_UNICODE:
 	case FileEncoding_UNICODE_BIG:
 		{
 			WCHAR ch = 0;
-			ReadFile(m_hFile, &ch, sizeof(WCHAR), &nBytesRead, NULL);
+            nBytesRead = (DWORD)m_pDataReader->Read(&ch, sizeof(WCHAR));
 			API_FAIL_EXIT(nBytesRead == 0);
 			if (mFileEncoding == FileEncoding_UNICODE_BIG)
 				ch = (ch << 8) | (ch >> 8);
-#if defined(_UNICODE) || defined(UNICODE)
 			tch = ch;
-#else
-			WideCharToMultiByte( CP_ACP, 0, &ch, -1,
-				&tch, sizeof (TCHAR), NULL, NULL );
-#endif
 		}
 		break;
 	}
@@ -166,14 +164,12 @@ lstring CTextReader::ReadLineUTF8()
 	line[c] = 0;
 	if (c > 0) {
 		TCHAR *convString = (TCHAR *)line;
-#if defined(_UNICODE) || defined(UNICODE)
 		len = MultiByteToWideChar(CP_UTF8, 0, line, c, NULL, 0);
 		if (len > 0) {
 			convString = new TCHAR[len+1];
 			len = MultiByteToWideChar(CP_UTF8, 0, line, c, convString, len);
 			convString[len] = 0;
 		}
-#endif
 		str += convString;
 		if (convString != (TCHAR *)line)
 			delete[] convString;

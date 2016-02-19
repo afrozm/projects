@@ -17,7 +17,7 @@ static const lstring kStringPropertyEmptyString;
 
 const lstring & Property::GetValue(const lstring & inKey) const
 {
-    auto cit(mProperties.find(inKey));
+    auto cit(mProperties.find(StringUtils::ToLower(inKey)));
     if (cit != mProperties.end())
         return cit->second;
     return kStringPropertyEmptyString;
@@ -25,7 +25,7 @@ const lstring & Property::GetValue(const lstring & inKey) const
 
 bool Property::HasKey(const lstring & inKey) const
 {
-    return mProperties.find(inKey) != mProperties.end();
+    return mProperties.find(StringUtils::ToLower(inKey)) != mProperties.end();
 }
 
 bool Property::SetValue(const lstring & inKey, const lstring & inValue, bool bOverwrite)
@@ -33,14 +33,14 @@ bool Property::SetValue(const lstring & inKey, const lstring & inValue, bool bOv
     bool bAdded(bOverwrite || !HasKey(inKey));
 
     if (bAdded)
-        mProperties[inKey] = inValue;
+        mProperties[StringUtils::ToLower(inKey)] = inValue;
 
     return bAdded;
 }
 
 bool Property::RemoveKey(const lstring & inKey)
 {
-    size_t nElemmetsRemoved(mProperties.erase(inKey));
+    size_t nElemmetsRemoved(mProperties.erase(StringUtils::ToLower(inKey)));
     return nElemmetsRemoved > 0;
 }
 
@@ -90,23 +90,23 @@ bool PropertySet::SetValue(const lstring & inSection, const lstring & inKey, con
 {
     if (bOverwrite && !HasSection(inSection))
         mMapProperty[inSection];
-    Property &prop(GetProperty(inSection));
-    if (!prop.IsEmpty())
-        return prop.SetValue(inKey, inValue, bOverwrite);
+    Property *prop(GetProperty(inSection));
+    if (prop)
+        return prop->SetValue(inKey, inValue, bOverwrite);
     return false;
 }
 
 bool PropertySet::RemoveKey(const lstring & inSection, const lstring & inKey)
 {
-    Property &prop(GetProperty(inSection));
-    if (!prop.IsEmpty())
-        return prop.RemoveKey(inKey);
+    Property *prop(GetProperty(inSection));
+    if (prop)
+        return prop->RemoveKey(inKey);
     return false;
 }
 
-static const Property kPropertyEmptyProperty;
 const Property & PropertySet::GetProperty(const lstring & inSection) const
 {
+    static const Property kPropertyEmptyProperty;
     auto cit(mMapProperty.find(inSection));
     if (cit != mMapProperty.end())
         return cit->second;
@@ -138,12 +138,22 @@ size_t PropertySet::GetCount() const
     return mMapProperty.size();
 }
 
-Property& PropertySet::GetProperty(const lstring & inSection)
+const PropertySet::MapProperty& PropertySet::GetMapProperty() const
+{
+    return mMapProperty;
+}
+
+PropertySet::MapProperty & PropertySet::GetMapProperty()
+{
+    return mMapProperty;
+}
+
+Property* PropertySet::GetProperty(const lstring & inSection)
 {
     auto cit(mMapProperty.find(inSection));
     if (cit != mMapProperty.end())
-        return cit->second;
-    return (Property&)kPropertyEmptyProperty;
+        return &cit->second;
+    return NULL;
 }
 
 

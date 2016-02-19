@@ -38,9 +38,11 @@ public:
     void RemoveAll();
     bool IsEmpty() const;
     size_t GetCount() const;
-private:
-    Property& GetProperty(const lstring &inSection);
     typedef std::map<lstring, Property> MapProperty;
+    const MapProperty& GetMapProperty() const; // only to iterate
+    MapProperty& GetMapProperty(); // only to iterate
+private:
+    Property* GetProperty(const lstring &inSection);
     MapProperty mMapProperty;
 };
 

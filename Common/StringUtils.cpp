@@ -1,6 +1,15 @@
 #include "stdafx.h"
 #include "StringUtils.h"
+#include <algorithm>
 
+lstring StringUtils::ToLower(const lstring &inStr)
+{
+    lstring outStr(inStr);
+
+    std::transform(outStr.begin(), outStr.end(), outStr.begin(), ::tolower);
+
+    return outStr;
+}
 
 int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars /* = _T(",") */, bool bIncludeEmpty /* = false */, int maxCount /* = -1 */)
 {
@@ -9,9 +18,9 @@ int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const 
     bool bContinue(true);
     while (true) {
         size_t pos = inStr.find_first_of(inSepChars, sp);
-        if (pos >= 0) {
+        if (pos != lstring::npos) {
             if (bIncludeEmpty || pos > sp) {
-                outStrings.push_back(inStr.substr(sp, pos));
+                outStrings.push_back(inStr.substr(sp, pos-sp));
                 if (maxCount > 0) {
                     --maxCount;
                     bContinue = maxCount > 0;
@@ -22,7 +31,7 @@ int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const 
         else break;
     }
     if (sp < inStr.length())
-        outStrings.push_back(inStr.substr(sp, inStr.length()));
+        outStrings.push_back(inStr.substr(sp, inStr.length()-sp));
 
     return (int)(outStrings.size()-count);
 }
@@ -54,6 +63,8 @@ bool StringUtils::TrimString(lstring & inOutStr, const lstring & inTrimChars, bo
 
 long long StringUtils::getLLfromStr(const TCHAR *str)
 {
+    if (str == NULL || *str == 0)
+        return 0;
     bool bMinus(*str == '-');
     if (bMinus)
         ++str;
@@ -61,4 +72,38 @@ long long StringUtils::getLLfromStr(const TCHAR *str)
     if (bMinus)
         retVal = -retVal;
     return retVal;
+}
+
+std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
+{
+    std::string sRet;
+    if (unicodeString != NULL && unicodeString[0])
+    {
+        int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, 0, 0, NULL, NULL);
+        std::vector<char> vecChar(kMultiByteLength);
+        if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
+        {
+            sRet.assign(&vecChar[0], vecChar.size());
+        }
+    }
+    return sRet;
+}
+std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
+{
+    std::wstring		sRet;
+    if (utf8String != NULL && utf8String[0])
+    {
+        int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, NULL, 0);
+        if (kAllocate)
+        {
+            std::vector<wchar_t> vecWide(kAllocate);
+
+            int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], (int)vecWide.size());
+            if (kCopied)
+            {
+                sRet.assign(&vecWide[0], vecWide.size());
+            }
+        }
+    }
+    return sRet;
 }

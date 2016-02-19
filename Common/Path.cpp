@@ -168,6 +168,18 @@ Path Path::GetSpecialFolderPath(int inFolderID, bool inCreate)
 	}
 	return outPath;
 }
+
+Path Path::GetModuleFilePath(HMODULE hModule /*= NULL*/)
+{
+    TCHAR modulePath[MAX_PATH] = { 0 };
+    ::GetModuleFileName(hModule, modulePath, MAX_PATH);
+    if (hModule != NULL && modulePath[0] == 0) {
+        DWORD nPNSize(MAX_PATH);
+        QueryFullProcessImageName(hModule, 0, modulePath, &nPNSize);
+    }
+    return modulePath;
+}
+
 bool Path::IsRelativePath() const
 {
 	return ::PathIsRelative(c_str()) == TRUE;
@@ -496,6 +508,18 @@ lstring WildCardExpToRegExp(LPCTSTR wildCardExp)
 		}
 	}
 	return regExp;
+}
+
+
+long long FindData::GetFileSize() const
+{
+    if (pFindData) {
+        long long fileSize(pFindData->nFileSizeHigh);
+        fileSize <<= sizeof(fileSize) << 1;
+        fileSize |= pFindData->nFileSizeLow;
+        return fileSize;
+    }
+    return Path(fullPath).GetSize();
 }
 
 Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR excludePattern)

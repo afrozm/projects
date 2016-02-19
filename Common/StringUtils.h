@@ -11,9 +11,13 @@
 
 namespace StringUtils
 {
+    lstring ToLower(const lstring &inStr);
     typedef std::vector<lstring> VecString;
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);
     long long getLLfromStr(const TCHAR *str);
+
+    std::string UnicodeToUTF8(const wchar_t *unicodeString);
+    std::wstring UTF8ToUnicode(const char *utf8String);
 };
 

@@ -6,8 +6,6 @@
 #include "Progress.h"
 #include "Path.h"
 
-typedef std::vector<char> VecChar;
-
 static wchar_t getHexChar(char ch)
 {
     ch &= 0xf;
@@ -141,8 +139,80 @@ int FindNextArg(int argc, _TCHAR* argv[], int startArg)
 void Help()
 {
     _tprintf(_T("Usage:\nHexDump <file or string> [-o=<offset>] [-s=<size>] [-f=<find buffer> [-fs]]\n"));
+    _tprintf(_T("[-mp=<match pattern>]\n"));
+    _tprintf(_T("[-ep=<exclude pattern>]\n"));
+    _tprintf(_T("mp,ep is used if file is folder path\n"));
 }
-
+struct HDFDCB_Data
+{
+    int argc;
+    TCHAR **argv;
+    BinaryFind &bf;
+};
+static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
+{
+    if (!fd.fileMatched)
+        return 0;
+    int argc(pUserParam->argc);
+    TCHAR **argv(pUserParam->argv);
+    BinaryFind &bf(pUserParam->bf);
+    FILE *fp = NULL;
+    _tfopen_s(&fp, fd.fullPath.c_str(), _T("rb"));
+    if (fp != NULL)
+    {
+        bf.SetFindBuffer();
+        _tprintf(_T("%s\n"), fd.fullPath.c_str());
+        Progress prog;
+        const TCHAR *argStr = FindArgValue(argc, argv, _T("-o="));
+        if (argStr != NULL) {
+            long long offset(getLLfromStr(argStr));
+            _fseeki64(fp, offset, offset >= 0 ? SEEK_SET : SEEK_END);
+        }
+        long long fileOffset(_ftelli64(fp));
+        long long sizeToRead(fd.GetFileSize());
+        const long long fileSize(sizeToRead);
+        argStr = FindArgValue(argc, argv, _T("-s="));
+        if (argStr != NULL) {
+            long long szRead = getLLfromStr(argStr);
+            if (fileOffset + szRead > sizeToRead)
+                sizeToRead = sizeToRead - fileOffset;
+            else
+                sizeToRead = szRead;
+        }
+        prog.SetTask(sizeToRead);
+        VecChar buffer;
+        buffer.resize(4 * 1024 * 1024);
+        while (sizeToRead > 0)
+        {
+            size_t cRead = buffer.size();
+            if (sizeToRead > 0) {
+                if ((long long)cRead > sizeToRead)
+                    cRead = sizeToRead;
+            }
+            cRead = fread_s(&buffer[0], buffer.size(), sizeof(char), cRead, fp);
+            if (cRead <= 0)
+                break;
+            sizeToRead -= cRead;
+            if (bf.HasFindPattern()) {
+                bf.SetFindBuffer(&buffer[0], cRead);
+                while (true)
+                {
+                    long long findPos = bf.FindNext();
+                    if (findPos >= 0)
+                        _tprintf(_T("%08llX=-%08llX\n"), fileOffset + findPos, fileSize - (fileOffset + findPos));
+                    else break;
+                }
+            }
+            else
+                fileOffset = HexDump(&buffer[0], cRead, fileOffset);
+            if (prog.UpdateProgress(prog.GetCurrentDone() + cRead))
+                _tprintf(_T("\r%02.02f%%\r"), prog.GetCurrentPercentageDone());
+        }
+        _tprintf(_T("\r            \r"));
+        fclose(fp);
+    }
+    return 0;
+}
 int _tmain(int argc, _TCHAR* argv[])
 {
     int retVal(0);
@@ -154,6 +224,8 @@ int _tmain(int argc, _TCHAR* argv[])
     }
     else
     {
+        for (int i = 1; i < argc; ++i)
+            _tprintf(_T("%s\n"), argv[i]);
         BinaryFind bf;
         {
             VecChar findBuffer;
@@ -162,58 +234,19 @@ int _tmain(int argc, _TCHAR* argv[])
                 bf.SetFindPattern(&findBuffer[0], findBuffer.size());
         }
         const TCHAR *fileOrString(argv[arg]);
-        FILE *fp = NULL;
-        _tfopen_s(&fp, fileOrString, _T("rb"));
-        if (fp != NULL)
-        {
-            Progress prog;
-            const TCHAR *argStr = FindArgValue(argc, argv, _T("-o="));
-            if (argStr != NULL) {
-                long long offset(getLLfromStr(argStr));
-                _fseeki64(fp, offset, offset >= 0 ? SEEK_SET : SEEK_END);
+        if (Path(fileOrString).Exists()) {
+            Path filePath(fileOrString);
+            HDFDCB_Data cbData = { argc, argv, bf };
+            if (filePath.IsDir()) {
+                Finder f((FindCallBack)HEXDump_FindCallBack, &cbData,
+                    FindArgValue(argc, argv, _T("-mp=")),
+                    FindArgValue(argc, argv, _T("-ep=")));
+                f.StartFind(fileOrString);
             }
-            long long fileOffset(_ftelli64(fp));
-            long long sizeToRead(Path(fileOrString).GetSize());
-            const long long fileSize(sizeToRead);
-            argStr = FindArgValue(argc, argv, _T("-s="));
-            if (argStr != NULL) {
-                long long szRead = getLLfromStr(argStr);
-                if (fileOffset + szRead > sizeToRead)
-                    sizeToRead = sizeToRead - fileOffset;
-                else
-                    sizeToRead = szRead;
+            else {
+                FindData fd(NULL, filePath, true);
+                HEXDump_FindCallBack(fd, &cbData);
             }
-            prog.SetTask(sizeToRead);
-            VecChar buffer;
-            buffer.resize(4 * 1024 * 1024);
-            while (sizeToRead > 0)
-            {
-                size_t cRead = buffer.size();
-                if (sizeToRead > 0) {
-                    if ((long long)cRead > sizeToRead)
-                        cRead = sizeToRead;
-                }
-                cRead = fread_s(&buffer[0], buffer.size(), sizeof(char), cRead, fp);
-                if (cRead <= 0)
-                    break;
-                sizeToRead -= cRead;
-                if (bf.HasFindPattern()) {
-                    bf.SetFindBuffer(&buffer[0], cRead);
-                    while (true)
-                    {
-                        long long findPos = bf.FindNext();
-                        if (findPos >= 0)
-                            _tprintf(_T("%08llX=-%08llX\n"), fileOffset + findPos, fileSize - (fileOffset + findPos));
-                        else break;
-                    }
-                }
-                else
-                    fileOffset = HexDump(&buffer[0], cRead, fileOffset);
-                if (prog.UpdateProgress(prog.GetCurrentDone() + cRead))
-                    _tprintf(_T("\r%02.02f%%\r"), prog.GetCurrentPercentageDone());
-            }
-            _tprintf(_T("\r            \r"));
-            fclose(fp);
         }
         else
         {
