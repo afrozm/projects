@@ -104,9 +104,9 @@ UINT64 CFileMapping::GetFileSize() const
 		GetFileSizeEx(m_hFile, &li);
 		fileSize = li.QuadPart;
 		if (fileSize == 0 && mFilePath.size() > 4) {
-			ULARGE_INTEGER li = {0};
-			GetDiskFreeSpaceEx(mFilePath.c_str()+4, NULL, &li, NULL);
-			fileSize = li.QuadPart;
+			ULARGE_INTEGER uli = {0};
+			GetDiskFreeSpaceEx(mFilePath.c_str()+4, NULL, &uli, NULL);
+			fileSize = uli.QuadPart;
 		}
 	}
 	return fileSize;

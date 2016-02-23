@@ -51,9 +51,9 @@ public:
     void SetFindBuffer(const BinaryData &inFindBuffer);
     size_t GetCurrentBufferIndex() const; // get position index to find pattern
     void SetCurrentBufferIndex(size_t currentIndex); // set start position to start find pattern
+    size_t GetTotalBufferSize() const { return mCurrentBufferSize; }
 private:
     unsigned char GetAt(size_t index);
-    size_t GetTotalBufferSize() const { return mCurrentBufferSize; }
     void ComputeKMPTable();
     BinaryData mFindPattern;
     std::vector<int> mVecKMPTable;

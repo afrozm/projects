@@ -4,8 +4,8 @@
 #include "stdafx.h"
 #include "Progress.h"
 #include "Path.h"
-#include "JpegFinder.h"
 #include "FileMapping.h"
+#include "RecoverManager.h"
 
 COORD GetConsolePos(void)
 {
@@ -19,7 +19,7 @@ void SetConsolePos(COORD newPos)
 {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), newPos);
 }
-void MoveConsoleCursor(int x, int y)
+void MoveConsoleCursor(SHORT x, SHORT y)
 {
 	COORD cp = GetConsolePos();
 	cp.X += x;
@@ -129,7 +129,7 @@ struct ConsoleProgress {
 	}
 };
 #define TIMER_SIZE 7
-const TCHAR *timeNames[] = {
+static const TCHAR *sktimeNames[] = {
 	_T("year"),
 	_T("month"),
 	_T("day"),
@@ -138,7 +138,7 @@ const TCHAR *timeNames[] = {
 	_T("second"),
 	_T("millisecond"),
 };
-const __int64 timeDuration[] = {
+static const __int64 skTimeDuration[] = {
 	1000LL*60LL*60LL*24LL*365LL,
 	1000*60*60*24*30UL,
 	1000*60*60*24,
@@ -152,8 +152,8 @@ struct STime {
 	STime(__int64 milliSecs)
 	{
 		for (int i = 0; i < TIMER_SIZE; i++) {
-			times[i] = milliSecs / timeDuration[i];
-			milliSecs %= timeDuration[i];
+			times[i] = milliSecs / skTimeDuration[i];
+			milliSecs %= skTimeDuration[i];
 		}
 	}
 };
@@ -191,11 +191,11 @@ public:
 			if (sTime.times[i])
 				break;
 		}
-		int len = _sntprintf_s(str, size, size, _T("%d %s%s"), (int)sTime.times[i], timeNames[i],
+		int len = _sntprintf_s(str, size, size, _T("%d %s%s"), (int)sTime.times[i], sktimeNames[i],
 			(int)sTime.times[i] > 1 ? _T("s") : _T(""));
 		i++;
 		if (i < TIMER_SIZE -1 && sTime.times[i] > 0) {
-			len = _sntprintf_s(str+len, size-len, size-len, _T(" %d %s%s"), (int)sTime.times[i], timeNames[i],
+			len = _sntprintf_s(str+len, size-len, size-len, _T(" %d %s%s"), (int)sTime.times[i], sktimeNames[i],
 			(int)sTime.times[i] > 1 ? _T("s") : _T(""));
 		}
 	}
@@ -255,7 +255,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		LARGE_INTEGER fileSize = {0};
 		GetFileSizeEx(hFile, &fileSize);
 		totalSize = fileSize.QuadPart;
-		if (totalSize == 0) {
+		if (totalSize == 0) { // Disk Path
 			ULARGE_INTEGER li = {0};
 			GetDiskFreeSpaceEx(argv[1]+4, NULL, &li, NULL);
 			totalSize = li.QuadPart;
@@ -270,15 +270,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		lprintf(_T("\t\t\t\tTime Remaining: "));
 		CountTimer timeRemaining(true);
 		if (dstPath.IsDir()) {
-			CJpegFinder jpgFinder;
-			jpgFinder.SetSavePath(dstPath.c_str());
-			while (currentDone < totalSize) {
-				unsigned char buf[4096];
-				DWORD nBytesRead(0);
-				ReadFile(hFile, buf, 4096, &nBytesRead, NULL);
-				if (nBytesRead > 0) {
-					jpgFinder.ParseBuffer(buf, nBytesRead);
-					currentDone += nBytesRead;
+            CRecoverManager recoverManger;
+            recoverManger.SetInputFileHandle(hFile);
+            recoverManger.SetSavePath(dstPath);
+            recoverManger.SetTotal(totalSize);
+            recoverManger.Initialize();
+            recoverManger.BeginRecover();
+			while (recoverManger.ProcessRecover()) {
+                currentDone = recoverManger.GetCurrentDone();
 					if (progress.UpdateProgress(currentDone))
 						cp.ShowPercentage(progress.GetCurrentPercentageDone());
 					DWORD curTime = GetTickCount();
@@ -288,9 +287,8 @@ int _tmain(int argc, _TCHAR* argv[])
 					}
 					timeElapsed.PrintTimeDuration();
 					timeRemaining.PrintTimeDuration();
-				}
-				else break;
 			}
+            recoverManger.EndRecover();
 		}
 		else {
 			CFileMapping fileDstMap;
@@ -303,10 +301,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			if (fileDstMap.GetFileMapping(argv[2], totalSize) != NULL) {
 				std::vector<char> buffer;
 				buffer.resize(1024*1024);
-				const unsigned int size = buffer.size();
+				size_t size = buffer.size();
 				char *buf = &buffer[0];
 				while (currentDone < totalSize) {
-					DWORD nBytesRead(fileSrcMap.Read(buf, size));
+					DWORD nBytesRead(fileSrcMap.Read(buf, (UINT)size));
 					if (nBytesRead > 0) {
 						fileDstMap.Write(buf, nBytesRead);
 						currentDone += nBytesRead;
