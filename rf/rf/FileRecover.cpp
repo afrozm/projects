@@ -115,11 +115,11 @@ bool CFileRecoverSE::ParseBuffer(BinaryData &inData)
         }
         else
             findPos = inData.Size();
-        mFileSaver.Write(inData, findPos);
+        mFileSaver.Write(inData, (size_t)findPos);
         break;
     case ReadTillEndOffset:
     {
-        BinaryData remainigData(inData.GetDataRef(findPos, m_iCurrentEndOffset));
+        BinaryData remainigData(inData.GetDataRef((size_t)findPos, m_iCurrentEndOffset));
         findPos += remainigData.Size();
         m_iCurrentEndOffset -= (int)remainigData.Size();
         mFileSaver.Write(remainigData, remainigData.Size());
@@ -131,7 +131,7 @@ bool CFileRecoverSE::ParseBuffer(BinaryData &inData)
         break;
     }
     if (findPos > 0)
-        inData = inData.GetDataRef(findPos);
+        inData = inData.GetDataRef((size_t)findPos);
     return mFindState != FindStart;
 }
 

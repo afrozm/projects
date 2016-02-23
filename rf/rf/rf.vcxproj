@@ -156,11 +156,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\BinaryFind.h" />
+    <ClInclude Include="..\..\Common\CountTimer.h" />
     <ClInclude Include="..\..\Common\DataReader.h" />
     <ClInclude Include="..\..\Common\FileMapping.h" />
     <ClInclude Include="..\..\Common\Path.h" />
     <ClInclude Include="..\..\Common\Progress.h" />
     <ClInclude Include="..\..\Common\Property.h" />
+    <ClInclude Include="..\..\Common\StdConsole.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\TextReader.h" />
     <ClInclude Include="FileRecover.h" />
@@ -173,11 +175,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\BinaryFind.cpp" />
+    <ClCompile Include="..\..\Common\CountTimer.cpp" />
     <ClCompile Include="..\..\Common\DataReader.cpp" />
     <ClCompile Include="..\..\Common\FileMapping.cpp" />
     <ClCompile Include="..\..\Common\Path.cpp" />
     <ClCompile Include="..\..\Common\Progress.cpp" />
     <ClCompile Include="..\..\Common\Property.cpp" />
+    <ClCompile Include="..\..\Common\StdConsole.cpp" />
     <ClCompile Include="..\..\Common\StringUtils.cpp" />
     <ClCompile Include="..\..\Common\TextReader.cpp" />
     <ClCompile Include="FileRecover.cpp" />

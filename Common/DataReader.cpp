@@ -25,7 +25,7 @@ size_t BinaryDataReader::Read(void *pBuffer, size_t bufferSize, size_t bytesToRe
         bytesToRead = bufferSize;
     const void *pSrcBuffer(*m_pData);
     if (bytesToRead + m_uCurPos > (size_t)GetSize())
-        bytesToRead = GetSize() - m_uCurPos;
+        bytesToRead = (size_t)GetSize() - m_uCurPos;
     if (bytesToRead > 0)
         memcpy_s(pBuffer, bufferSize, pSrcBuffer, bytesToRead);
     m_uCurPos += bytesToRead;
@@ -37,19 +37,19 @@ long long BinaryDataReader::SetPointer(long long offset /* = 0 */, int seekType 
     switch (seekType)
     {
     case SEEK_SET:
-        m_uCurPos = offset;
+        m_uCurPos = (size_t)offset;
         break;
     case SEEK_CUR:
-        m_uCurPos += offset;
+        m_uCurPos += (size_t)offset;
         break;
     case SEEK_END:
-        m_uCurPos = GetSize() - m_uCurPos;
+        m_uCurPos = (size_t)GetSize() - m_uCurPos;
         break;
     default:
         break;
     }
     if (m_uCurPos > (size_t)GetSize())
-        m_uCurPos = GetSize();
+        m_uCurPos = (size_t)GetSize();
     return GetPointer();
 }
 

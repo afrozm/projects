@@ -6,228 +6,7 @@
 #include "Path.h"
 #include "FileMapping.h"
 #include "RecoverManager.h"
-
-COORD GetConsolePos(void)
-{
-	CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
-		&csbiInfo);
-	return csbiInfo.dwCursorPosition;
-}
-
-void SetConsolePos(COORD newPos)
-{
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), newPos);
-}
-void MoveConsoleCursor(SHORT x, SHORT y)
-{
-	COORD cp = GetConsolePos();
-	cp.X += x;
-	cp.Y += y;
-	SetConsolePos(cp);
-}
-class AutoConsolePos {
-	COORD mCurPos;
-public:
-	AutoConsolePos(PCOORD setPos = NULL)
-	{
-		mCurPos = GetConsolePos();
-		if (setPos)
-			SetConsolePos(*setPos);
-	}
-	~AutoConsolePos()
-	{
-		SetConsolePos(mCurPos);
-	}
-};
-class ConsolePrinter
-{
-	COORD printPos;
-	TCHAR mStr[256];
-	int strLen;
-/*	void AllocateSpaceForStr(int newLen)
-	{
-		if (newLen > strLen) {
-			if (mStr)
-				delete[] mStr;
-			mStr = new TCHAR[newLen+1];
-			mStr[0] = 0;
-			strLen = newLen+1;
-		}
-		else if (newLen <= 0 && mStr) {
-			delete[] mStr;
-			mStr = NULL;
-			strLen = 0;
-		}
-	}*/
-	void CopyStr(const TCHAR *str)
-	{
-	//	AllocateSpaceForStr(lstrlen(str));
-		lstrcpy(mStr, str);
-	}
-public:
-	ConsolePrinter()
-	{
-		printPos = GetConsolePos();
-		mStr[0] = 0;
-		strLen = 0;
-	}
-	void Print(const TCHAR *str)
-	{
-		if (lstrcmp(mStr, str)) {
-			Erase();
-			CopyStr(str);
-			AutoConsolePos acp(&printPos);
-			lprintf(mStr);
-		}
-	}
-	void Erase()
-	{
-		int len = lstrlen(mStr);
-		AutoConsolePos acp(&printPos);
-		while (len-- > 0) {
-			lprintf(_T(" "));
-		}
-	}
-	~ConsolePrinter(void)
-	{
-//		AllocateSpaceForStr(0); // Free space
-	}
-};
-
-struct ConsoleProgress {
-	COORD printPos;
-	COORD printDotPos;
-	double m_iPercentDone, m_dLastPercentage;
-	ConsoleProgress() {
-		lprintf(_T("\r\t\t\t\t\t"));
-		printPos = GetConsolePos();
-		printDotPos = printPos;
-		printDotPos.X = 0;
-		m_iPercentDone = 0;
-		m_dLastPercentage = 0;
-		lprintf(_T("\r"));
-	}
-	~ConsoleProgress() {
-	}
-	void ShowPercentage(double percentDone)
-	{
-		if (percentDone > 100)
-			percentDone = 100;
-		/*if (m_iPercentDone < percentDone)*/ {
-			m_iPercentDone = percentDone;
-			AutoConsolePos acp;
-			if (m_iPercentDone - m_dLastPercentage > 5) {
-				m_dLastPercentage = m_iPercentDone;
-				SetConsolePos(printDotPos);
-				lprintf(_T("."));
-				printDotPos.X++;
-			}
-			SetConsolePos(printPos);
-			lprintf(_T(" %02.02f%% "), percentDone);
-		}
-	}
-};
-#define TIMER_SIZE 7
-static const TCHAR *sktimeNames[] = {
-	_T("year"),
-	_T("month"),
-	_T("day"),
-	_T("hour"),
-	_T("minute"),
-	_T("second"),
-	_T("millisecond"),
-};
-static const __int64 skTimeDuration[] = {
-	1000LL*60LL*60LL*24LL*365LL,
-	1000*60*60*24*30UL,
-	1000*60*60*24,
-	1000*60*60,
-	1000*60,
-	1000,
-	1
-};
-struct STime {
-	__int64 times[TIMER_SIZE]; // index 0 - timeNames[0], 1 timeNames[1]
-	STime(__int64 milliSecs)
-	{
-		for (int i = 0; i < TIMER_SIZE; i++) {
-			times[i] = milliSecs / skTimeDuration[i];
-			milliSecs %= skTimeDuration[i];
-		}
-	}
-};
-class CountTimer {
-	DWORD mLastTime;
-	DWORD mCurTime;
-	__int64 mTimeDuration;
-	DWORD mTimerUpdateDuration;
-	bool m_bCountDownWards;
-	ConsolePrinter m_CP;
-public:
-	CountTimer(bool bCountDownWards = false, DWORD timerUpdateDuration = 1000)
-	{
-		m_bCountDownWards = bCountDownWards;
-		mLastTime = GetTickCount();
-		mTimeDuration = 0;
-		mTimerUpdateDuration = timerUpdateDuration;
-	}
-	void SetTimeDuration(__int64 timeDuration)
-	{
-		m_bCountDownWards = true; // its a count down timer
-		mTimeDuration = timeDuration;
-	}
-	__int64 GetTimeDuration(void)
-	{
-		UpdateTimeDuration();
-		return mTimeDuration;
-	}
-
-	void GetString(TCHAR *str, int size)
-	{
-		STime sTime(mTimeDuration);
-		int i;
-		for (i = 0; i < TIMER_SIZE -2; i++) {
-			if (sTime.times[i])
-				break;
-		}
-		int len = _sntprintf_s(str, size, size, _T("%d %s%s"), (int)sTime.times[i], sktimeNames[i],
-			(int)sTime.times[i] > 1 ? _T("s") : _T(""));
-		i++;
-		if (i < TIMER_SIZE -1 && sTime.times[i] > 0) {
-			len = _sntprintf_s(str+len, size-len, size-len, _T(" %d %s%s"), (int)sTime.times[i], sktimeNames[i],
-			(int)sTime.times[i] > 1 ? _T("s") : _T(""));
-		}
-	}
-	bool UpdateTimeDuration()
-	{
-		DWORD curTime = GetTickCount();
-		if (curTime - mCurTime > mTimerUpdateDuration) {
-			DWORD interval = curTime - mLastTime;
-			if (m_bCountDownWards) {
-				mTimeDuration -= interval;
-				if (mTimeDuration < 0)
-					mTimeDuration = 0;
-				mLastTime = curTime;
-			}
-			else {
-				mTimeDuration = interval;
-			}
-			mCurTime = curTime;
-			return true;
-		}
-		return false;
-	}
-	void PrintTimeDuration()
-	{
-		if (UpdateTimeDuration()) {
-			TCHAR str[32];
-			GetString(str, 32);
-			m_CP.Print(str);
-		}
-	}
-};
-
+#include "CountTimer.h"
 
 void printf_Buffer(const unsigned char *pBuffer, int len)
 {
@@ -278,18 +57,22 @@ int _tmain(int argc, _TCHAR* argv[])
             recoverManger.BeginRecover();
 			while (recoverManger.ProcessRecover()) {
                 currentDone = recoverManger.GetCurrentDone();
-					if (progress.UpdateProgress(currentDone))
-						cp.ShowPercentage(progress.GetCurrentPercentageDone());
-					DWORD curTime = GetTickCount();
-					if (curTime - updateWSTime >= 5000) { // 5 secs passed
-						timeRemaining.SetTimeDuration((timeElapsed.GetTimeDuration() * totalSize) / currentDone);
-						updateWSTime = curTime;
-					}
-					timeElapsed.PrintTimeDuration();
-					timeRemaining.PrintTimeDuration();
+				if (progress.UpdateProgress(currentDone))
+					cp.ShowPercentage(progress.GetCurrentPercentageDone());
+				DWORD curTime = GetTickCount();
+				if (curTime - updateWSTime >= 5000) { // 5 secs passed
+					timeRemaining.SetTimeDuration((timeElapsed.GetTimeDuration() * totalSize) / currentDone);
+					updateWSTime = curTime;
+				}
+				timeElapsed.PrintTimeDuration();
+				timeRemaining.PrintTimeDuration();
 			}
+            if (progress.UpdateProgress(currentDone))
+                cp.ShowPercentage(progress.GetCurrentPercentageDone());
             recoverManger.EndRecover();
-		}
+            progress.UpdateProgress(totalSize);
+            cp.ShowPercentage(progress.GetCurrentPercentageDone());
+        }
 		else {
 			CFileMapping fileDstMap;
 			CFileMapping fileSrcMap;
