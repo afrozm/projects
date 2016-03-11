@@ -84,6 +84,12 @@
     <ClInclude Include="..\..\Common\StdConsole.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\ProcessUtil.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="DocFileRecover.h">
+      <Filter>Header Files\Recover</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -133,6 +139,12 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\StdConsole.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ProcessUtil.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="DocFileRecover.cpp">
+      <Filter>Source Files\Recover</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

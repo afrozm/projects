@@ -4,7 +4,7 @@
 
 
 BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
-    : m_pBuffer(pBuffer), mSize(bufLen)
+    : m_pBuffer(pBuffer), mBufferSize(bufLen), mDataSize(bufLen)
 {
     SetData(pBuffer, bufLen, bStore);
 }
@@ -12,23 +12,29 @@ BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
 void BinaryData::SetData(const void *pBuffer /*= NULL*/, size_t bufLen /*= 0*/, bool bStore /*= true*/)
 {
     mBuffer.clear();
-    mSize = bufLen;
+    mBufferSize = bufLen;
+    mDataSize = 0;
+    bool bSetDataSize(true);
     if (!bStore) {
         m_pBuffer = pBuffer;
-        if (mSize <= 0)
+        if (mBufferSize <= 0)
             m_pBuffer = NULL;
         if (m_pBuffer == NULL)
-            mSize = 0;
+            mBufferSize = 0;
     }
     else
     {
         m_pBuffer = NULL;
-        if (mSize > 0) {
-            mBuffer.resize(mSize);
+        if (mBufferSize > 0) {
+            mBuffer.resize(mBufferSize);
             if (pBuffer != NULL)
                 memcpy_s(&mBuffer[0], mBuffer.size(), pBuffer, bufLen);
+            else
+                bSetDataSize = false;
         }
     }
+    if (bSetDataSize)
+        mDataSize = Size();
 }
 
 BinaryData::~BinaryData()
@@ -50,7 +56,12 @@ BinaryData::operator void*() const
 
 size_t BinaryData::Size() const
 {
-    return mSize;
+    return mBufferSize;
+}
+
+size_t BinaryData::DataSize() const
+{
+    return mDataSize;
 }
 
 bool BinaryData::operator<(const BinaryData & inData) const
@@ -60,21 +71,21 @@ bool BinaryData::operator<(const BinaryData & inData) const
 
 int BinaryData::Compare(const BinaryData & inData) const
 {
-    int diff((int)Size() - (int)inData.Size());
-    if (!diff && Size() > 0)
-        diff = memcmp((const void *)*this, (const void *)inData, Size());
+    int diff((int)DataSize() - (int)inData.DataSize());
+    if (!diff && DataSize() > 0)
+        diff = memcmp((const void *)*this, (const void *)inData, DataSize());
     return diff;
 }
 
 unsigned char BinaryData::operator[](size_t index) const
 {
     unsigned char ch = 0;
-    if (index < Size())
+    if (index < DataSize())
         ch = ((const unsigned char *)((const void *)*this))[index];
     return ch;
 }
 
-const void* BinaryData::operator+(size_t inOffset)
+const void* BinaryData::operator+(size_t inOffset) const
 {
     if (inOffset < Size())
         return (const unsigned char *)((const void *)*this) + inOffset;
@@ -84,12 +95,14 @@ const void* BinaryData::operator+(size_t inOffset)
 size_t BinaryData::BuildFromString(const TCHAR * pStr, bool asString)
 {
     SetData();
-    mSize = BinaryDataUtil::StrToBuffer(pStr, mBuffer, asString);
-    return Size();
+    mBufferSize = BinaryDataUtil::StrToBuffer(pStr, mBuffer, asString);
+    mDataSize = mBufferSize;
+    return DataSize();
 }
 
 size_t BinaryData::ReadFromFile(FILE *pFile, size_t nBytesRead /* = 0 */, long long fileOffset /* = -1 */)
 {
+    mDataSize = 0;
     if (pFile == NULL)
         return 0;
     if (nBytesRead <= 0 || nBytesRead > Size())
@@ -99,11 +112,13 @@ size_t BinaryData::ReadFromFile(FILE *pFile, size_t nBytesRead /* = 0 */, long l
     if (fileOffset >= 0)
         _fseeki64(pFile, fileOffset, SEEK_SET);
     nBytesRead = fread_s(*this, Size(), 1, nBytesRead, pFile);
+    mDataSize = nBytesRead;
     return nBytesRead;
 }
 
 size_t BinaryData::ReadFromFile(HANDLE hFile, size_t nBytesRead, long long fileOffset)
 {
+    mDataSize = 0;
     if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
         return 0;
     if (nBytesRead <= 0 || nBytesRead > Size())
@@ -118,6 +133,7 @@ size_t BinaryData::ReadFromFile(HANDLE hFile, size_t nBytesRead, long long fileO
     DWORD dwRead(0);
     ReadFile(hFile, *this, (DWORD)Size(), &dwRead, NULL);
     nBytesRead = dwRead;
+    mDataSize = nBytesRead;
     return nBytesRead;
 }
 
@@ -146,6 +162,30 @@ BinaryData BinaryData::GetDataRef(size_t offset, size_t inSize)
     if (offset + inSize > Size())
         inSize = Size() - offset;
     return BinaryData(*this + offset, inSize, false);
+}
+
+size_t BinaryData::Append(const BinaryData &inData)
+{
+    if (inData.DataSize() == 0)
+        return 0;
+
+    if (m_pBuffer != NULL)
+        SetData(m_pBuffer, DataSize());
+    if (Size() - DataSize() < inData.DataSize()) {
+        mBuffer.resize(Size() + inData.DataSize(), 0);
+        mBufferSize = mBuffer.size();
+    }
+    memcpy_s((void *)(*this + DataSize()), Size() - DataSize(), inData, inData.DataSize());
+    mDataSize += inData.DataSize();
+
+    return DataSize();
+}
+
+void BinaryData::Clear()
+{
+    if (m_pBuffer != NULL)
+        m_pBuffer = NULL;
+    mDataSize = 0;
 }
 
 ////////////////////////////// BinaryFind //////////////////////////////

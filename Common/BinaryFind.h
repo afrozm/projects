@@ -17,10 +17,11 @@ public:
     operator const void*() const;
     operator void*() const;
     size_t Size() const;
+    size_t DataSize() const;
     bool operator < (const BinaryData &inData) const;
     int Compare(const BinaryData &inData) const;
     unsigned char operator[](size_t index) const;
-    const void* operator + (size_t inOffset);
+    const void* operator + (size_t inOffset) const;
     size_t BuildFromString(const TCHAR *pStr, bool asString = false);
     size_t ReadFromFile(FILE *pFile, size_t nBytesToRead = 0, long long fileOffset = -1);
 #ifdef _WIN32
@@ -28,10 +29,12 @@ public:
     size_t ReadFromResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hModule = NULL);
 #endif // _WIN32
     BinaryData GetDataRef(size_t offset = 0, size_t inSize = -1);
+    size_t Append(const BinaryData &inData);
+    void Clear(); // Clears data, does not erase memory
 private:
     VecChar mBuffer;
     const void *m_pBuffer;
-    size_t mSize;
+    size_t mBufferSize, mDataSize;
 };
 
 

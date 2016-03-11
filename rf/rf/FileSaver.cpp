@@ -3,7 +3,7 @@
 #include "BinaryFind.h"
 
 CFileSaver::CFileSaver(void)
-	: mid(1), m_hFile(INVALID_HANDLE_VALUE)
+	: mid(1), m_hFile(INVALID_HANDLE_VALUE), m_sNewExt(NULL)
 {
 }
 
@@ -16,15 +16,27 @@ void CFileSaver::Close()
 {
 	if (m_hFile != INVALID_HANDLE_VALUE)
 		CloseHandle(m_hFile);
+    if (m_sNewExt != NULL && m_FilePath.Exists() && m_FilePath.CompareExtension(m_sNewExt)) {
+        Path newFileName(m_SavePath.GetUniqueFileName(mid, m_sNewExt, m_FilePath.FileNameWithoutExt().c_str()));
+        m_FilePath.Move(newFileName);
+    }
+    m_sNewExt = NULL;
 	m_hFile = INVALID_HANDLE_VALUE;
+    m_FilePath.clear();
 }
+
+void CFileSaver::SetExt(LPCTSTR newExt)
+{
+    m_sNewExt = newExt;
+}
+
 BOOL CFileSaver::OpenNew(LPCTSTR ext, LPCTSTR prefix)
 {
 	Close();
 
-	Path fileName(m_SavePath.GetUniqueFileName(mid, ext, prefix));
+    m_FilePath = m_SavePath.GetUniqueFileName(mid, ext, prefix);
 
-	m_hFile = CreateFile(fileName.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
+	m_hFile = CreateFile(m_FilePath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
 
 	return m_hFile != INVALID_HANDLE_VALUE;
 }

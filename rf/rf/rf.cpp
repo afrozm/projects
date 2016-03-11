@@ -7,6 +7,7 @@
 #include "FileMapping.h"
 #include "RecoverManager.h"
 #include "CountTimer.h"
+#include "ProcessUtil.h"
 
 void printf_Buffer(const unsigned char *pBuffer, int len)
 {
@@ -25,7 +26,7 @@ void printf_Buffer(const unsigned char *pBuffer, int len)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	if (argc < 3) {
-		_tprintf(_T("Usage: rf <source file/disk path> <desnitantion file/folder>\nFor disk use \\\\.\\H: as source path"));
+		_tprintf(_T("Usage: rf <source file/disk path> <desnitantion folder/file>\nFor disk use \\\\.\\H: as source path"));
 		return -1;
 	}
 	HANDLE hFile = CreateFile(argv[1], GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -112,7 +113,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		CloseHandle(hFile);
 	}
-	else _tprintf(_T("Cannot open file: '%s'\nError: %d"), argv[1], GetLastError());
+    else {
+        bool bError(true);
+        if (GetLastError() == ERROR_ACCESS_DENIED)
+            bError = !RunApplication(argc, (LPCTSTR*)argv, RAF_ADMIN);
+        if (bError)
+            _tprintf(_T("Cannot open file: '%s'\nError: %d"), argv[1], GetLastError());
+    }
 	return 0;
 }
 

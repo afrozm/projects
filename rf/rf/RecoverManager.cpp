@@ -69,7 +69,7 @@ bool CRecoverManager::ProcessRecover()
     BinaryData &dataRead((BinaryData &)GetDataRead());
     size_t readSize(m_pInputFile ? dataRead.ReadFromFile(m_pInputFile) : dataRead.ReadFromFile(m_hInputFile));
     BinaryData currentData(dataRead, readSize, false);
-    while (currentData.Size() > 0) {
+    while (currentData.DataSize() > 0) {
         if (m_pActiveRecover != NULL)
             if (!m_pActiveRecover->ParseBuffer(currentData))
                 m_pActiveRecover = NULL;
@@ -100,6 +100,43 @@ void CRecoverManager::EndRecover()
     mDataRead[0].SetData();
     mDataRead[1].SetData();
     mbCurrent = false;
+}
+
+BinaryData CRecoverManager::GetData(size_t offset /*= 0*/, size_t len /*= -1*/, const BinaryData *pCurrentData /*= NULL*/)
+{
+    BinaryData outData;
+    const BinaryData& currentData(GetDataRead());
+
+    if (pCurrentData != NULL) {
+        size_t currentOffset = currentData.DataSize() - pCurrentData->DataSize();
+        offset = currentOffset + offset;
+    }
+    pCurrentData = &currentData;
+    if ((int)offset < 0) {
+        pCurrentData = &GetDataRead(false);
+        offset += pCurrentData->DataSize();
+    }
+    if (offset < pCurrentData->DataSize()) {
+        if (offset + len > pCurrentData->DataSize())
+            len = pCurrentData->DataSize() - offset;
+        outData.SetData(*pCurrentData + offset, len, false);
+    }
+
+    return outData;
+}
+
+size_t CRecoverManager::GetData(BinaryData &outData, size_t offset /*= 0*/, size_t len /*= -1*/, const BinaryData *pCurrentData /*= NULL*/)
+{
+    size_t dataRead(0);
+    BinaryData data(GetData(offset, len, pCurrentData));
+    dataRead += data.DataSize();
+    outData.Append(data);
+    if ((int)len > 0 && dataRead < len) {
+        data = GetData(offset + dataRead, len - dataRead, pCurrentData);
+        dataRead += data.DataSize();
+        outData.Append(data);
+    }
+    return dataRead;
 }
 
 const BinaryData& CRecoverManager::GetDataRead(bool bCurrent /*= true*/)

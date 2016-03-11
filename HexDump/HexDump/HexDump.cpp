@@ -148,6 +148,7 @@ struct HDFDCB_Data
     int argc;
     TCHAR **argv;
     BinaryFind &bf;
+    int nFiles, nFound, nMaxMatchPerFile;
 };
 static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
 {
@@ -160,8 +161,11 @@ static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
     _tfopen_s(&fp, fd.fullPath.c_str(), _T("rb"));
     if (fp != NULL)
     {
+        int nMatches(0);
+
         bf.SetFindBuffer();
         _tprintf(_T("%s\n"), fd.fullPath.c_str());
+        pUserParam->nFiles++;
         Progress prog;
         const TCHAR *argStr = FindArgValue(argc, argv, _T("-o="));
         if (argStr != NULL) {
@@ -198,8 +202,10 @@ static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
                 while (true)
                 {
                     long long findPos = bf.FindNext();
-                    if (findPos >= 0)
+                    if (findPos >= 0) {
                         _tprintf(_T("%08llX=-%08llX\n"), fileOffset + findPos, fileSize - (fileOffset + findPos));
+                        ++nMatches;
+                    }
                     else break;
                 }
             }
@@ -210,6 +216,13 @@ static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
         }
         _tprintf(_T("\r            \r"));
         fclose(fp);
+        if (nMatches > 0) {
+            pUserParam->nFound++;
+            if (nMatches > pUserParam->nMaxMatchPerFile)
+                pUserParam->nMaxMatchPerFile = nMatches;
+            if (nMatches > 1)
+                _tprintf(_T("%d matches\n"), nMatches);
+        }
     }
     return 0;
 }
@@ -246,6 +259,13 @@ int _tmain(int argc, _TCHAR* argv[])
             else {
                 FindData fd(NULL, filePath, true);
                 HEXDump_FindCallBack(fd, &cbData);
+            }
+            if (cbData.nFiles > 1)
+                _tprintf(_T("Total files: %d\n"), cbData.nFiles);
+            if (cbData.nFound > 1) {
+                _tprintf(_T("Total files matching: %d\n"), cbData.nFound);
+                if (cbData.nMaxMatchPerFile > 1)
+                    _tprintf(_T("max matching in a file : %d\n"), cbData.nMaxMatchPerFile);
             }
         }
         else

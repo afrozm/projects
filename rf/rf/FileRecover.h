@@ -19,6 +19,7 @@ public:
     static void ReleaseFileRecover(CFileRecover *&pFileRecover);
     const BinaryData& GetStartPattern();
     void SetRecoverManager(CRecoverManager *pRecoverManager);
+    CRecoverManager* GetRecoverManager() const;
 protected:
     virtual bool SetupData();
     BinaryData mStartPattern;
@@ -60,16 +61,24 @@ protected:
 /// CFileRecoverSS
 // Start and size pattern based recover
 // covers: avi, mp4, mov
-class CFileRecoverSS : public CFileRecover
+class CFileRecoverMov : public CFileRecover
 {
 public:
-    CFileRecoverSS();
+    CFileRecoverMov();
     virtual bool ParseBuffer(BinaryData &inData) override;
     virtual void ResetState() override;
 
 protected:
     virtual bool SetupData() override;
+    size_t ReadSectionSize(const BinaryData *pCurrentData);
 
+    enum State {
+        FindStart,
+        SectionSize,
+        Save
+    } mFindState;
 
     unsigned long long m_ullSectionSize;
+    bool mbIsAVI;
+    BinaryData mSectionData;
 };

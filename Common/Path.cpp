@@ -113,6 +113,18 @@ int Path::Compare(const Path &p) const
 	Path p2(p.MakeFullPath());
 	return lstrcmpi(p1.c_str(), p2.c_str());
 }
+int Path::CompareExtension(LPCTSTR extn) const
+{
+    if (extn == NULL)
+        return -1;
+    Path thisExtn(GetExtension());
+    LPCTSTR thisExtnStr(thisExtn.c_str());
+    if (*thisExtnStr == '.')
+        ++thisExtnStr;
+    if (*extn == '.')
+        ++extn;
+    return lstrcmpi(thisExtnStr, extn);
+}
 Path Path::GetRoot() const
 {
 	TCHAR root[MAX_PATH];
@@ -456,6 +468,11 @@ ULONGLONG Path::GetFileTime(FileTimeType fileType) const
 	outFileTime <<= 32;
 	outFileTime |= fileTime[fileType].dwLowDateTime;
 	return outFileTime;
+}
+
+bool Path::Move(const Path & inNewLocation) const
+{
+    return MoveFileEx(c_str(), inNewLocation.c_str(), MOVEFILE_COPY_ALLOWED) == TRUE;
 }
 
 lstring WildCardToRegExp(LPCTSTR wildCard)

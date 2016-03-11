@@ -18,9 +18,11 @@ public:
     void SetTotal(UINT64 total) { mTotal = total; }
     UINT64 GetCurrentDone() const { return mCurrentDone; }
     void EndRecover();
-    const BinaryData& GetDataRead(bool bCurrent = true);
     const lstring& GetSavePath() const { return mStrSavePath; }
+    BinaryData GetData(size_t offset = 0, size_t len = -1, const BinaryData *pCurrentData = NULL);
+    size_t GetData(BinaryData &outData, size_t offset = 0, size_t len = -1, const BinaryData *pCurrentData = NULL);
 private:
+    const BinaryData& GetDataRead(bool bCurrent = true);
     lstring mStrSavePath, mStrInputFile;
     typedef std::vector<CFileRecover*> VecFileRecover;
     CFileRecover *m_pActiveRecover;

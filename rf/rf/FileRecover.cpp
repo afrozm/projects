@@ -3,7 +3,7 @@
 #include <set>
 #include "RecoverManager.h"
 #include "JpgFileRecover.h"
-
+#include "DocFileRecover.h"
 //////////////////////////////////////////////////////////////////////////
 /// CFileRecover
 
@@ -24,8 +24,9 @@ bool CFileRecover::SetupData(const Property & inProp)
 #define DEFINE_FN_FRGET_OBJECT(cn) static CFileRecover* get##cn() {return new cn;}
 
 DEFINE_FN_FRGET_OBJECT(CFileRecoverSE)
-DEFINE_FN_FRGET_OBJECT(CFileRecoverSS)
+DEFINE_FN_FRGET_OBJECT(CFileRecoverMov)
 DEFINE_FN_FRGET_OBJECT(CJpgFileRecover)
+DEFINE_FN_FRGET_OBJECT(CDocFileRecover)
 
 CFileRecover* CFileRecover::GetFileRecover(const Property &inProp)
 {
@@ -36,9 +37,10 @@ CFileRecover* CFileRecover::GetFileRecover(const Property &inProp)
         mapStrFn[_T("png")] = getCFileRecoverSE;
         mapStrFn[_T("mp3")] = getCFileRecoverSE;
         mapStrFn[_T("mpg")] = getCFileRecoverSE;
-        mapStrFn[_T("avi")] = getCFileRecoverSS;
-        mapStrFn[_T("mp4")] = getCFileRecoverSS;
-        mapStrFn[_T("mov")] = getCFileRecoverSS;
+        mapStrFn[_T("avi")] = getCFileRecoverMov;
+        mapStrFn[_T("mp4")] = getCFileRecoverMov;
+        mapStrFn[_T("mov")] = getCFileRecoverMov;
+        mapStrFn[_T("docx")] = getCDocFileRecover;
     }
     CFileRecover *pFileRecover(NULL);
     lstring name = StringUtils::ToLower(inProp.GetValue(_T("name")));
@@ -70,11 +72,17 @@ void CFileRecover::SetRecoverManager(CRecoverManager *pRecoverManager)
         mFileSaver.SetSavePath(m_pRecoverManager->GetSavePath().c_str());
 }
 
+CRecoverManager* CFileRecover::GetRecoverManager() const
+{
+    return m_pRecoverManager;
+}
+
 bool CFileRecover::SetupData()
 {
     bool bSuccess(mStartPattern.BuildFromString(mPropData.GetValue(_T("start")).c_str()) > 3);
 
     mBinaryFind.SetFindPattern(mStartPattern);
+    ResetState();
 
     return bSuccess;
 }
@@ -140,7 +148,6 @@ bool CFileRecoverSE::SetupData()
     bool bSuccess = mEndPattern.BuildFromString(mPropData.GetValue(_T("end")).c_str()) > 0;
     m_iEndPatternSkipCount = (int)StringUtils::getLLfromStr(mPropData.GetValue(_T("skipStart")).c_str());
     m_iEndOffset = (int)StringUtils::getLLfromStr(mPropData.GetValue(_T("endOffset")).c_str());
-    ResetState();
     return bSuccess && __super::SetupData();
 }
 
@@ -156,24 +163,116 @@ void CFileRecoverSE::ResetState()
 
 //////////////////////////////////////////////////////////////////////////
 /// CFileRecoverSS
-CFileRecoverSS::CFileRecoverSS()
-    : m_ullSectionSize(0)
+
+#define MEDIA_SECTION_SIZE 8
+
+CFileRecoverMov::CFileRecoverMov()
+    : m_ullSectionSize(0), mbIsAVI(false), mSectionData(NULL, (size_t)MEDIA_SECTION_SIZE)
 {
 
 }
 
-bool CFileRecoverSS::ParseBuffer(BinaryData &inData)
+static bool isValidFOURCC(const BinaryData &inData, size_t offset = 0)
 {
-    UNREFERENCED_PARAMETER(inData);
-    return false;
+    size_t i = 0;
+    for (; i < 4; ++i) {
+        if (!isprint(inData[i + offset]))
+            break;
+    }
+    return i == 4;
 }
 
-bool CFileRecoverSS::SetupData()
+bool CFileRecoverMov::ParseBuffer(BinaryData &inData)
 {
-    return __super::SetupData();
+    mBinaryFind.SetFindBuffer(); // reset
+    mBinaryFind.SetFindBuffer(inData);
+    long long findPos(-1);
+    switch (mFindState)
+    {
+    case CFileRecoverMov::FindStart:
+    {
+        findPos = mBinaryFind.FindNext();
+        if (findPos < 0)
+            break;
+        if (!mbIsAVI) // for non-avi read size - 4 bytes before pattern matched
+            GetRecoverManager()->GetData(mSectionData, (size_t)findPos - 4, 4, &inData);
+        mFileSaver.OpenNew(mPropData.GetValue(_T("name")).c_str(), mPropData.GetValue(_T("fileNamePrefix")).c_str());
+        mFindState = SectionSize;
+        break;
+    }
+    case SectionSize:
+        findPos = ReadSectionSize(&inData);
+        if (mSectionData.DataSize() == MEDIA_SECTION_SIZE) {
+            if (m_ullSectionSize == 0)// Not valid section
+                ResetState();
+            else {
+                // Write section
+                mFileSaver.Write(mSectionData, mSectionData.DataSize());
+                if (!mbIsAVI && m_ullSectionSize != 1) // non-avi: size is includes section data
+                    m_ullSectionSize -= mSectionData.DataSize();
+                mSectionData.Clear();
+                if (m_ullSectionSize != 1)
+                    mFindState = Save;
+            }
+        }
+        break;
+    case Save:
+    {
+        size_t szWrite(m_ullSectionSize > inData.DataSize() ? inData.DataSize() : (size_t)m_ullSectionSize);
+        mFileSaver.Write(inData, szWrite);
+        m_ullSectionSize -= szWrite;
+        findPos = szWrite;
+        if (m_ullSectionSize == 0)
+            mFindState = SectionSize;
+    }
+        break;
+    }
+    if (findPos > 0)
+        inData = inData.GetDataRef((size_t)findPos);
+    return mFindState != FindStart;
 }
 
-void CFileRecoverSS::ResetState()
+void CFileRecoverMov::ResetState()
 {
+    mFileSaver.Close();
+    mFindState = FindStart;
+    m_ullSectionSize = 0;
+    mBinaryFind.SetFindBuffer();
+}
 
+bool CFileRecoverMov::SetupData()
+{
+    bool bSuccess(__super::SetupData());
+    BinaryData riff;
+    riff.BuildFromString(_T("RIFF"), true);
+    mbIsAVI = mStartPattern.Compare(riff) == 0;
+    mSectionData.SetData(NULL, MEDIA_SECTION_SIZE);
+    mBinaryFind.SetFindPattern(mStartPattern);
+    return bSuccess;
+}
+
+size_t CFileRecoverMov::ReadSectionSize(const BinaryData *pCurrentData)
+{
+    size_t szRead(0);
+    if (mSectionData.DataSize() < MEDIA_SECTION_SIZE) {
+        BinaryData data(GetRecoverManager()->GetData(0, MEDIA_SECTION_SIZE-mSectionData.DataSize(), pCurrentData));
+        szRead += data.DataSize();
+        mSectionData.Append(data);
+        if (mSectionData.DataSize() == MEDIA_SECTION_SIZE) {
+            if (m_ullSectionSize == 0) {
+                size_t offsets[2] = { 0,4 };
+                m_ullSectionSize = BinaryDataUtil::GetValueType<unsigned int>(mSectionData, offsets[mbIsAVI]);
+                if (mbIsAVI)
+                    m_ullSectionSize = BinaryDataUtil::ToggleEndian((unsigned int)m_ullSectionSize);
+                if (!isValidFOURCC(mSectionData, offsets[!mbIsAVI]))
+                    m_ullSectionSize = 0; // EOF
+            }
+            else {
+                m_ullSectionSize = BinaryDataUtil::GetValueType<unsigned long long>(mSectionData);
+                if (mbIsAVI)
+                    m_ullSectionSize = BinaryDataUtil::ToggleEndian((unsigned int)m_ullSectionSize);
+            }
+        }
+    }
+    return szRead;
 }

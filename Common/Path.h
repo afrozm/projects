@@ -21,6 +21,7 @@ public:
 	Path RenameExtension(LPCTSTR newExtn = NULL) const;
 	Path GetExtension() const;
 	int Compare(const Path &p) const;
+    int CompareExtension(LPCTSTR extn) const;
 	Path GetRoot() const;
 	static Path GetSpecialFolderPath(int inFolderID, bool inCreate = false);
     static Path GetModuleFilePath(HMODULE hModule = NULL);
@@ -45,6 +46,7 @@ public:
 		ModifiedTime
 	};
 	ULONGLONG GetFileTime(FileTimeType fileType = CreationTime) const;
+    bool Move(const Path &inNewLocation) const;
 };
 
 bool operator == (const Path& p1, const Path& p2);
