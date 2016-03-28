@@ -63,7 +63,7 @@ int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbF
 		}
 	}
 	else selectCore = "*";
-	int sqlrv = PrepareStmtEx(&statement, "SELECT %s FROM %s%s", selectCore.c_str(), tableName, conditions);
+	int sqlrv = PrepareStmtEx(&statement, "SELECT %s FROM %s %s", selectCore.c_str(), tableName, conditions);
 	if (SQLITE_OK != sqlrv) {
 		return sqlrv;
 	}
@@ -87,6 +87,18 @@ int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbF
 	}
 	sqlite3_finalize(statement);
 	return sqlrv;
+}
+int Database::IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itcbFn, void *pUserData, const SelectData *pData /* = NULL */, const char *conditions /* = NULL */, ...)
+{
+    va_list args;
+    if (conditions == NULL)
+        conditions = "";
+    va_start(args, conditions);
+    char *q = sqlite3_vmprintf(conditions, args);
+    int retVal = IterateTableRows(tableName, itcbFn, q, pUserData, pData);
+    sqlite3_free(q);
+    va_end(args);
+    return retVal;
 }
 /*
 int 
@@ -145,15 +157,38 @@ int Database::GetTableColTexts(const char *tableName, const char *conditions, RI
 */
 static int ItrTableRowsCallback_GetTableRowCount(sqlite3_stmt *statement, void *pUserData)
 {
-	++(*(int *)pUserData);
-	return 0;
+    ++(*(unsigned long long *)pUserData);
+    return 0;
+}
+static int ItrTableRowsCallback_GetTableRowCount2(sqlite3_stmt *statement, void *pUserData)
+{
+    (*(unsigned long long *)pUserData) = sqlite3_column_int64(statement, 0);
+    return 0;
 }
 
-int Database::GetTableRowCount(const char *tableName, const char *conditions, int &outCount)
+int Database::GetTableRowCount(const char *tableName, unsigned long long &outCount, const char *conditions /* = NULL */, ...)
 {
-	outCount = 0;
-	return IterateTableRows(tableName, ItrTableRowsCallback_GetTableRowCount,
-		conditions, &outCount);
+
+    va_list args;
+    if (conditions == NULL)
+        conditions = "";
+    int retVal(0);
+    if (*conditions) {
+        va_start(args, conditions);
+        char *q = sqlite3_vmprintf(conditions, args);
+        retVal = IterateTableRows(tableName, ItrTableRowsCallback_GetTableRowCount,
+            q, &outCount);
+        sqlite3_free(q);
+        va_end(args);
+    }
+    else {
+        SelectData sd;
+        char* col[] = { "COUNT(*)", NULL };
+        sd.columns = (const char **)col;
+        retVal = IterateTableRows(tableName, ItrTableRowsCallback_GetTableRowCount2,
+            conditions, &outCount, &sd);
+    }
+    return retVal;
 }
 
 /*! Undo the changes made in the databse. */

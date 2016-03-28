@@ -33,7 +33,7 @@ struct STime {
 CountTimer::CountTimer(bool bCountDownWards /* = false */, DWORD timerUpdateDuration /* = 1000 */)
 {
     m_bCountDownWards = bCountDownWards;
-    mLastTime = GetTickCount();
+    mCurTime = mLastTime = GetTickCount();
     mTimeDuration = 0;
     mTimerUpdateDuration = timerUpdateDuration;
 }

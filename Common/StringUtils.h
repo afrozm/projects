@@ -16,8 +16,11 @@ namespace StringUtils
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);
     long long getLLfromStr(const TCHAR *str);
+    lstring Format(const TCHAR *fmt, ...);
+    void Replace(lstring &inOutStr, const lstring &inFindStr, const lstring &inReplaceStr, size_t pos = 0);
 
     std::string UnicodeToUTF8(const wchar_t *unicodeString);
     std::wstring UTF8ToUnicode(const char *utf8String);
+    std::string UnicodeToUTF8(const std::wstring &unicodeString);
+    std::wstring UTF8ToUnicode(const std::string &utf8String);
 };
-

@@ -180,10 +180,10 @@ void FindDataBase::MakeSQLString(CString &inoutstring)
 //	SystemUtils::FindAndReplace(inoutstring, _T("%"), _T("%%"));
 }
 
-int FindDataBase::GetTableRowCount( const CString &tableName, LPCTSTR condition /*= NULL*/ )
+unsigned long long FindDataBase::GetTableRowCount( const CString &tableName, LPCTSTR condition /*= NULL*/ )
 {
 	std::string cCondition(SystemUtils::UnicodeToUTF8(condition));
-	int rowCount(0);
-	__super::GetTableRowCount(SystemUtils::UnicodeToUTF8(tableName).c_str(), cCondition.c_str(), rowCount);
+	unsigned long long rowCount(0);
+	__super::GetTableRowCount(SystemUtils::UnicodeToUTF8(tableName).c_str(), rowCount, cCondition.c_str());
 	return rowCount;
 }

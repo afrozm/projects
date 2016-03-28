@@ -54,7 +54,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
@@ -62,7 +62,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Database.lib;Unzip.lib;Version.lib;UxTheme.lib;Psapi.lib;Mpr.lib;Gdiplus.lib;adsiid.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -81,7 +81,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -92,7 +92,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Database.lib;Unzip.lib;Version.lib;UxTheme.lib;Psapi.lib;Mpr.lib;Gdiplus.lib;adsiid.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Database\$(Platform)\$(Configuration)\;$(ProjectDir)..\Unzip\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

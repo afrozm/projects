@@ -52,13 +52,26 @@ ConsolePrinter::ConsolePrinter()
     mStr[0] = 0;
     strLen = 0;
 }
-void ConsolePrinter::Print(const TCHAR *str)
+
+void ConsolePrinter::Print(const TCHAR *msg /* = NULL */, ...)
 {
-    if (str && lstrcmp(mStr, str)) {
+    lstring str;
+    {
+        if (msg != NULL && *msg != 0) {
+            va_list arg;
+            va_start(arg, msg);
+            int len = _vsctprintf(msg, arg) + 4 * sizeof(TCHAR); // _vscprintf doesn't count + 1; terminating '\0'
+            TCHAR *buf = new TCHAR[len];
+            _vstprintf_s(buf, len, msg, arg);
+            str = buf;
+            delete[] buf;
+        }
+    }
+    if (lstrcmp(mStr, str.c_str())) {
         Erase();
-        CopyStr(str);
+        CopyStr(str.c_str());
         AutoConsolePos acp(&printPos);
-        lprintf(mStr);
+        lprintf(_T("%s"), mStr);
     }
 }
 void ConsolePrinter::Erase()

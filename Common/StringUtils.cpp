@@ -74,6 +74,37 @@ long long StringUtils::getLLfromStr(const TCHAR *str)
     return retVal;
 }
 
+lstring StringUtils::Format(const TCHAR *msg, ...)
+{
+    if (msg == NULL || *msg == 0)
+        return _T("");
+    va_list arg;
+    va_start(arg, msg);
+    int len = _vsctprintf(msg, arg) + 4 * sizeof(TCHAR); // _vscprintf doesn't count + 1; terminating '\0'
+    TCHAR *buf = new TCHAR[len];
+    _vstprintf_s(buf, len, msg, arg);
+    lstring outStr(buf);
+    delete[] buf;
+    return outStr;
+}
+
+void StringUtils::Replace(lstring &inOutStr, const lstring &inFindStr, const lstring &inReplaceStr, size_t pos /* = 0 */)
+{
+    if (inFindStr == inReplaceStr)
+        return;
+    if (inFindStr.empty())
+        return;
+    size_t fl(inFindStr.length()), rl(inReplaceStr.length());
+    while (true)
+    {
+        pos = inOutStr.find(inFindStr, pos);
+        if (pos == lstring::npos)
+            break;
+        inOutStr.replace(pos, fl, inReplaceStr);
+        pos += rl;
+    }
+}
+
 std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
 {
     std::string sRet;
@@ -88,6 +119,12 @@ std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
     }
     return sRet;
 }
+
+std::wstring StringUtils::UTF8ToUnicode(const std::string &utf8String)
+{
+    return UTF8ToUnicode(utf8String.c_str());
+}
+
 std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
 {
     std::wstring		sRet;
@@ -106,4 +143,9 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
         }
     }
     return sRet;
+}
+
+std::string StringUtils::UnicodeToUTF8(const std::wstring & unicodeString)
+{
+    return UnicodeToUTF8(unicodeString.c_str());
 }

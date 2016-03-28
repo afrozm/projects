@@ -25,7 +25,7 @@ class ConsolePrinter
     void CopyStr(const TCHAR *str);
 public:
     ConsolePrinter();
-    void Print(const TCHAR *str);
+    void Print(const TCHAR *str = NULL, ...);
     void Erase();
     ~ConsolePrinter(void);
 };
