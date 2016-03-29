@@ -114,7 +114,7 @@ std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
         std::vector<char> vecChar(kMultiByteLength);
         if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
         {
-            sRet.assign(&vecChar[0], vecChar.size());
+            sRet.assign(&vecChar[0]);
         }
     }
     return sRet;
@@ -138,7 +138,7 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
             int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], (int)vecWide.size());
             if (kCopied)
             {
-                sRet.assign(&vecWide[0], vecWide.size());
+                sRet.assign(&vecWide[0]);
             }
         }
     }

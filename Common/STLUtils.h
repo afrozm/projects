@@ -55,6 +55,12 @@ namespace STLUtils {
 		StringStream interpreter;
 		return interpreter << inSource && interpreter >> outTarget;
 	}
+    template<typename Source>
+    bool ChangeType(const Source &inSource, std::string &outTarget)
+    {
+        std::stringstream interpreter;
+        return interpreter << inSource && interpreter >> outTarget;
+    }
     template<typename Source, typename Target>
     Target ChangeType(const Source &inSource)
     {
