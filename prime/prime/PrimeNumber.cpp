@@ -31,11 +31,26 @@ static unsigned CumulitiveSum(unsigned long long n)
     }
     return sum;
 }
+static std::size_t GetRecommendedAllocSize()
+{
+    const std::size_t oneGB(1024ULL * 1024ULL * 1024ULL); // 1GB
+    std::size_t allocSize(10ULL * oneGB); // 10 GB
+    MEMORYSTATUSEX statex;
 
+    statex.dwLength = sizeof(statex);
+
+    GlobalMemoryStatusEx(&statex);
+
+    std::size_t recomSize((statex.ullAvailPhys >> 4) & ~(oneGB - 1));
+    if (allocSize > recomSize)
+        allocSize = recomSize;
+
+    return allocSize;
+}
 void PrimeNumber::StartCompute()
 {
     if (mCachedPrime.size() == 0) {
-        mCachedPrime.resize(512 * 1024 * 1024 >> 3, 0);
+        mCachedPrime.resize(GetRecommendedAllocSize() >> 3, 0);
         // mPrimeDatabase.GetPrimeNumbers(&mCachedPrime[0], mCachedPrime.size());
     }
     if (m_ullNumber == 0) {
