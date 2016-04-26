@@ -588,7 +588,8 @@ void CFindServerDlg::OnSize(UINT nType, int cx, int cy)
 		break;
 	}
 }
-
+#define TIMER_NEXT_SEARCH 1
+#define TIMER_QUIT_APP 2
 LRESULT CFindServerDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) {
@@ -610,12 +611,16 @@ LRESULT CFindServerDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_TIMER:
 		switch (wParam) {
-		case 1:
+		case TIMER_NEXT_SEARCH:
 			if (!IsSearching()) {
 				KillTimer(wParam);
 				StartFind();
 			}
 			break;
+        case TIMER_QUIT_APP:
+            KillTimer(wParam);
+            PostMessage(WM_CLOSE);
+            break;
 		}
 		break;
 	case WM_IS_SERVER:
@@ -1234,9 +1239,6 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	AddThreadStatusPanel(false);
 	SetSearchStarted(false);
 	SetTitle(NULL);
-	if (IsFlagSet(SF_DIALOG_CLOSED)) {
-		PostMessage(WM_CLOSE);
-	}
 	SystemUtils::LogMessage(_T("Server: Finished%s"), bSearchCancelled ? _T(" - Operation cancelled") : _T(""));
 }
 struct ThreadData {
@@ -1277,7 +1279,9 @@ int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
         break;
 	case SERVER_THREAD_OP_START_SEARCH:
 		Find(pThreadData->pThreadData != NULL);
-		SetTimer(1, 1000*60*60*3, NULL); // Wait for other 3 hours
+        if (IsFlagSet(SF_DIALOG_CLOSED))
+            SetTimer(TIMER_QUIT_APP, 100, NULL);
+        SetTimer(TIMER_NEXT_SEARCH, 1000 * 60 * 60 * 3, NULL); // Wait for other 3 hours
 		break;
 	case SERVER_THREAD_OP_START_DBCOMMITER:
 		DoDBCommitment();

@@ -3,6 +3,9 @@
 // but are changed infrequently
 
 #pragma once
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 #ifndef _SECURE_ATL
 #define _SECURE_ATL 1
