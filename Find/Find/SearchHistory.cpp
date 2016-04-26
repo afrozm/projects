@@ -161,7 +161,7 @@ const CSearchHistory* CSearchHistoryArray::FindInSearchHistory(const CString &in
 			if (outSearchHistory->IsAlreadySearched(bCheckInProgress))
 				retVal = FSH_SKIP_SEARCH;
 			else if (searchRoot != inSearchHistory) { // if it is path - then check if it smaller - if so skip it
-				if (ComparePath(inSearchHistory, outSearchHistory->GetSearchKey()) < 0)
+				if (ComparePath(inSearchHistory, outSearchHistory->GetSearchKey(), true) < 0)
 					retVal = FSH_SKIP_SEARCH;
 			}
 			if (retVal == FSH_CONTINUE_SEARCH && bCheckInProgress)

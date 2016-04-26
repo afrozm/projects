@@ -212,8 +212,8 @@ BOOL CFindServerDlg::OnInitDialog()
 	mCmdEditCtrl->SubclassDlgItem(IDC_EDIT_COMMAND, this);
 	mCombinedBotton.Init();
 	mCombinedBotton.AddPage(&mFindServerDlgContext);
-	if (FindDataBase::SGetProperty(_T("ServerSearchStatus"), FDB_CacheDatabase).IsEmpty()) {
-		LoadDefault();
+	if (FindDataBase::SGetProperty(_T("StartedByUser"), FDB_CacheDatabase).IsEmpty()) {
+        OnBnClickedButtonLoaddefault();
 		SetFlag(SF_DIALOG_SHOW_MINIMIZED, false);
 	}
 	else {
@@ -656,7 +656,7 @@ void CFindServerDlg::OnBnClickedButtonDelete()
 
 void CFindServerDlg::OnBnClickedButtonExecute()
 {
-	Execute();
+    StartThreadOperation(SERVER_THREAD_OP_EXECUTE);
 }
 void CFindServerDlg::SetSearchStarted(bool bSearchStarted)
 {
@@ -865,14 +865,6 @@ int CFindServerDlg::TreeNetWorkIteratorCallBack(void *pIterData, void *pUserPara
 }
 int CFindServerDlg::SearchInNetwork(HTREEITEM hItem)
 {
-	// Skip this if it has already been searched.
-	{
-		int retVal(0);
-		CString path(mTreeCtrlDomain->GetFilePath(hItem));
-		PreSearchCheck(path, retVal);
-		if (retVal == FSH_SKIP_SEARCH)
-			return FIND_SKIP_SEARCH;
-	}
 	LPNETRESOURCE lpnRes = (LPNETRESOURCE)mTreeCtrlDomain->GetItemData(hItem);
 	if (lpnRes < (LPNETRESOURCE)2) // Resolved Folder
 		return FIND_CONTINUE_SEARCH;
@@ -911,9 +903,9 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 		retVal = FCB_ABORT;
 		bProcess = false;
 	}
-	// Skip till seach history
+	// Skip till search history
 	else if (pFFCD->searchHistory != NULL && bIsDir) {
-		if (ComparePath(path, pFFCD->searchHistory->GetSearchKey()) < 0)
+		if (ComparePath(path, pFFCD->searchHistory->GetSearchKey(), true) < 0)
 			retVal = FCB_NORECURSIVE;
 		else {
 			// Remove existing from search history
@@ -925,7 +917,7 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 	if (pFFCD->pExtraData && pFFCD->pExtraData->callbackFn)
 		retVal = (this->*pFFCD->pExtraData->callbackFn)(pFindFile, bMatched, pFFCD->pExtraData->pUserData);
 	if (bProcess) { // Now do actual stuff
-		// Match catagory
+		// Match category
 		FindCatagory *pCatagotyMatched(NULL);
 		for (INT_PTR i = 0; i < mArrayFindCatagory.GetCount(); ++i) {
 			if (mArrayFindCatagory.GetAt(i)->Match(pFindFile)) {
@@ -1128,6 +1120,10 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 			GetLogger().Log(Logger::kLogLevelFatal, _T("Cannot open database %s. Error: %d"), mDataBase.GetDBPath(), retVal);
 			return;
 		}
+        CString started(mDataBase.GetProperty(_T("StartedByUser")));
+        if (!bForce && started.IsEmpty())
+            return;
+        mDataBase.SetProperty(_T("StartedByUser"), _T("1"));
 		CString lastStartTime(mDataBase.GetProperty(_T("StartTime")));
 		if (lastStartTime.IsEmpty()) {
 			// Set start time
@@ -1231,7 +1227,9 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 			SystemUtils::DateToString(CTime::GetCurrentTime()));
 		mDataBase.RemoveProperty(_T("StartTime"));
 	}
-	mDataBase.Commit();
+    else if (!IsFlagSet(SF_DIALOG_CLOSED)) // Explicitly stopped by user
+        mDataBase.RemoveProperty(_T("StartedByUser"));
+    mDataBase.Commit();
 	mDataBase.Close();
 	AddThreadStatusPanel(false);
 	SetSearchStarted(false);
@@ -1271,6 +1269,12 @@ int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
 {
 	ThreadData *pThreadData((ThreadData *)pInThreadData);
 	switch (pThreadData->threadOp) {
+    case SERVER_THREAD_OP_LOAD_DEFAULT:
+        LoadDefault();
+        break;
+    case SERVER_THREAD_OP_EXECUTE:
+        Execute();
+        break;
 	case SERVER_THREAD_OP_START_SEARCH:
 		Find(pThreadData->pThreadData != NULL);
 		SetTimer(1, 1000*60*60*3, NULL); // Wait for other 3 hours
@@ -1293,7 +1297,7 @@ int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
 
 void CFindServerDlg::OnBnClickedButtonLoaddefault()
 {
-	LoadDefault();
+    StartThreadOperation(SERVER_THREAD_OP_LOAD_DEFAULT);
 }
 void CFindServerDlg::DoDBCommitment()
 {

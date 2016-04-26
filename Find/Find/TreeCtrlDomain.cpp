@@ -202,7 +202,9 @@ HTREEITEM CTreeCtrlDomain::FindPath(const CString &path, HTREEITEM hStartItem)
 	if (fullPath.IsUNC()) {
 		fullPath.Delete(0, 2);
 		if (hStartItem == TVI_ROOT) {
-			hStartItem = GetChildItem(FindText(fullPath.GetRoot(), hStartItem, true));
+            hStartItem = FindText(fullPath.GetRoot(), hStartItem, true);
+            if (NULL != hStartItem)
+			    hStartItem = GetChildItem(hStartItem);
 			fullPath = fullPath.RemoveRoot();
 		}
 	}

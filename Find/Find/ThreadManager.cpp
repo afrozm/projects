@@ -223,6 +223,8 @@ bool ThreadManager::IsThreadTerminated(DWORD threadID /* = -1 */)
 	CAutoReadLock autoLock(mArrayLocker);
 	TMThreadData *pThread(NULL);
 	mThreads.Lookup(threadID, pThread);
+    if (pThread == NULL && GetCurrentThreadId() == threadID)
+        return false;
 	return pThread == NULL || pThread->IsTerminated();
 }
 

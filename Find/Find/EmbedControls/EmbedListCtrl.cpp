@@ -285,9 +285,9 @@ bool CEmbedListCtrl::AddCheckBox()
 		if (hTheme != NULL) {
 			CBitmap bmpCheckboxes;
 			int states[] = {CBS_UNCHECKEDNORMAL, CBS_CHECKEDNORMAL};
-			CDC dcMem;
-			dcMem.CreateCompatibleDC(GetDC());
-			bmpCheckboxes.CreateCompatibleBitmap(GetDC(), m_iConSize<<1, m_iConSize);
+			CDC dcMem, *windowDC(GetDC());
+			dcMem.CreateCompatibleDC(windowDC);
+			bmpCheckboxes.CreateCompatibleBitmap(windowDC, m_iConSize<<1, m_iConSize);
 			CBitmap* pOldBmp = dcMem.SelectObject(&bmpCheckboxes);
 			RECT rect = {0};
 			rect.left = (m_iConSize-kImageSize)>>1;
@@ -303,6 +303,7 @@ bool CEmbedListCtrl::AddCheckBox()
 			}
 			dcMem.SelectObject(pOldBmp);
 			mCheckBoxIndex = mImageList.Add(&bmpCheckboxes, RGB(0,0,0));
+            ReleaseDC(windowDC);
 			CloseThemeData(hTheme);
 		}
 		InitHeaderControl();

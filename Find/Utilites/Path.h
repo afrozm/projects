@@ -1,5 +1,5 @@
 #pragma once
-int ComparePath(const CString &path1, const CString &path2);
+int ComparePath(const CString &path1, const CString &path2, bool checkPath1IsSubPath = false);
 
 class Path : public CString
 {

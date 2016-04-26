@@ -9,6 +9,9 @@
 
 #include "resource.h"		// main symbols
 
+#ifdef _DEBUG
+#include <vld.h>
+#endif // _DEBUG
 
 // CFindApp:
 // See Find.cpp for the implementation of this class

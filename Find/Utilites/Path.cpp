@@ -167,7 +167,7 @@ unsigned Path::NextComponent(Path &component, unsigned pos) const
 	component = CString(curPath, startPos);
 	return pos;
 }
-int ComparePath(const CString &path1, const CString &path2)
+int ComparePath(const CString &path1, const CString &path2, bool checkPath1IsSubPath /* = false */)
 {
 	int curPos1 = 0;
 	CString resToken1= path1.Tokenize(_T("\\/"),curPos1);
@@ -182,6 +182,8 @@ int ComparePath(const CString &path1, const CString &path2)
 		resToken1= path1.Tokenize(_T("\\/"),curPos1);
 		resToken2= path2.Tokenize(_T("\\/"),curPos2);
 	};
+    if (checkPath1IsSubPath && resToken1.IsEmpty())
+        res = 0;
 	return res;
 }
 bool Path::IsUNC() const

@@ -12,12 +12,14 @@ Logger& GetServerLogger();
 
 // Thread op
 typedef enum {
-	SERVER_THREAD_OP_START_SEARCH,
+    SERVER_THREAD_OP_START_SEARCH,
 	SERVER_THREAD_OP_START_DBCOMMITER,
 	SERVER_THREAD_OP_SEARCH_IN_NETWORK,
 	SERVER_THREAD_OP_VERIFY,
 	SERVER_THREAD_OP_IPENUM,
-	SERVER_THREAD_OP_STATUS // status of all thread in status window
+    SERVER_THREAD_OP_LOAD_DEFAULT,
+    SERVER_THREAD_OP_EXECUTE,
+    SERVER_THREAD_OP_STATUS // status of all thread in status window
 } ServerThreadOperation;
 
 // CServerStatusDlg dialog
