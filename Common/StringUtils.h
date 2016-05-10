@@ -23,4 +23,8 @@ namespace StringUtils
     std::wstring UTF8ToUnicode(const char *utf8String);
     std::string UnicodeToUTF8(const std::wstring &unicodeString);
     std::wstring UTF8ToUnicode(const std::string &utf8String);
+
+    lstring WildCardExpToRegExp(const TCHAR *wildCardExp);
+    bool WildCardMatch(const lstring &inWildCardExp, const lstring &inStr);
+    bool RegMatch(const lstring &inRegExp, const lstring &inStr);
 };

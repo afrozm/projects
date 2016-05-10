@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotificationSystemTest", "NotificationSystemTest\NotificationSystemTest.vcxproj", "{3E72B2B1-060B-4A16-B3CC-0DE2480F70CE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotificationSystem", "NotificationSystem\NotificationSystem.vcxproj", "{1E95CBF7-D3B1-4C22-B9C4-35F0396E2559}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E72B2B1-060B-4A16-B3CC-0DE2480F70CE}.Debug|x64.ActiveCfg = Debug|x64
+		{3E72B2B1-060B-4A16-B3CC-0DE2480F70CE}.Debug|x64.Build.0 = Debug|x64
+		{3E72B2B1-060B-4A16-B3CC-0DE2480F70CE}.Release|x64.ActiveCfg = Release|x64
+		{3E72B2B1-060B-4A16-B3CC-0DE2480F70CE}.Release|x64.Build.0 = Release|x64
+		{1E95CBF7-D3B1-4C22-B9C4-35F0396E2559}.Debug|x64.ActiveCfg = Debug|x64
+		{1E95CBF7-D3B1-4C22-B9C4-35F0396E2559}.Debug|x64.Build.0 = Debug|x64
+		{1E95CBF7-D3B1-4C22-B9C4-35F0396E2559}.Release|x64.ActiveCfg = Release|x64
+		{1E95CBF7-D3B1-4C22-B9C4-35F0396E2559}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

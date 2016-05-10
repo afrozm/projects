@@ -16,8 +16,9 @@ public:
     bool IsEmpty() const;
     size_t GetCount() const;
     void SetProperties(const Property &inProperties, bool bMerger = true, bool bOverwrite = true);
-private:
     typedef std::map<lstring, lstring> MapStrStr;
+    const MapStrStr& GetMapStrStr() const; // only to iterate
+private:
     MapStrStr mProperties;
 };
 
@@ -42,7 +43,7 @@ public:
     const MapProperty& GetMapProperty() const; // only to iterate
     MapProperty& GetMapProperty(); // only to iterate
 private:
-    Property* GetProperty(const lstring &inSection);
+    Property* GetPropertyInt(const lstring &inSection);
     MapProperty mMapProperty;
 };
 

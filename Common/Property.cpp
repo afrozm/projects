@@ -69,6 +69,11 @@ void Property::SetProperties(const Property & inProperties, bool bMerger, bool b
         mProperties[cit.first] = cit.second;
 }
 
+const Property::MapStrStr & Property::GetMapStrStr() const
+{
+    return mProperties;
+}
+
 
 ////////////////////////////// PropertySet //////////////////////////////
 
@@ -90,7 +95,7 @@ bool PropertySet::SetValue(const lstring & inSection, const lstring & inKey, con
 {
     if (bOverwrite && !HasSection(inSection))
         mMapProperty[inSection];
-    Property *prop(GetProperty(inSection));
+    Property *prop(GetPropertyInt(inSection));
     if (prop)
         return prop->SetValue(inKey, inValue, bOverwrite);
     return false;
@@ -98,7 +103,7 @@ bool PropertySet::SetValue(const lstring & inSection, const lstring & inKey, con
 
 bool PropertySet::RemoveKey(const lstring & inSection, const lstring & inKey)
 {
-    Property *prop(GetProperty(inSection));
+    Property *prop(GetPropertyInt(inSection));
     if (prop)
         return prop->RemoveKey(inKey);
     return false;
@@ -148,7 +153,7 @@ PropertySet::MapProperty & PropertySet::GetMapProperty()
     return mMapProperty;
 }
 
-Property* PropertySet::GetProperty(const lstring & inSection)
+Property* PropertySet::GetPropertyInt(const lstring & inSection)
 {
     auto cit(mMapProperty.find(inSection));
     if (cit != mMapProperty.end())
@@ -249,4 +254,18 @@ void PropertySetStreamer::SetPropertySetStream(PropertySet & inReadInSet)
 void PropertySetStreamer::SetPropertySetStream(const PropertySet &inWriteInSet)
 {
     SetPropertySetStream((PropertySet&)inWriteInSet);
+}
+
+bool PropertySetStreamer::WrtieToString(lstring &outString)
+{
+    bool bWritten(false);
+    if (m_pPropertySet != NULL) {
+        const PropertySet::MapProperty &mapProperty(m_pPropertySet->GetMapProperty());
+        for (auto &prop : mapProperty) {
+            outString += _T("[") + prop.first + _T("]\r\n");
+            for (auto &keyVal : prop.second.GetMapStrStr())
+                outString += keyVal.first + _T("=") + keyVal.second + _T("\r\n");
+        }
+    }
+    return bWritten;
 }

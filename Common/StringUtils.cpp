@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "StringUtils.h"
 #include <algorithm>
+#include <regex>
 
 lstring StringUtils::ToLower(const lstring &inStr)
 {
@@ -148,4 +149,72 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
 std::string StringUtils::UnicodeToUTF8(const std::wstring & unicodeString)
 {
     return UnicodeToUTF8(unicodeString.c_str());
+}
+
+static lstring WildCardToRegExp(LPCTSTR wildCard)
+{
+    LPTSTR regExp = new TCHAR[6 * lstrlen(wildCard) + 1];
+    unsigned len = 0;
+
+    while (*wildCard) {
+        TCHAR extraCharToAdd = 0;
+
+        switch (*wildCard) {
+        case '*':
+            extraCharToAdd = '.';
+            break;
+        case '.':
+        case '[':
+        case '{':
+        case ']':
+        case '}':
+        case '(':
+        case '\\':
+            extraCharToAdd = '\\';
+            break;
+        }
+        if (extraCharToAdd)
+            regExp[len++] = extraCharToAdd;
+        regExp[len++] = *wildCard++;
+    }
+    regExp[len] = 0;
+    lstring regExpStr(regExp);
+
+    delete[] regExp;
+
+    return regExpStr;
+}
+
+lstring StringUtils::WildCardExpToRegExp(const TCHAR *wildCardExp)
+{
+    TCHAR *exp = new TCHAR[lstrlen(wildCardExp) + 1];
+    lstrcpy(exp, wildCardExp);
+    LPTSTR nexttoken(NULL);
+    LPTSTR token = _tcstok_s(exp, _T(";"), &nexttoken);
+    lstring regExp;
+    while (token != NULL) {
+        regExp += _T("(") + WildCardToRegExp(token) + _T(")");
+        token = _tcstok_s(NULL, _T(";"), &nexttoken);
+        if (token != NULL) {
+            regExp += _T("|");
+        }
+    }
+    delete[]exp;
+    return regExp;
+}
+
+bool StringUtils::WildCardMatch(const lstring &inWildCardExp, const lstring &inStr)
+{
+    return RegMatch(WildCardExpToRegExp(inWildCardExp.c_str()), inStr);
+}
+
+bool StringUtils::RegMatch(const lstring &inRegExp, const lstring &inStr)
+{
+#if defined(_UNICODE) || defined(UNICODE)
+    std::wregex 
+#else
+    std::regex
+#endif
+        txt_regex(inRegExp, std::regex_constants::icase);
+    return std::regex_match(inStr, txt_regex);
 }
