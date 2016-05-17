@@ -2,6 +2,7 @@
 #include "StringUtils.h"
 #include <algorithm>
 #include <regex>
+#include <windows.h>
 
 lstring StringUtils::ToLower(const lstring &inStr)
 {
@@ -69,7 +70,8 @@ long long StringUtils::getLLfromStr(const TCHAR *str)
     bool bMinus(*str == '-');
     if (bMinus)
         ++str;
-    long long retVal = std::stoll(str, NULL, 0);
+    long long retVal = 0;
+    try { retVal = std::stoll(str, NULL, 0); } catch (...) {}
     if (bMinus)
         retVal = -retVal;
     return retVal;

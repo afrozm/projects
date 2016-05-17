@@ -6,109 +6,17 @@
 #include "Progress.h"
 #include "Path.h"
 
-static wchar_t getHexChar(char ch)
+static long long HexDump(const BinaryData &buffer, long long startAddress = 0)
 {
-    ch &= 0xf;
-    if (ch > 9)
-        return 'A' + ch - 0xA;
-    return '0' + ch;
-}
-static char getHexByte(wchar_t ch)
-{
-    if (ch >= '0' && ch <= '9')
-        return ch - '0';
-    if (ch >= 'A' && ch <= 'F')
-        return 0xA + ch - 'A';
-    if (ch >= 'a' && ch <= 'f')
-        return 0xA + ch - 'a';
-    return (char)ch;
-}
-static void getHexStr(char ch, wchar_t *outHex)
-{
-    outHex[0] = getHexChar(ch >> 4);
-    outHex[1] = getHexChar(ch);
-    outHex[2] = 0;
-}
-static char getHexByte(const wchar_t *inStr)
-{
-    char ch = 0;
-    if (inStr) {
-        for (int i = 0; i < 2 && inStr[i]; ++i) {
-            ch <<= 4;
-            ch |= getHexByte(inStr[i]);
-        }
-    }
-    return ch;
-}
-
-#define HEX_WITH 16
-
-static long long HexDump(const void *buffer, size_t size, long long startAddress = 0)
-{
-    const char *buf((const char *)buffer);
-    for (size_t i = 0; i < size;) {
-        _tprintf(_T("%08llX  "), startAddress+i);
-        size_t s = i;
-        const char *sBuf(buf);
-        for (int j = 0; j < HEX_WITH && s < size; ++j, ++s, ++buf) {
-            if (j%4==0)
-                _tprintf(_T(" "));
-            if (j == (HEX_WITH >> 1))
-                _tprintf(_T(" "));
-            wchar_t hexStr[4] = { 0 };
-            getHexStr(*buf, hexStr);
-            _tprintf(_T("%s"), hexStr);
-        }
-        _tprintf(_T("   "));
-        s = i;
-        for (int j = 0; j < HEX_WITH && s < size; ++j, ++s, ++sBuf) {
-            if (j == (HEX_WITH >> 1))
-                _tprintf(_T(" "));
-            _tprintf(_T("%c"), isprint((unsigned char)*sBuf) ? *sBuf : '.');
-        }
-        i = s;
-        _tprintf(_T("\n"));
-    }
-    return startAddress + size;
-}
-
-static long long getLLfromStr(const TCHAR *str)
-{
-    bool bMinus(*str == '-');
-    if (bMinus)
-        ++str;
-    long long retVal = std::stoll(str, NULL, 0);
-    if (bMinus)
-        retVal = -retVal;
-    return retVal;
+    _tprintf(_T("%s"), buffer.HexDump(startAddress).c_str());
+    return startAddress + buffer.DataSize();
 }
 
 #define STR_IS_VALID_PTR(p) (p&&*p)
 #define STR_INR_PTR(p) if(STR_IS_VALID_PTR(p)) ++p
 #define STR_CHAR_IS_SPACE(c) ((c)==' ' || (c)=='\t' || (c)=='\n' || (c)=='\r')
 #define STR_SKIP_SPACE(p) while(STR_IS_VALID_PTR(p)&&STR_CHAR_IS_SPACE(*p)) ++p
-
-static size_t StrToBuffer(const TCHAR *pStr, VecChar &outBuffer, bool asString = false)
-{
-    if (pStr != NULL)
-    {
-        while (*pStr)
-        {
-            if (!asString) {
-                STR_SKIP_SPACE(pStr);
-                if (!STR_IS_VALID_PTR(pStr))
-                    continue;
-                outBuffer.push_back(getHexByte(pStr));
-                STR_INR_PTR(pStr);
-            }
-            else
-                outBuffer.push_back((char)*pStr);
-            STR_INR_PTR(pStr);
-        }
-    }
-    return outBuffer.size();
-}
-
+#define STR_SKIP_TILL_CHAR(p,c) while(STR_IS_VALID_PTR(p)&&*p!=c) ++p
 
 int FindArg(int argc, _TCHAR* argv[], const TCHAR * arg)
 {
@@ -139,6 +47,8 @@ int FindNextArg(int argc, _TCHAR* argv[], int startArg)
 void Help()
 {
     _tprintf(_T("Usage:\nHexDump <file or string> [-o=<offset>] [-s=<size>] [-f=<find buffer> [-fs]]\n"));
+    _tprintf(_T("[-fs to treat find buffer -f as string]\n"));
+    _tprintf(_T("[-d[=<dump size>[,dump offset]]]. Valid only with -f\n"));
     _tprintf(_T("[-mp=<match pattern>]\n"));
     _tprintf(_T("[-ep=<exclude pattern>]\n"));
     _tprintf(_T("mp,ep is used if file is folder path\n"));
@@ -169,7 +79,7 @@ static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
         Progress prog;
         const TCHAR *argStr = FindArgValue(argc, argv, _T("-o="));
         if (argStr != NULL) {
-            long long offset(getLLfromStr(argStr));
+            long long offset(StringUtils::getLLfromStr(argStr));
             _fseeki64(fp, offset, offset >= 0 ? SEEK_SET : SEEK_END);
         }
         long long fileOffset(_ftelli64(fp));
@@ -177,41 +87,60 @@ static int HEXDump_FindCallBack(FindData &fd, HDFDCB_Data *pUserParam)
         const long long fileSize(sizeToRead);
         argStr = FindArgValue(argc, argv, _T("-s="));
         if (argStr != NULL) {
-            long long szRead = getLLfromStr(argStr);
+            long long szRead = StringUtils::getLLfromStr(argStr);
             if (fileOffset + szRead > sizeToRead)
                 sizeToRead = sizeToRead - fileOffset;
             else
                 sizeToRead = szRead;
         }
+        size_t findDumpSize(0), findDumpOffset(-16);
+        if (bf.HasFindPattern()) {
+            argStr = FindArgValue(argc, argv, _T("-d"));
+            if (argStr != NULL) {
+                if (*argStr == '=') {
+                    findDumpSize = StringUtils::getLLfromStr(argStr + 1);
+                    STR_SKIP_TILL_CHAR(argStr, ';');
+                    if (*argStr)
+                        findDumpOffset = StringUtils::getLLfromStr(argStr + 1);
+                }
+                if (findDumpSize <= 0)
+                    findDumpSize = 48;
+            }
+        }
         prog.SetTask(sizeToRead);
-        VecChar buffer;
-        buffer.resize(4 * 1024 * 1024);
+        BinaryData buffer(NULL, 4 * 1024 * 1024);
         while (sizeToRead > 0)
         {
-            size_t cRead = buffer.size();
-            if (sizeToRead > 0) {
-                if ((long long)cRead > sizeToRead)
-                    cRead = sizeToRead;
-            }
-            cRead = fread_s(&buffer[0], buffer.size(), sizeof(char), cRead, fp);
-            if (cRead <= 0)
+            buffer.ReadFromFile(fp);
+            if (buffer.DataSize() <= 0)
                 break;
-            sizeToRead -= cRead;
+            sizeToRead -= buffer.DataSize();
             if (bf.HasFindPattern()) {
-                bf.SetFindBuffer(&buffer[0], cRead);
+                bf.SetFindBuffer(buffer);
                 while (true)
                 {
                     long long findPos = bf.FindNext();
                     if (findPos >= 0) {
                         _tprintf(_T("%08llX=-%08llX\n"), fileOffset + findPos, fileSize - (fileOffset + findPos));
+                        if (findDumpSize > 0) {
+                            const long long curPos(_ftelli64(fp));
+                            long long newPos(fileOffset + findPos + findDumpOffset);
+                            if (newPos < 0)
+                                newPos = 0;
+                            newPos &= ~0xf;
+                            BinaryData bd(NULL, findDumpSize);
+                            bd.ReadFromFile(fp, 0, newPos);
+                            HexDump(bd, newPos);
+                            _fseeki64(fp, curPos, SEEK_SET);
+                        }
                         ++nMatches;
                     }
                     else break;
                 }
             }
             else
-                fileOffset = HexDump(&buffer[0], cRead, fileOffset);
-            if (prog.UpdateProgress(prog.GetCurrentDone() + cRead))
+                fileOffset = HexDump(buffer, fileOffset);
+            if (prog.UpdateProgress(prog.GetCurrentDone() + buffer.DataSize()))
                 _tprintf(_T("\r%02.02f%%\r"), prog.GetCurrentPercentageDone());
         }
         _tprintf(_T("\r            \r"));
@@ -241,10 +170,10 @@ int _tmain(int argc, _TCHAR* argv[])
             _tprintf(_T("%s\n"), argv[i]);
         BinaryFind bf;
         {
-            VecChar findBuffer;
-            StrToBuffer(FindArgValue(argc, argv, _T("-f=")), findBuffer, FindArgValue(argc, argv, _T("-fs")) != NULL);
-            if (!findBuffer.empty())
-                bf.SetFindPattern(&findBuffer[0], findBuffer.size());
+            BinaryData findBuffer;
+            findBuffer.BuildFromString(FindArgValue(argc, argv, _T("-f=")), FindArgValue(argc, argv, _T("-fs")) != NULL);
+            if (findBuffer.DataSize() > 0)
+                bf.SetFindPattern(findBuffer);
         }
         const TCHAR *fileOrString(argv[arg]);
         if (Path(fileOrString).Exists()) {

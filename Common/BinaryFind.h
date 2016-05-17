@@ -31,6 +31,7 @@ public:
     BinaryData GetDataRef(size_t offset = 0, size_t inSize = -1);
     size_t Append(const BinaryData &inData);
     void Clear(); // Clears data, does not erase memory
+    lstring HexDump(long long startAddress = 0, unsigned hexWidth = 16) const;
 private:
     VecChar mBuffer;
     const void *m_pBuffer;

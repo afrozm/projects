@@ -188,6 +188,53 @@ void BinaryData::Clear()
     mDataSize = 0;
 }
 
+static TCHAR getHexChar(char ch)
+{
+    ch &= 0xf;
+    if (ch > 9)
+        return 'A' + ch - 0xA;
+    return '0' + ch;
+}
+
+static void getHexStr(char ch, TCHAR *outHex)
+{
+    outHex[0] = getHexChar(ch >> 4);
+    outHex[1] = getHexChar(ch);
+    outHex[2] = 0;
+}
+
+lstring BinaryData::HexDump(long long startAddress /*= 0*/, unsigned hexWidth /*= 16*/) const
+{
+    TCHAR strData[256] = { 0 };
+    lstring outStr;
+    const char *buf((const char *)(const void *)(*this));
+    for (size_t i = 0; i < DataSize();) {
+        _stprintf_s(strData, _T("%08llX  "), startAddress + i);
+        outStr += strData;
+        size_t s = i;
+        const char *sBuf(buf);
+        for (unsigned j = 0; j < hexWidth && s < DataSize(); ++j, ++s, ++buf) {
+            if (j % 4 == 0)
+                outStr += _T(" ");
+            if (j == (hexWidth >> 1))
+                outStr += _T(" ");
+            TCHAR hexStr[4] = { 0 };
+            getHexStr(*buf, hexStr);
+            outStr += hexStr;
+        }
+        outStr += _T("   ");
+        s = i;
+        for (unsigned j = 0; j < hexWidth && s < DataSize(); ++j, ++s, ++sBuf) {
+            if (j == (hexWidth >> 1))
+                outStr += _T(" ");
+            outStr += isprint((unsigned char)*sBuf) ? *sBuf : '.';
+        }
+        i = s;
+        outStr += _T("\n");
+    }
+    return outStr;
+}
+
 ////////////////////////////// BinaryFind //////////////////////////////
 
 BinaryFind::BinaryFind(const void *pBuffer /* = NULL */, size_t bufLen /* = 0 */)
