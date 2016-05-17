@@ -21,7 +21,7 @@ bool CJpgFileRecover::ParseBuffer(BinaryData &inData)
     bool bParseBuffer(__super::ParseBuffer(inData));
     if (m_iEndPatternSkipCount <= 0 && mExifFindLimit < 256) {
         if (GetState() == FindEnd) {
-            mBinaryFindExif.SetFindBuffer(oldState == FindStart ? inData : data);
+            mBinaryFindExif.SetFindBuffer(oldState == FindStart ? inData : data, true);
             mExifFindLimit += mBinaryFindExif.GetTotalBufferSize();
             if (mBinaryFindExif.FindNext() >= 0)
                 m_iEndPatternSkipCount = 1;

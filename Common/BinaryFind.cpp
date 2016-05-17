@@ -248,27 +248,34 @@ void BinaryFind::SetFindPattern(const void *pBuffer, size_t bufLen)
     ComputeKMPTable();
 }
 
-void BinaryFind::SetFindBuffer(const void * buffer, size_t size)
+void BinaryFind::SetFindPattern(const char *str)
+{
+    SetFindPattern((const void *)str, strlen(str));
+}
+
+void BinaryFind::SetFindBuffer(const void * buffer, size_t size, bool bResetOffset /* = false */)
 {
     m_pCurrentBuffer = (const unsigned char *)buffer;
     mCurrentBufferIndex = 0;
     if (m_pCurrentBuffer == NULL || size <= 0) {
         m_pCurrentBuffer = NULL;
         size = 0;
-        mOffSet = 0;
+        bResetOffset = true;
     }
+    if (bResetOffset)
+        mOffSet = 0;
     mCurrentBufferSize = size;
     mOffSet += mCurrentBufferSize;
 }
 
-void BinaryFind::SetFindBuffer(const std::vector<char> &buffer)
+void BinaryFind::SetFindBuffer(const std::vector<char> &buffer, bool bResetOffset /* = false */)
 {
-    SetFindBuffer(buffer.size() > 0 ? &buffer[0] : NULL, buffer.size());
+    SetFindBuffer(buffer.size() > 0 ? &buffer[0] : NULL, buffer.size(), bResetOffset);
 }
 
-void BinaryFind::SetFindBuffer(const BinaryData &inFindBuffer)
+void BinaryFind::SetFindBuffer(const BinaryData &inFindBuffer, bool bResetOffset /* = false */)
 {
-    SetFindBuffer(inFindBuffer, inFindBuffer.Size());
+    SetFindBuffer(inFindBuffer, inFindBuffer.Size(), bResetOffset);
 }
 
 size_t BinaryFind::GetCurrentBufferIndex() const

@@ -4,6 +4,7 @@
 #include "RecoverManager.h"
 #include "JpgFileRecover.h"
 #include "DocFileRecover.h"
+#include "PdfFileRecover.h"
 //////////////////////////////////////////////////////////////////////////
 /// CFileRecover
 
@@ -27,6 +28,7 @@ DEFINE_FN_FRGET_OBJECT(CFileRecoverSE)
 DEFINE_FN_FRGET_OBJECT(CFileRecoverMov)
 DEFINE_FN_FRGET_OBJECT(CJpgFileRecover)
 DEFINE_FN_FRGET_OBJECT(CDocFileRecover)
+DEFINE_FN_FRGET_OBJECT(CPdfFileRecover)
 
 CFileRecover* CFileRecover::GetFileRecover(const Property &inProp)
 {
@@ -41,6 +43,7 @@ CFileRecover* CFileRecover::GetFileRecover(const Property &inProp)
         mapStrFn[_T("mp4")] = getCFileRecoverMov;
         mapStrFn[_T("mov")] = getCFileRecoverMov;
         mapStrFn[_T("docx")] = getCDocFileRecover;
+        mapStrFn[_T("pdf")] = getCPdfFileRecover;
     }
     CFileRecover *pFileRecover(NULL);
     lstring name = StringUtils::ToLower(inProp.GetValue(_T("name")));
@@ -98,8 +101,7 @@ CFileRecoverSE::CFileRecoverSE()
 
 bool CFileRecoverSE::ParseBuffer(BinaryData &inData)
 {
-    mBinaryFind.SetFindBuffer(); // reset
-    mBinaryFind.SetFindBuffer(inData);
+    mBinaryFind.SetFindBuffer(inData, true);
     long long findPos(0);
     if (mFindState != ReadTillEndOffset)
         findPos = mBinaryFind.FindNext();
@@ -184,8 +186,7 @@ static bool isValidFOURCC(const BinaryData &inData, size_t offset = 0)
 
 bool CFileRecoverMov::ParseBuffer(BinaryData &inData)
 {
-    mBinaryFind.SetFindBuffer(); // reset
-    mBinaryFind.SetFindBuffer(inData);
+    mBinaryFind.SetFindBuffer(inData, true);
     long long findPos(-1);
     switch (mFindState)
     {

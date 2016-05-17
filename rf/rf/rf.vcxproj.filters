@@ -90,6 +90,9 @@
     <ClInclude Include="DocFileRecover.h">
       <Filter>Header Files\Recover</Filter>
     </ClInclude>
+    <ClInclude Include="PdfFileRecover.h">
+      <Filter>Header Files\Recover</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -144,6 +147,9 @@
       <Filter>Source Files\Common</Filter>
     </ClCompile>
     <ClCompile Include="DocFileRecover.cpp">
+      <Filter>Source Files\Recover</Filter>
+    </ClCompile>
+    <ClCompile Include="PdfFileRecover.cpp">
       <Filter>Source Files\Recover</Filter>
     </ClCompile>
   </ItemGroup>

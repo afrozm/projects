@@ -48,10 +48,11 @@ public:
     long long FindNext();
     void SetFindPattern(const BinaryData &inFindPatter);
     void SetFindPattern(const void *pBuffer, size_t bufLen);
+    void SetFindPattern(const char *str);
     bool HasFindPattern() const { return mFindPattern.Size() > 0; }
-    void SetFindBuffer(const void *buffer = NULL, size_t size = 0);
-    void SetFindBuffer(const std::vector<char> &buffer);
-    void SetFindBuffer(const BinaryData &inFindBuffer);
+    void SetFindBuffer(const void *buffer = NULL, size_t size = 0, bool bResetOffset = false);
+    void SetFindBuffer(const std::vector<char> &buffer, bool bResetOffset = false);
+    void SetFindBuffer(const BinaryData &inFindBuffer, bool bResetOffset = false);
     size_t GetCurrentBufferIndex() const; // get position index to find pattern
     void SetCurrentBufferIndex(size_t currentIndex); // set start position to start find pattern
     size_t GetTotalBufferSize() const { return mCurrentBufferSize; }

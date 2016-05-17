@@ -55,6 +55,7 @@ protected:
     } mFindState;
 
     State GetState() const { return mFindState; }
+    void SetState(State state) { mFindState = state; }
 };
 
 //////////////////////////////////////////////////////////////////////////
