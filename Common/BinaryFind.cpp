@@ -322,7 +322,7 @@ void BinaryFind::SetFindBuffer(const std::vector<char> &buffer, bool bResetOffse
 
 void BinaryFind::SetFindBuffer(const BinaryData &inFindBuffer, bool bResetOffset /* = false */)
 {
-    SetFindBuffer(inFindBuffer, inFindBuffer.Size(), bResetOffset);
+    SetFindBuffer(inFindBuffer, inFindBuffer.DataSize(), bResetOffset);
 }
 
 size_t BinaryFind::GetCurrentBufferIndex() const
