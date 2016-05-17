@@ -213,14 +213,18 @@ lstring BinaryData::HexDump(long long startAddress /*= 0*/, unsigned hexWidth /*
         outStr += strData;
         size_t s = i;
         const char *sBuf(buf);
-        for (unsigned j = 0; j < hexWidth && s < DataSize(); ++j, ++s, ++buf) {
+        for (unsigned j = 0; j < hexWidth; ++j, ++s, ++buf) {
             if (j % 4 == 0)
                 outStr += _T(" ");
             if (j == (hexWidth >> 1))
                 outStr += _T(" ");
-            TCHAR hexStr[4] = { 0 };
-            getHexStr(*buf, hexStr);
-            outStr += hexStr;
+            if (s < DataSize()) {
+                TCHAR hexStr[4] = { 0 };
+                getHexStr(*buf, hexStr);
+                outStr += hexStr;
+            }
+            else
+                outStr += _T("  ");
         }
         outStr += _T("   ");
         s = i;
