@@ -38,7 +38,7 @@ std::string UnicodeToUTF8(const wchar_t *unicodeString)
 		int len(lstrlen(unicodeString));
 		int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, 0, 0, NULL, NULL);
 		std::vector<char> vecChar(kMultiByteLength);
-		if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], vecChar.size(), NULL, NULL))
+		if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
 		{
 			sRet = &vecChar[0];
 		}
@@ -55,7 +55,7 @@ std::wstring UTF8ToUnicode(const char *utf8String)
 		{
 			std::vector<wchar_t> vecWide(kAllocate);
 
-			int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], vecWide.size());
+			int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], (int)vecWide.size());
 			if (kCopied)
 			{
 				sRet = &vecWide[0];
