@@ -5,9 +5,20 @@
 #include "LibraryMessageSender.h"
 #include "Paramters.h"
 
+
+#ifdef _WIN32
+#define DEFAULT_LIB_EXTN ".dll"
+#define DEFAULT_LIB_PREFIX ""
+#else
+#define DEFAULT_LIB_EXTN ".dylib"
+#define DEFAULT_LIB_PREFIX "lib"
+#include <dlfcn.h>
+#endif // _WIN32
+
+
 int main()
 {
-    LibraryMessageSender msgSender("DynamicLibraryTemplate" DEFAULT_LIB_EXTN, "_DLT");
+    LibraryMessageSender msgSender(DEFAULT_LIB_PREFIX "DynamicLibraryTemplate" DEFAULT_LIB_EXTN, "_DLT");
     Paramters parameters;
     const char * paramNames[] = { "param1", "param2", "testParam" };
     for (auto param : paramNames)

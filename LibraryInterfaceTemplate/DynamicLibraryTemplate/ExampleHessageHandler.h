@@ -6,7 +6,7 @@ class ExampleHessageHandler :
     public LibraryMessageHandler
 {
 public:
-    static ExampleHessageHandler& ExampleHessageHandler::GetInstance();
+    static ExampleHessageHandler& GetInstance();
 
 private:
     ExampleHessageHandler();

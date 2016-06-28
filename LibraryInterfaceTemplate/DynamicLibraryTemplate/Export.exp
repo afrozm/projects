@@ -1,0 +1,10 @@
+#  Export.exp
+#  DynamicLibraryTemplate
+#
+#  Created by Afroz Muzammil on 28/6/16.
+#  Copyright © 2016 Afroz Muzammil. All rights reserved.
+
+_Initialize_DLT
+_Finalize_DLT
+_ProcessMessage_DLT
+_FreeMessage_DLT

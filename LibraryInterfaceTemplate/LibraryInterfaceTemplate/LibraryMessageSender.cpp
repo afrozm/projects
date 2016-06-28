@@ -3,11 +3,11 @@
 #include <windows.h>
 #include <codecvt>
 #define LM_LIB_SYMBOL(h,n) GetProcAddress((HMODULE)h, n)
-#define DEFAULT_LIB_EXTN ".dll"
 #else
 #define LM_LIB_SYMBOL(h,n) dlsym(h, n)
-#define DEFAULT_LIB_EXTN ".dylib"
+#include <dlfcn.h>
 #endif // _WIN32
+
 #include<stdarg.h>
 #include "Paramters.h"
 
@@ -28,6 +28,7 @@ LibraryMessageSender::LibraryMessageSender(const char *libName /* = NULL */, con
 
 LibraryMessageSender::~LibraryMessageSender()
 {
+    UnLoad();
 }
 
 
@@ -51,7 +52,7 @@ void LibraryMessageSender::UnLoad()
 #ifdef _WIN32
             FreeLibrary((HMODULE)mhLibraryHandle);
 #else
-            dlclose(mhLibraryHandle)
+            dlclose(mhLibraryHandle);
 #endif 
         }
         mhLibraryHandle = NULL;

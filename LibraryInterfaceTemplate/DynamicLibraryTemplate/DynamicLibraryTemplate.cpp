@@ -5,24 +5,32 @@
 #include "ILibraryExports.h"
 #include <stdio.h>
 
+#ifdef _WIN32
+// windows symbols are exported from .def file
+#define DLT_EXPORT
+#else
+// symbols exported from visibility default and from exp file
+#define DLT_EXPORT __attribute__((visibility("default")))
+#endif
+
 // Rename _DLT with you own library name
 
 extern "C" {
-    int Initialize_DLT()
+    DLT_EXPORT int Initialize_DLT()
     {
         ILibraryExports *pHandler(ILibraryExports::GetLibraryMessageHandler());
         if (pHandler)
             return pHandler->Initialize();
         return -1;
     }
-    int Finalize_DLT()
+    DLT_EXPORT int Finalize_DLT()
     {
         ILibraryExports *pHandler(ILibraryExports::GetLibraryMessageHandler());
         if (pHandler)
             return pHandler->Finalize();
         return -1;
     }
-    const char* ProcessMessage_DLT(const char *msg, const char *msgData)
+    DLT_EXPORT const char* ProcessMessage_DLT(const char *msg, const char *msgData)
     {
         if (msg == NULL)
             return NULL;
@@ -36,6 +44,7 @@ extern "C" {
             if (!bHandled)
                 printf("No message handler for %s\n", msg);
 #endif
+            UNREFERENCED_PARAMETER(bHandled);
             if (outResult.length() == 0)
                 return NULL;
             const size_t dataLen(outResult.length() + 1);
@@ -45,7 +54,7 @@ extern "C" {
         }
         return NULL;
     }
-    void FreeMessage_DLT(const char *msgResult)
+    DLT_EXPORT void FreeMessage_DLT(const char *msgResult)
     {
         if (msgResult != NULL)
             delete[] msgResult;
