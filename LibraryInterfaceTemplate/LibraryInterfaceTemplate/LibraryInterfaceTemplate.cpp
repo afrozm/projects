@@ -1,0 +1,25 @@
+// LibraryInterfaceTemplate.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+#include "LibraryMessageSender.h"
+#include "Paramters.h"
+
+int main()
+{
+    LibraryMessageSender msgSender("DynamicLibraryTemplate" DEFAULT_LIB_EXTN, "_DLT");
+    Paramters parameters;
+    const char * paramNames[] = { "param1", "param2", "testParam" };
+    for (auto param : paramNames)
+        parameters.SetParamValue(param, param);
+    std::string result;
+    const std::string msg("MessageHandler_TestMessage"), params(parameters.ToString());
+    printf("Sending message %s with param\n%s\n", msg.c_str(), params.c_str());
+    msgSender.ProcessMessage(msg, params, result);
+    printf("result=%s\n", result.c_str());
+    msgSender.ProcessMessageWithArguments(msg, result, "param1", "help", "param2", "p2val", "testParam", "hell", NULL);
+    printf("result=%s\n", result.c_str());
+
+    return 0;
+}
+
