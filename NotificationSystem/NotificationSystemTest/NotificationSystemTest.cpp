@@ -6,32 +6,36 @@
 
 static void MainNotificationHandler(NSCharPtr notificationName, NotificationData data, void *pUserData)
 {
-    _tprintf(_T("Received notification: %s\n"), notificationName);
+    printf("Received notification: %s\n", notificationName);
 }
 
-int main()
+#ifdef _WIN32
+int main(int argc, const char * argv[])
+#else
+int mac_main(int argc, const char * argv[])
+#endif
 {
     InitializeNotification();
     bool bContinue(true);
     while (bContinue)
     {
-        _tprintf(_T("1. Register\n2. Send\n3. Exit\n\t"));
-        TCHAR ch(_getche());
+        printf("1. Register\n2. Send\n3. Exit\n\t");
+        char ch(getchar());
         switch (ch)
         {
         case '1':
         case '2':
-            _tprintf(_T("\tName: "));
+            printf("\tName: ");
             {
-                TCHAR name[256];
-                _tscanf_s(_T("%256s"), name, (unsigned int)_countof(name));
+                char name[256];
+                scanf_s("%256s", name, (unsigned int)sizeof(name)/sizeof(name[0]));
 
                 int retVal = 0;
                 if (ch == '1')
                     retVal = RegisterNotification(name, MainNotificationHandler, NULL);
                 else
                     retVal = SendNotification(name, NULL);
-                _tprintf(_T("status: %d\n"), retVal);
+                printf("status: %d\n", retVal);
             }
             break;
         case '3':

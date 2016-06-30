@@ -1,0 +1,6 @@
+LIBRARY
+EXPORTS
+    Initialize_DLT
+    Finalize_DLT
+    ProcessMessage_DLT
+    FreeMessage_DLT

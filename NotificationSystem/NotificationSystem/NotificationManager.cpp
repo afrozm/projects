@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "NotificationManager.h"
-#include "Property.h"
-#include "StringUtils.h"
 #ifdef _WIN32
 #include "NotificationManagerWin.h"
+#elif defined(__APPLE__)
+#include "NotificationManagerMac.h"
 #endif
 
 void NotificationManager::WorkerThreadProc()
@@ -21,20 +21,19 @@ void NotificationManager::WorkerThreadProc()
         }
         if (NULL != data) {
             // process data
-            lstring notificationName(GetNotificationData(data, _T("_name")));
+            const std::string &notificationName(data->GetParamValue(NS_NOTF_NAME));
             std::list<NotficationHandlerData> handlers;
             if (!notificationName.empty())
             {
                 std::lock_guard<std::mutex> guard(mMutextHandler);
                 for (auto &hander : mMapNotificationHandler) {
-                    if (StringUtils::WildCardMatch(hander.first, notificationName))
+                    if (!lstrcmpi(hander.first.c_str(), notificationName.c_str()))
                         handlers.insert(handlers.end(), hander.second.begin(), hander.second.end());
                 }
             }
             for (auto &handler : handlers)
                 handler.handler(notificationName.c_str(), data, handler.pUserData);
-            // delete data
-            ReleaseNotificationData(data);
+            delete data;
         }
     }
 }
@@ -47,6 +46,7 @@ NotificationManager::NotificationManager()
 
 NotificationManager::~NotificationManager()
 {
+    Finalize();
 }
 
 
@@ -60,6 +60,8 @@ NotificationManager& NotificationManager::GetInstance()
     static
 #ifdef _WIN32
         NotificationManagerWin
+#else
+    NotificationManagerMac
 #endif // _WIN32
         sNotificationManager;
     return sNotificationManager;
@@ -84,7 +86,7 @@ int NotificationManager::Finalize()
             std::lock_guard<std::mutex> lk(mMutextQueue);
             while (!mQueuedData.empty())
             {
-                ReleaseNotificationData(mQueuedData.front());
+                delete mQueuedData.front();
                 mQueuedData.pop_front();
             }
         }
@@ -94,41 +96,6 @@ int NotificationManager::Finalize()
         m_pWorkerThread = NULL;
     }
     return retVal;
-}
-
-NotificationData NotificationManager::CreateNotificationData()
-{
-    return new Property;
-}
-
-bool NotificationManager::SetNotificationData(NotificationData notificationData, NSCharPtr key, NSCharPtr value, bool bOverwrite)
-{
-    bool bSet(NULL != notificationData);
-    if (bSet) {
-        Property *pProperty((Property *)notificationData);
-        if (NULL == key)
-            pProperty->RemoveAll();
-        else if (NULL == value)
-            pProperty->RemoveKey(key);
-        else
-            pProperty->SetValue(key, value, bOverwrite);
-    }
-    return bSet;
-}
-
-NSCharPtr NotificationManager::GetNotificationData(NotificationData notificationData, NSCharPtr key)
-{
-    if (NULL != notificationData && NULL != key)
-        return ((Property*)notificationData)->GetValue(key).c_str();
-    return NULL;
-}
-
-bool NotificationManager::ReleaseNotificationData(NotificationData data)
-{
-    bool bRelease(data != NULL);
-    if (bRelease)
-        delete (Property*)data;
-    return bRelease;
 }
 
 int NotificationManager::RegisterNotification(NSCharPtr notificationName, NotificationHandler handler, void * pUserData, bool bRegister /* = true */)
@@ -168,18 +135,18 @@ int NotificationManager::RegisterNotification(NSCharPtr notificationName, Notifi
 
 int NotificationManager::SendNotification(NSCharPtr notificationName, NotificationData data)
 {
-    int retVal(2);
-    lstring strData;
-    {
-        PropertySet ps;
-        Property &prop(ps.GetMapProperty()[_T("data")]);
-        if (data)
-            prop = *(Property*)data;
-        prop.SetValue(_T("_name"), notificationName);
-        PropertySetStreamer pss;
-        pss.SetPropertySetStream(ps);
-        pss.WrtieToString(strData);
-        strData += _T("#end");
-    }
+    std::string strData;
+    data->SetParamValue(NS_NOTF_NAME, notificationName);
+    strData = data->ToString();
     return SendNotification(strData);
+}
+
+void NotificationManager::AddNotificationToQueue(const std::string &notData)
+{
+    Paramters *notDataParams = new Paramters(notData);
+    {
+        std::lock_guard<std::mutex> lk(mMutextQueue);
+        mQueuedData.push_back(notDataParams);
+    }
+    mcvQueue.notify_one();
 }

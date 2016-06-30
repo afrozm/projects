@@ -61,6 +61,15 @@ namespace STLUtils {
         std::stringstream interpreter;
         return interpreter << inSource && interpreter >> outTarget;
     }
+    template<typename Source>
+    bool ChangeType(const Source &inSource, void* &outTarget)
+    {
+        std::stringstream interpreter;
+        unsigned long long value(0); // Direct coversion to void* is buggy and trancating
+        bool bRet = interpreter << inSource && interpreter >> std::hex >> value;
+        outTarget = (void*)value;
+        return bRet;
+    }
     template<typename Source, typename Target>
     Target ChangeType(const Source &inSource)
     {

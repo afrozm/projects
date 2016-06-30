@@ -3,8 +3,10 @@
 #include <string>
 #ifdef _WIN32
 #define DEFAULT_LIB_EXTN ".dll"
+#define DEFAULT_LIB_PREFIX ""
 #else
 #define DEFAULT_LIB_EXTN ".dylib"
+#define DEFAULT_LIB_PREFIX "lib"
 #endif // _WIN32
 
 class LibraryMessageSender

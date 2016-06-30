@@ -14,16 +14,12 @@ public:
     virtual int Initialize();
     virtual int Finalize();
 
-    static NotificationData CreateNotificationData();
-    static bool SetNotificationData(NotificationData notificationData, NSCharPtr key, NSCharPtr value, bool bOverwrite);
-    static NSCharPtr GetNotificationData(NotificationData notificationData, NSCharPtr key);
-    static bool ReleaseNotificationData(NotificationData data);
-
     int RegisterNotification(NSCharPtr notificationName, NotificationHandler handler, void * pUserData, bool bRegister = true);
     int SendNotification(NSCharPtr notificationName, NotificationData data);
+    void AddNotificationToQueue(const std::string &notData);
 protected:
     void WorkerThreadProc();
-    virtual int SendNotification(const lstring &notData) = 0;
+    virtual int SendNotification(const std::string &notData) = 0;
     NotificationManager();
     virtual ~NotificationManager();
     bool IsFinished();

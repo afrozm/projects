@@ -1,0 +1,397 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		56E311EB1D23834100E24A52 /* NotificationSystemTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311E91D23834100E24A52 /* NotificationSystemTest.cpp */; };
+		56E311F61D238B0900E24A52 /* LibraryMessageSender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F51D238B0900E24A52 /* LibraryMessageSender.cpp */; };
+		56E311F91D238B5F00E24A52 /* NotificationSystemClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F81D238B5F00E24A52 /* NotificationSystemClient.cpp */; };
+		56E312041D238F1300E24A52 /* Paramters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E312031D238F1300E24A52 /* Paramters.cpp */; };
+		56E312171D23C81D00E24A52 /* nsapp_main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 56E312161D23C81D00E24A52 /* nsapp_main.mm */; };
+		56E3121A1D23C9B800E24A52 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56E312191D23C9B800E24A52 /* AppKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		56E3120B1D2395DC00E24A52 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 56E312071D2395DB00E24A52 /* NotificationSystem.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5617192D1D2228DD0097E837;
+			remoteInfo = NotificationSystem;
+		};
+		56E3120D1D2395E600E24A52 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 56E312071D2395DB00E24A52 /* NotificationSystem.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5617192C1D2228DD0097E837;
+			remoteInfo = NotificationSystem;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		56E311DD1D23830200E24A52 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		56E311DF1D23830200E24A52 /* NotificationSystemTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NotificationSystemTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		56E311E91D23834100E24A52 /* NotificationSystemTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystemTest.cpp; sourceTree = SOURCE_ROOT; };
+		56E311EA1D23834100E24A52 /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = SOURCE_ROOT; };
+		56E311ED1D23876200E24A52 /* NotificationSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NotificationSystem.h; path = ../NotificationSystem/NotificationSystem.h; sourceTree = "<group>"; };
+		56E311F51D238B0900E24A52 /* LibraryMessageSender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LibraryMessageSender.cpp; path = ../../../LibraryInterfaceTemplate/LibraryInterfaceTemplate/LibraryMessageSender.cpp; sourceTree = "<group>"; };
+		56E311F71D238B1100E24A52 /* LibraryMessageSender.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LibraryMessageSender.h; path = ../../LibraryInterfaceTemplate/LibraryInterfaceTemplate/LibraryMessageSender.h; sourceTree = "<group>"; };
+		56E311F81D238B5F00E24A52 /* NotificationSystemClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystemClient.cpp; sourceTree = SOURCE_ROOT; };
+		56E311FE1D238DB600E24A52 /* STLUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = STLUtils.h; path = ../../Common/STLUtils.h; sourceTree = "<group>"; };
+		56E312021D238F0D00E24A52 /* Paramters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Paramters.h; path = /Users/afroz_muzammil/projects/NotificationSystem/NotificationSystem/../../LibraryInterfaceTemplate/DynamicLibraryTemplate/Paramters.h; sourceTree = "<absolute>"; };
+		56E312031D238F1300E24A52 /* Paramters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Paramters.cpp; path = /Users/afroz_muzammil/projects/NotificationSystem/NotificationSystem/../../LibraryInterfaceTemplate/DynamicLibraryTemplate/Paramters.cpp; sourceTree = "<absolute>"; };
+		56E312071D2395DB00E24A52 /* NotificationSystem.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = NotificationSystem.xcodeproj; path = ../NotificationSystem/NotificationSystem.xcodeproj; sourceTree = "<group>"; };
+		56E312161D23C81D00E24A52 /* nsapp_main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = nsapp_main.mm; path = ../../../Common/nsapp_main.mm; sourceTree = "<group>"; };
+		56E312191D23C9B800E24A52 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		56E311DC1D23830200E24A52 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56E3121A1D23C9B800E24A52 /* AppKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		56E311D61D23830200E24A52 = {
+			isa = PBXGroup;
+			children = (
+				56E312191D23C9B800E24A52 /* AppKit.framework */,
+				56E312061D2395D000E24A52 /* Dependencies */,
+				56E311EC1D23875000E24A52 /* Header Files */,
+				56E311E11D23830200E24A52 /* NotificationSystemTest */,
+				56E311E01D23830200E24A52 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		56E311E01D23830200E24A52 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56E311DF1D23830200E24A52 /* NotificationSystemTest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		56E311E11D23830200E24A52 /* NotificationSystemTest */ = {
+			isa = PBXGroup;
+			children = (
+				56E312181D23C82200E24A52 /* Common */,
+				56E312011D238DEB00E24A52 /* LibraryInterface */,
+				56E311E91D23834100E24A52 /* NotificationSystemTest.cpp */,
+				56E311F81D238B5F00E24A52 /* NotificationSystemClient.cpp */,
+			);
+			path = NotificationSystemTest;
+			sourceTree = "<group>";
+		};
+		56E311EC1D23875000E24A52 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				56E312001D238DDE00E24A52 /* LibraryInterface */,
+				56E311FF1D238DB600E24A52 /* Common */,
+				56E311ED1D23876200E24A52 /* NotificationSystem.h */,
+				56E311EA1D23834100E24A52 /* stdafx.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		56E311FF1D238DB600E24A52 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				56E311FE1D238DB600E24A52 /* STLUtils.h */,
+			);
+			name = Common;
+			path = ../NotificationSystem;
+			sourceTree = "<group>";
+		};
+		56E312001D238DDE00E24A52 /* LibraryInterface */ = {
+			isa = PBXGroup;
+			children = (
+				56E311F71D238B1100E24A52 /* LibraryMessageSender.h */,
+				56E312021D238F0D00E24A52 /* Paramters.h */,
+			);
+			name = LibraryInterface;
+			sourceTree = "<group>";
+		};
+		56E312011D238DEB00E24A52 /* LibraryInterface */ = {
+			isa = PBXGroup;
+			children = (
+				56E311F51D238B0900E24A52 /* LibraryMessageSender.cpp */,
+				56E312031D238F1300E24A52 /* Paramters.cpp */,
+			);
+			name = LibraryInterface;
+			sourceTree = "<group>";
+		};
+		56E312061D2395D000E24A52 /* Dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				56E312071D2395DB00E24A52 /* NotificationSystem.xcodeproj */,
+			);
+			name = Dependencies;
+			sourceTree = "<group>";
+		};
+		56E312081D2395DB00E24A52 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56E3120C1D2395DC00E24A52 /* libNotificationSystem.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		56E312181D23C82200E24A52 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				56E312161D23C81D00E24A52 /* nsapp_main.mm */,
+			);
+			name = Common;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		56E311DE1D23830200E24A52 /* NotificationSystemTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 56E311E61D23830200E24A52 /* Build configuration list for PBXNativeTarget "NotificationSystemTest" */;
+			buildPhases = (
+				56E311DB1D23830200E24A52 /* Sources */,
+				56E311DC1D23830200E24A52 /* Frameworks */,
+				56E311DD1D23830200E24A52 /* CopyFiles */,
+				56E312051D2392DF00E24A52 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				56E3120E1D2395E600E24A52 /* PBXTargetDependency */,
+			);
+			name = NotificationSystemTest;
+			productName = NotificationSystemTest;
+			productReference = 56E311DF1D23830200E24A52 /* NotificationSystemTest */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		56E311D71D23830200E24A52 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = "Afroz Muzammil";
+				TargetAttributes = {
+					56E311DE1D23830200E24A52 = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 56E311DA1D23830200E24A52 /* Build configuration list for PBXProject "NotificationSystemTest" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 56E311D61D23830200E24A52;
+			productRefGroup = 56E311E01D23830200E24A52 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 56E312081D2395DB00E24A52 /* Products */;
+					ProjectRef = 56E312071D2395DB00E24A52 /* NotificationSystem.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				56E311DE1D23830200E24A52 /* NotificationSystemTest */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		56E3120C1D2395DC00E24A52 /* libNotificationSystem.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libNotificationSystem.dylib;
+			remoteRef = 56E3120B1D2395DC00E24A52 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		56E312051D2392DF00E24A52 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto -v ${CONFIGURATION_BUILD_DIR}/../../../NotificationSystem/build/${CONFIGURATION}/libNotificationSystem.dylib ${CONFIGURATION_BUILD_DIR}/libNotificationSystem.dylib";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		56E311DB1D23830200E24A52 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56E312171D23C81D00E24A52 /* nsapp_main.mm in Sources */,
+				56E311F91D238B5F00E24A52 /* NotificationSystemClient.cpp in Sources */,
+				56E312041D238F1300E24A52 /* Paramters.cpp in Sources */,
+				56E311F61D238B0900E24A52 /* LibraryMessageSender.cpp in Sources */,
+				56E311EB1D23834100E24A52 /* NotificationSystemTest.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		56E3120E1D2395E600E24A52 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = NotificationSystem;
+			targetProxy = 56E3120D1D2395E600E24A52 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		56E311E41D23830200E24A52 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		56E311E51D23830200E24A52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		56E311E71D23830200E24A52 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		56E311E81D23830200E24A52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		56E311DA1D23830200E24A52 /* Build configuration list for PBXProject "NotificationSystemTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56E311E41D23830200E24A52 /* Debug */,
+				56E311E51D23830200E24A52 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		56E311E61D23830200E24A52 /* Build configuration list for PBXNativeTarget "NotificationSystemTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56E311E71D23830200E24A52 /* Debug */,
+				56E311E81D23830200E24A52 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 56E311D71D23830200E24A52 /* Project object */;
+}

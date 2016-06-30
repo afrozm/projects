@@ -5,13 +5,13 @@
 
 #pragma once
 
+#ifdef _WIN32
 #include "targetver.h"
+#include <conio.h>
+#else
+#include <curses.h>
+#define scanf_s(p,d,s) scanf(p,d)
+#endif
 
 #include <stdio.h>
-#include <tchar.h>
-
-
-
-#include <conio.h>
 #include <stdlib.h>
-#include <windows.h>

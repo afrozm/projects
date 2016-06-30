@@ -7,24 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		561719381D22296E0097E837 /* DynamicLibraryTemplate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719351D22296E0097E837 /* DynamicLibraryTemplate.cpp */; };
-		561719391D22296E0097E837 /* ExampleHessageHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719361D22296E0097E837 /* ExampleHessageHandler.cpp */; };
-		5617193A1D22296E0097E837 /* Paramters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719371D22296E0097E837 /* Paramters.cpp */; };
-		561719421D222AB30097E837 /* LibraryMessageHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719411D222AB30097E837 /* LibraryMessageHandler.cpp */; };
+		561719381D22296E0097E837 /* NotificationSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719351D22296E0097E837 /* NotificationSystem.cpp */; };
+		56E311CC1D22537100E24A52 /* NotificationSystemMessageHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311CB1D22537100E24A52 /* NotificationSystemMessageHandler.cpp */; };
+		56E311D11D2255E100E24A52 /* NotificationManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311D01D2255E100E24A52 /* NotificationManager.cpp */; };
+		56E311D41D22641400E24A52 /* NotificationManagerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 56E311D21D22641400E24A52 /* NotificationManagerMac.mm */; };
+		56E311D51D22641400E24A52 /* NotificationManagerMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 56E311D31D22641400E24A52 /* NotificationManagerMac.h */; };
+		56E311F31D238ABF00E24A52 /* LibraryMessageHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F11D238ABF00E24A52 /* LibraryMessageHandler.cpp */; };
+		56E311F41D238ABF00E24A52 /* Paramters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F21D238ABF00E24A52 /* Paramters.cpp */; };
+		56E312101D23A38400E24A52 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56E3120F1D23A38400E24A52 /* AppKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5617192D1D2228DD0097E837 /* libDynamicLibraryTemplate.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libDynamicLibraryTemplate.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		561719351D22296E0097E837 /* DynamicLibraryTemplate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DynamicLibraryTemplate.cpp; sourceTree = "<group>"; };
-		561719361D22296E0097E837 /* ExampleHessageHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExampleHessageHandler.cpp; sourceTree = "<group>"; };
-		561719371D22296E0097E837 /* Paramters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Paramters.cpp; sourceTree = "<group>"; };
-		5617193C1D22299F0097E837 /* ExampleHessageHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExampleHessageHandler.h; sourceTree = "<group>"; };
-		5617193D1D22299F0097E837 /* ILibraryExports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ILibraryExports.h; sourceTree = "<group>"; };
-		5617193E1D22299F0097E837 /* LibraryMessageHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LibraryMessageHandler.h; sourceTree = "<group>"; };
-		5617193F1D22299F0097E837 /* Paramters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Paramters.h; sourceTree = "<group>"; };
+		5617192D1D2228DD0097E837 /* libNotificationSystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libNotificationSystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		561719351D22296E0097E837 /* NotificationSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystem.cpp; sourceTree = "<group>"; };
 		561719401D22299F0097E837 /* stdafx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
-		561719411D222AB30097E837 /* LibraryMessageHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibraryMessageHandler.cpp; sourceTree = "<group>"; };
 		561719431D2234D60097E837 /* Export.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = Export.exp; sourceTree = "<group>"; };
+		56E311CB1D22537100E24A52 /* NotificationSystemMessageHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystemMessageHandler.cpp; sourceTree = "<group>"; };
+		56E311CD1D22537D00E24A52 /* NotificationSystemMessageHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationSystemMessageHandler.h; sourceTree = "<group>"; };
+		56E311CE1D2254B600E24A52 /* NotificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationManager.h; sourceTree = "<group>"; };
+		56E311CF1D2254B600E24A52 /* NotificationSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationSystem.h; sourceTree = "<group>"; };
+		56E311D01D2255E100E24A52 /* NotificationManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationManager.cpp; sourceTree = "<group>"; };
+		56E311D21D22641400E24A52 /* NotificationManagerMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NotificationManagerMac.mm; sourceTree = "<group>"; };
+		56E311D31D22641400E24A52 /* NotificationManagerMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotificationManagerMac.h; sourceTree = "<group>"; };
+		56E311EE1D238AA500E24A52 /* ILibraryExports.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ILibraryExports.h; path = ../../LibraryInterfaceTemplate/DynamicLibraryTemplate/ILibraryExports.h; sourceTree = "<group>"; };
+		56E311EF1D238AA500E24A52 /* LibraryMessageHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LibraryMessageHandler.h; path = ../../LibraryInterfaceTemplate/DynamicLibraryTemplate/LibraryMessageHandler.h; sourceTree = "<group>"; };
+		56E311F01D238AA500E24A52 /* Paramters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Paramters.h; path = ../../LibraryInterfaceTemplate/DynamicLibraryTemplate/Paramters.h; sourceTree = "<group>"; };
+		56E311F11D238ABF00E24A52 /* LibraryMessageHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LibraryMessageHandler.cpp; path = ../../LibraryInterfaceTemplate/DynamicLibraryTemplate/LibraryMessageHandler.cpp; sourceTree = "<group>"; };
+		56E311F21D238ABF00E24A52 /* Paramters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Paramters.cpp; path = ../../LibraryInterfaceTemplate/DynamicLibraryTemplate/Paramters.cpp; sourceTree = "<group>"; };
+		56E3120F1D23A38400E24A52 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56E312101D23A38400E24A52 /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,6 +52,7 @@
 		561719241D2228DD0097E837 = {
 			isa = PBXGroup;
 			children = (
+				56E3120F1D23A38400E24A52 /* AppKit.framework */,
 				5617193B1D2229810097E837 /* Header Files */,
 				561719341D2229600097E837 /* Source Files */,
 				5617192E1D2228DD0097E837 /* Products */,
@@ -50,7 +62,7 @@
 		5617192E1D2228DD0097E837 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5617192D1D2228DD0097E837 /* libDynamicLibraryTemplate.dylib */,
+				5617192D1D2228DD0097E837 /* libNotificationSystem.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -58,11 +70,12 @@
 		561719341D2229600097E837 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
-				561719351D22296E0097E837 /* DynamicLibraryTemplate.cpp */,
-				561719361D22296E0097E837 /* ExampleHessageHandler.cpp */,
-				561719411D222AB30097E837 /* LibraryMessageHandler.cpp */,
-				561719371D22296E0097E837 /* Paramters.cpp */,
+				56E311FD1D238D8800E24A52 /* DynamicLibrary */,
 				561719431D2234D60097E837 /* Export.exp */,
+				56E311D01D2255E100E24A52 /* NotificationManager.cpp */,
+				56E311D21D22641400E24A52 /* NotificationManagerMac.mm */,
+				561719351D22296E0097E837 /* NotificationSystem.cpp */,
+				56E311CB1D22537100E24A52 /* NotificationSystemMessageHandler.cpp */,
 			);
 			name = "Source Files";
 			sourceTree = "<group>";
@@ -70,13 +83,33 @@
 		5617193B1D2229810097E837 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
-				5617193C1D22299F0097E837 /* ExampleHessageHandler.h */,
-				5617193D1D22299F0097E837 /* ILibraryExports.h */,
-				5617193E1D22299F0097E837 /* LibraryMessageHandler.h */,
-				5617193F1D22299F0097E837 /* Paramters.h */,
+				56E311FB1D238D5600E24A52 /* DynamicLibrary */,
+				56E311CE1D2254B600E24A52 /* NotificationManager.h */,
+				56E311D31D22641400E24A52 /* NotificationManagerMac.h */,
+				56E311CF1D2254B600E24A52 /* NotificationSystem.h */,
+				56E311CD1D22537D00E24A52 /* NotificationSystemMessageHandler.h */,
 				561719401D22299F0097E837 /* stdafx.h */,
 			);
 			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		56E311FB1D238D5600E24A52 /* DynamicLibrary */ = {
+			isa = PBXGroup;
+			children = (
+				56E311EE1D238AA500E24A52 /* ILibraryExports.h */,
+				56E311EF1D238AA500E24A52 /* LibraryMessageHandler.h */,
+				56E311F01D238AA500E24A52 /* Paramters.h */,
+			);
+			name = DynamicLibrary;
+			sourceTree = "<group>";
+		};
+		56E311FD1D238D8800E24A52 /* DynamicLibrary */ = {
+			isa = PBXGroup;
+			children = (
+				56E311F11D238ABF00E24A52 /* LibraryMessageHandler.cpp */,
+				56E311F21D238ABF00E24A52 /* Paramters.cpp */,
+			);
+			name = DynamicLibrary;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -86,15 +119,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56E311D51D22641400E24A52 /* NotificationManagerMac.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		5617192C1D2228DD0097E837 /* DynamicLibraryTemplate */ = {
+		5617192C1D2228DD0097E837 /* NotificationSystem */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 561719311D2228DD0097E837 /* Build configuration list for PBXNativeTarget "DynamicLibraryTemplate" */;
+			buildConfigurationList = 561719311D2228DD0097E837 /* Build configuration list for PBXNativeTarget "NotificationSystem" */;
 			buildPhases = (
 				561719291D2228DD0097E837 /* Sources */,
 				5617192A1D2228DD0097E837 /* Frameworks */,
@@ -104,9 +138,9 @@
 			);
 			dependencies = (
 			);
-			name = DynamicLibraryTemplate;
-			productName = DynamicLibraryTemplate;
-			productReference = 5617192D1D2228DD0097E837 /* libDynamicLibraryTemplate.dylib */;
+			name = NotificationSystem;
+			productName = NotificationSystem;
+			productReference = 5617192D1D2228DD0097E837 /* libNotificationSystem.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -123,7 +157,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 561719281D2228DD0097E837 /* Build configuration list for PBXProject "DynamicLibraryTemplate" */;
+			buildConfigurationList = 561719281D2228DD0097E837 /* Build configuration list for PBXProject "NotificationSystem" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -135,7 +169,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5617192C1D2228DD0097E837 /* DynamicLibraryTemplate */,
+				5617192C1D2228DD0097E837 /* NotificationSystem */,
 			);
 		};
 /* End PBXProject section */
@@ -145,10 +179,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				561719391D22296E0097E837 /* ExampleHessageHandler.cpp in Sources */,
-				561719381D22296E0097E837 /* DynamicLibraryTemplate.cpp in Sources */,
-				561719421D222AB30097E837 /* LibraryMessageHandler.cpp in Sources */,
-				5617193A1D22296E0097E837 /* Paramters.cpp in Sources */,
+				56E311D41D22641400E24A52 /* NotificationManagerMac.mm in Sources */,
+				56E311CC1D22537100E24A52 /* NotificationSystemMessageHandler.cpp in Sources */,
+				561719381D22296E0097E837 /* NotificationSystem.cpp in Sources */,
+				56E311D11D2255E100E24A52 /* NotificationManager.cpp in Sources */,
+				56E311F31D238ABF00E24A52 /* LibraryMessageHandler.cpp in Sources */,
+				56E311F41D238ABF00E24A52 /* Paramters.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +287,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
 				EXPORTED_SYMBOLS_FILE = Export.exp;
+				HEADER_SEARCH_PATHS = ../../Common;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -262,6 +299,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
 				EXPORTED_SYMBOLS_FILE = Export.exp;
+				HEADER_SEARCH_PATHS = ../../Common;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -269,7 +307,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		561719281D2228DD0097E837 /* Build configuration list for PBXProject "DynamicLibraryTemplate" */ = {
+		561719281D2228DD0097E837 /* Build configuration list for PBXProject "NotificationSystem" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5617192F1D2228DD0097E837 /* Debug */,
@@ -278,7 +316,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		561719311D2228DD0097E837 /* Build configuration list for PBXNativeTarget "DynamicLibraryTemplate" */ = {
+		561719311D2228DD0097E837 /* Build configuration list for PBXNativeTarget "NotificationSystem" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				561719321D2228DD0097E837 /* Debug */,

@@ -1,0 +1,10 @@
+#  Export.exp
+#  DynamicLibraryTemplate
+#
+#  Created by Afroz Muzammil on 28/6/16.
+#  Copyright © 2016 Afroz Muzammil. All rights reserved.
+
+_Initialize_NotificationSystem
+_Finalize_NotificationSystem
+_ProcessMessage_NotificationSystem
+_FreeMessage_NotificationSystem
