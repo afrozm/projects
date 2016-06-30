@@ -16,7 +16,7 @@ public:
     virtual int Initialize() override;
     virtual int Finalize() override;
 protected:
-    virtual int SendNotification(const lstring &notData) override;
+    virtual int SendNotification(const std::string &notData) override;
 private:
     void WindowThreadProc();
     HWND m_hWndDialog;

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "NotificationManagerWin.h"
 #include "resource.h"
-#include "Property.h"
 
 NotificationManagerWin::NotificationManagerWin()
     : m_hWndDialog(NULL), m_pWindowThread(NULL)
@@ -31,12 +30,7 @@ INT_PTR NotificationManagerWin::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPara
         COPYDATASTRUCT *pcs((COPYDATASTRUCT*)lParam);
         if (NULL == pcs)
             break;
-        PropertySetStreamer pss;
-        PropertySet ps;
-        pss.SetPropertySetStream(ps);
-        pss.ReadFromString(lstring((LPCTSTR)pcs->lpData, pcs->cbData));
-        NotificationData notData(CreateNotificationData());
-        *((Property*)notData) = ps.GetProperty(_T("data"));
+        NotificationData notData(new Paramters(std::string((const char *)pcs->lpData, pcs->cbData)));
         {
             std::lock_guard<std::mutex> lk(mMutextQueue);
             mQueuedData.push_back(notData);
@@ -70,15 +64,15 @@ BOOL NotificationManagerWin::EnumWindowsProc(HWND hWnd, LPARAM lParam)
         && GetWindowText(hWnd, buffer, _countof(buffer))
         && !lstrcmpi(buffer, _T("NotificationWindowHelper"))) {    // Notification window
         if (SendMessage(hWnd, WM_NM_HANDLE_NOTIFCATION, 0, 0)) { // Handle notification
-            lstring *pData((lstring*)lParam);
-            COPYDATASTRUCT cpData = { 1, (DWORD)pData->length() * sizeof(TCHAR), (PVOID)pData->c_str() };
+            std::string *pData((std::string*)lParam);
+            COPYDATASTRUCT cpData = { 1, (DWORD)pData->length() * sizeof(char), (PVOID)pData->c_str() };
             SendMessage(hWnd, WM_COPYDATA, (WPARAM)m_hWndDialog, (LPARAM)&cpData);
         }
     }
     return TRUE;
 }
 
-int NotificationManagerWin::SendNotification(const lstring &notData)
+int NotificationManagerWin::SendNotification(const std::string &notData)
 {
     EnumWindows(NotificationManager_EnumWindowsProc, (LPARAM)&notData);
     return 0;

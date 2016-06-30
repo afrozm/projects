@@ -24,12 +24,27 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\LibraryInterfaceTemplate\LibraryInterfaceTemplate\LibraryMessageSender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\Paramters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NotificationSystemTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NotificationSystemClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LibraryInterfaceTemplate\LibraryInterfaceTemplate\LibraryMessageSender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\Paramters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

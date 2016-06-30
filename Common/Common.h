@@ -11,7 +11,7 @@
 #else
 #define lstrcmpi strcasecmp
 #endif
-
+#define _stricmp strcasecmp
 #endif
 
 #if defined(_UNICODE) || defined(UNICODE)

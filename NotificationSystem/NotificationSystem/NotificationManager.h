@@ -38,7 +38,7 @@ protected:
         NotificationHandler handler;
         void *pUserData;
     };
-    typedef std::map<lstring, std::list<NotficationHandlerData>> MapNotificationHandler;
+    typedef std::map<std::string, std::list<NotficationHandlerData>> MapNotificationHandler;
     MapNotificationHandler mMapNotificationHandler;
     std::mutex mMutextHandler;
 };

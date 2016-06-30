@@ -27,7 +27,7 @@ void NotificationManager::WorkerThreadProc()
             {
                 std::lock_guard<std::mutex> guard(mMutextHandler);
                 for (auto &hander : mMapNotificationHandler) {
-                    if (!lstrcmpi(hander.first.c_str(), notificationName.c_str()))
+                    if (!_stricmp(hander.first.c_str(), notificationName.c_str()))
                         handlers.insert(handlers.end(), hander.second.begin(), hander.second.end());
                 }
             }

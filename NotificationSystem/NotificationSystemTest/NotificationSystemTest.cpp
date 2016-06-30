@@ -28,7 +28,7 @@ int mac_main(int argc, const char * argv[])
             printf("\tName: ");
             {
                 char name[256];
-                scanf_s("%256s", name, (unsigned int)sizeof(name)/sizeof(name[0]));
+                scanf_s("%255s", name, (unsigned)(sizeof(name)/sizeof(name[0])));
 
                 int retVal = 0;
                 if (ch == '1')

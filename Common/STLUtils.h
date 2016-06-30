@@ -41,26 +41,13 @@ public:
 };
 
 namespace STLUtils {
-	typedef
-#ifdef _WIN32
-	std::wstringstream
-#else
-	std::stringstream
-#endif
-	StringStream;
 
 	template<typename Source, typename Target>
 	bool ChangeType(const Source &inSource, Target &outTarget)
 	{
-		StringStream interpreter;
+        std::stringstream interpreter;
 		return interpreter << inSource && interpreter >> outTarget;
 	}
-    template<typename Source>
-    bool ChangeType(const Source &inSource, std::string &outTarget)
-    {
-        std::stringstream interpreter;
-        return interpreter << inSource && interpreter >> outTarget;
-    }
     template<typename Source>
     bool ChangeType(const Source &inSource, void* &outTarget)
     {
