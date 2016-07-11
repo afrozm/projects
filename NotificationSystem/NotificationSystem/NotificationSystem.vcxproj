@@ -157,10 +157,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\ProcessUtil.h" />
+    <ClInclude Include="..\..\Common\StdCondVar.h" />
     <ClInclude Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\ILibraryExports.h" />
     <ClInclude Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\LibraryMessageHandler.h" />
     <ClInclude Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\Paramters.h" />
-    <ClInclude Include="ExampleHessageHandler.h" />
     <ClInclude Include="NotificationManager.h" />
     <ClInclude Include="NotificationManagerWin.h" />
     <ClInclude Include="NotificationSystem.h" />
@@ -170,6 +171,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\ProcessUtil.cpp" />
+    <ClCompile Include="..\..\Common\StdCondVar.cpp" />
     <ClCompile Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\LibraryMessageHandler.cpp" />
     <ClCompile Include="..\..\LibraryInterfaceTemplate\DynamicLibraryTemplate\Paramters.cpp" />
     <ClCompile Include="dllmain.cpp">

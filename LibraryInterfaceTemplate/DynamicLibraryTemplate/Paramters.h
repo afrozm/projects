@@ -14,7 +14,7 @@ public:
     ~Paramters();
     StringParam ToString() const;
     void FromString(const StringParam &inParams);
-
+    void operator += (const Paramters &inOther);
 private:
     typedef std::map<StringParam, StringParam> MapStringParam;
     MapStringParam mParamters;

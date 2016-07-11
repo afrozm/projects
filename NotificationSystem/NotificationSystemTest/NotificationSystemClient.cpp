@@ -46,7 +46,8 @@ int SendNotification(NSCharPtr notificationName, NotificationData data)
     std::string result;
     data->SetParamValue(NS_NOTF_NAME, notificationName);
     sLibraryMessageSender.ProcessMessage("SendNotification", data->ToString() ,result);
-    ChangeType(result, retVal);
+    data->FromString(result);
+    ChangeType(data->GetParamValue(NS_NOTF_RESULT), retVal);
     return retVal;
 }
 

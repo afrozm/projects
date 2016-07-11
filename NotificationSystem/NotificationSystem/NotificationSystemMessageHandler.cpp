@@ -44,6 +44,8 @@ void NotificationSystemMessageHandler::SendNotification(const StdString & msg, P
 {
     int retVal(::SendNotification(params.GetParamValue(NS_NOTF_NAME).c_str(), &params));
     ChangeType(retVal, outResult);
+    params.SetParamValue(NS_NOTF_RESULT, outResult);
+    outResult = params.ToString();
 }
 void NotificationSystemMessageHandler::RegisterNotification(const StdString & msg, Paramters & params, StdString & outResult)
 {

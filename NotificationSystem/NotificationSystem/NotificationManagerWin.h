@@ -1,5 +1,7 @@
 #pragma once
 #include "NotificationManager.h"
+#include <set>
+
 class NotificationManagerWin :
     public NotificationManager
 {
@@ -19,7 +21,13 @@ protected:
     virtual int SendNotification(const std::string &notData) override;
 private:
     void WindowThreadProc();
+    void UpdateRegisteredWnds();
+    void PostMyWndToOther(BOOL bAdd);
+    typedef std::set<HWND> SetHWND;
+    void GetRegWindows(SetHWND &outRegWindows);
     HWND m_hWndDialog;
     std::thread *m_pWindowThread;
+    SetHWND mRegisteredWnds;
+    std::mutex mLock;
 };
 

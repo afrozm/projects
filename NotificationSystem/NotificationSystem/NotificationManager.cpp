@@ -5,6 +5,10 @@
 #elif defined(__APPLE__)
 #include "NotificationManagerMac.h"
 #endif
+#include "ProcessUtil.h"
+#include "stlutils.h"
+#include <ctime>
+#include "StdCondVar.h"
 
 void NotificationManager::WorkerThreadProc()
 {
@@ -33,6 +37,15 @@ void NotificationManager::WorkerThreadProc()
             }
             for (auto &handler : handlers)
                 handler.handler(notificationName.c_str(), data, handler.pUserData);
+            // check if reply requested
+            if (handlers.size() > 0)
+            {
+                std::string reply(data->GetParamValue(NS_NOTF_REPLY));
+                if (_stricmp(reply.c_str(), notificationName.c_str())) {
+                    data->RemoveParam(NS_NOTF_SYNC);
+                    SendNotification(reply.c_str(), data);
+                }
+            }
             delete data;
         }
     }
@@ -112,14 +125,12 @@ int NotificationManager::RegisterNotification(NSCharPtr notificationName, Notifi
         if (bExists) {
             for (auto dit(cit->second.begin()); dit != cit->second.end(); ++dit) {
                 if (dit->handler == handler) {
-                    if (!bRegister) {
+                    if (!bRegister)
                         cit->second.erase(dit);
-                        bExists = false;
-                        break;
-                    }
                     else
                         dit->pUserData = pUserData;
                     bRegister = false;
+                    break;
                 }
             }
         }
@@ -129,16 +140,83 @@ int NotificationManager::RegisterNotification(NSCharPtr notificationName, Notifi
             else
                 mMapNotificationHandler[notificationName].push_back(NotficationHandlerData(handler, pUserData));
         }
+        else if (bExists && cit->second.empty())
+            mMapNotificationHandler.erase(notificationName);
     }
     return retVal;
 }
 
+struct NM_SyncCallData
+{
+    StdConditionVariable cv;
+    Paramters recveiedData;
+    NM_SyncCallData(NotificationManager *pMgr, NotificationData data);
+    ~NM_SyncCallData();
+private:
+    NotificationManager *pNotMgr;
+    NotificationData data;
+    bool bIsSync;
+    std::string replyNot, notName;
+};
+
+static void NotificationHandler_SyncCall(const char * notificationName, NotificationData data, void *pUserData)
+{
+    data->SetParamValue(NS_NOTF_REPLIED, "1");
+    ((NM_SyncCallData *)pUserData)->recveiedData = *data;
+    ((NM_SyncCallData *)pUserData)->cv.Signal();
+}
+NM_SyncCallData::NM_SyncCallData(NotificationManager *pMgr, NotificationData indata)
+    : pNotMgr(pMgr), data(indata)
+{
+    bIsSync = data->GetParamValue(NS_NOTF_SYNC) == "1";
+    if (bIsSync) {
+        notName = data->GetParamValue(NS_NOTF_NAME);
+        replyNot = data->GetParamValue(NS_NOTF_NAME);
+        // make reply as - message.pid.tid.time
+        std::string strId;
+        using namespace STLUtils;
+        // pid
+        ChangeType(ProcessUtil::GetCurrentProcessId(), strId);
+        replyNot += ".reply." + strId + ".";
+        // tid - thread id
+        ChangeType(ProcessUtil::GetCurrentThreadId(), strId);
+        replyNot += strId + ".";
+        // time stamp
+        ChangeType(std::time(nullptr), strId);
+        replyNot += strId;
+        data->SetParamValue(NS_NOTF_REPLY, replyNot);
+        // registry reply
+        pNotMgr->RegisterNotification(replyNot.c_str(), NotificationHandler_SyncCall, this);
+    }
+}
+NM_SyncCallData::~NM_SyncCallData()
+{
+    if (bIsSync) {
+        unsigned sleepMilliSec(0);
+        STLUtils::ChangeType(data->GetParamValue("_timeout"), sleepMilliSec);
+        if (sleepMilliSec == 0 || sleepMilliSec > 60 * 1000)
+            sleepMilliSec = 300;
+        // wait for .3 sec to receive the reply
+        cv.WaitForSignal(sleepMilliSec);
+        // un-register reply
+        pNotMgr->RegisterNotification(replyNot.c_str(), NULL, NULL, false);
+        *data += recveiedData;
+        if (data->GetParamValue(NS_NOTF_REPLIED).empty()) {
+            data->SetParamValue("_error", "timeout");
+            ProcessUtil::Sleep(50); // Sleep extra 50ms in case pending notification
+        }
+        data->RemoveParam(NS_NOTF_REPLY);
+        data->SetParamValue(NS_NOTF_NAME, notName);
+    }
+}
 int NotificationManager::SendNotification(NSCharPtr notificationName, NotificationData data)
 {
     std::string strData;
     data->SetParamValue(NS_NOTF_NAME, notificationName);
+    NM_SyncCallData synCallData(this, data);
     strData = data->ToString();
-    return SendNotification(strData);
+    int retVal = SendNotification(strData);
+    return retVal;
 }
 
 void NotificationManager::AddNotificationToQueue(const std::string &notData)

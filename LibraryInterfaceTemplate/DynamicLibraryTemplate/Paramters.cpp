@@ -88,3 +88,9 @@ void Paramters::FromString(const StringParam &inParams)
     if (!key.empty())
         mParamters[key] = value;
 }
+
+void Paramters::operator+=(const Paramters & inOther)
+{
+    for (auto &cit : inOther.mParamters)
+        SetParamValue(cit.first, cit.second);
+}

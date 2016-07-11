@@ -5,8 +5,9 @@
 
 #include "ProcessUtil.h"
 #include "Common.h"
-
+#include <Shellapi.h>
 #pragma comment(lib, "advapi32.lib")
+//#pragma comment(lib, "Shell32.lib")
 
 static BOOL GetLogonSID (HANDLE hToken, PSID *ppsid) 
 {
@@ -679,7 +680,7 @@ static BOOL AddAceToDesktop(HDESK hdesk, PSID psid)
    return bSuccess;
 }
 
-BOOL IsUserAdmin(VOID)
+BOOL ProcessUtil::IsUserAdmin(VOID)
 	/*++ 
 	Routine Description: This routine returns TRUE if the caller's
 	process is a member of the Administrators local group. Caller is NOT
@@ -764,7 +765,7 @@ static LPCTSTR GetExecutableArgFromCommandLine(LPCTSTR commandLine, LPTSTR outEx
     return *commandLine ? commandLine : NULL;
 }
 
-bool RunApplication(LPCTSTR commandLine,
+bool ProcessUtil::RunApplication(LPCTSTR commandLine,
     unsigned uRAF /*= RAF_BLOCKING*/, unsigned long *outExitCode /*= NULL*/)
 {
 	bool isSuccessful(false);
@@ -845,7 +846,7 @@ bool RunApplication(LPCTSTR commandLine,
 	return isSuccessful;
 }
 
-bool RunApplication(int argc, LPCTSTR * argv,
+bool ProcessUtil::RunApplication(int argc, LPCTSTR * argv,
     unsigned uRAF /*= RAF_BLOCKING*/, unsigned long *outExitCode /*= NULL*/)
 {
     lstring commandLine;
@@ -863,3 +864,17 @@ bool RunApplication(int argc, LPCTSTR * argv,
     return RunApplication(commandLine.c_str(), uRAF, outExitCode);
 }
 
+int ProcessUtil::GetCurrentProcessId()
+{
+    return (int)::GetCurrentProcessId();
+}
+
+int ProcessUtil::GetCurrentThreadId()
+{
+    return (int)::GetCurrentThreadId();
+}
+
+void ProcessUtil::Sleep(unsigned milliSeconds)
+{
+    ::Sleep(milliSeconds);
+}

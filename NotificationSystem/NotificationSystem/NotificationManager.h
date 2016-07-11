@@ -17,9 +17,10 @@ public:
     int RegisterNotification(NSCharPtr notificationName, NotificationHandler handler, void * pUserData, bool bRegister = true);
     int SendNotification(NSCharPtr notificationName, NotificationData data);
     void AddNotificationToQueue(const std::string &notData);
+    // Should be called internally
+    virtual int SendNotification(const std::string &notData) = 0;
 protected:
     void WorkerThreadProc();
-    virtual int SendNotification(const std::string &notData) = 0;
     NotificationManager();
     virtual ~NotificationManager();
     bool IsFinished();

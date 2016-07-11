@@ -4,6 +4,10 @@
 typedef const char* NSCharPtr;
 typedef Paramters* NotificationData;
 #define NS_NOTF_NAME "_name"
+#define NS_NOTF_SYNC "_sync"
+#define NS_NOTF_REPLY "_reply"
+#define NS_NOTF_RESULT "_result"
+#define NS_NOTF_REPLIED "_replied"
 
 // InitializeNotification
 //  Initializes notification system
