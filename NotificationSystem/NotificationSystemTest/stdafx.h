@@ -11,6 +11,7 @@
 #else
 #include <curses.h>
 #define scanf_s(p,d,s) scanf(p,d)
+#define _stricmp strcasecmp
 #endif
 
 #include <stdio.h>

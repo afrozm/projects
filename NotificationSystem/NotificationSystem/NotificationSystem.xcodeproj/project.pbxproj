@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		561719381D22296E0097E837 /* NotificationSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561719351D22296E0097E837 /* NotificationSystem.cpp */; };
+		565115A51D335141008436A8 /* ProcessUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 565115A41D335141008436A8 /* ProcessUtil.mm */; };
+		565115A81D3352C6008436A8 /* StdCondVar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 565115A61D3352C6008436A8 /* StdCondVar.cpp */; };
 		56E311CC1D22537100E24A52 /* NotificationSystemMessageHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311CB1D22537100E24A52 /* NotificationSystemMessageHandler.cpp */; };
 		56E311D11D2255E100E24A52 /* NotificationManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311D01D2255E100E24A52 /* NotificationManager.cpp */; };
 		56E311D41D22641400E24A52 /* NotificationManagerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 56E311D21D22641400E24A52 /* NotificationManagerMac.mm */; };
@@ -22,6 +24,10 @@
 		561719351D22296E0097E837 /* NotificationSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystem.cpp; sourceTree = "<group>"; };
 		561719401D22299F0097E837 /* stdafx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
 		561719431D2234D60097E837 /* Export.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = Export.exp; sourceTree = "<group>"; };
+		565115A21D335110008436A8 /* ProcessUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ProcessUtil.h; path = ../../Common/ProcessUtil.h; sourceTree = "<group>"; };
+		565115A41D335141008436A8 /* ProcessUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ProcessUtil.mm; path = ../../Common/ProcessUtil.mm; sourceTree = "<group>"; };
+		565115A61D3352C6008436A8 /* StdCondVar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StdCondVar.cpp; path = ../../Common/StdCondVar.cpp; sourceTree = "<group>"; };
+		565115A71D3352C6008436A8 /* StdCondVar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StdCondVar.h; path = ../../Common/StdCondVar.h; sourceTree = "<group>"; };
 		56E311CB1D22537100E24A52 /* NotificationSystemMessageHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystemMessageHandler.cpp; sourceTree = "<group>"; };
 		56E311CD1D22537D00E24A52 /* NotificationSystemMessageHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationSystemMessageHandler.h; sourceTree = "<group>"; };
 		56E311CE1D2254B600E24A52 /* NotificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationManager.h; sourceTree = "<group>"; };
@@ -70,6 +76,7 @@
 		561719341D2229600097E837 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				565115A31D33511F008436A8 /* Common */,
 				56E311FD1D238D8800E24A52 /* DynamicLibrary */,
 				561719431D2234D60097E837 /* Export.exp */,
 				56E311D01D2255E100E24A52 /* NotificationManager.cpp */,
@@ -83,6 +90,7 @@
 		5617193B1D2229810097E837 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				565115A11D335104008436A8 /* Common */,
 				56E311FB1D238D5600E24A52 /* DynamicLibrary */,
 				56E311CE1D2254B600E24A52 /* NotificationManager.h */,
 				56E311D31D22641400E24A52 /* NotificationManagerMac.h */,
@@ -91,6 +99,24 @@
 				561719401D22299F0097E837 /* stdafx.h */,
 			);
 			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		565115A11D335104008436A8 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				565115A21D335110008436A8 /* ProcessUtil.h */,
+				565115A71D3352C6008436A8 /* StdCondVar.h */,
+			);
+			name = Common;
+			sourceTree = "<group>";
+		};
+		565115A31D33511F008436A8 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				565115A61D3352C6008436A8 /* StdCondVar.cpp */,
+				565115A41D335141008436A8 /* ProcessUtil.mm */,
+			);
+			name = Common;
 			sourceTree = "<group>";
 		};
 		56E311FB1D238D5600E24A52 /* DynamicLibrary */ = {
@@ -179,12 +205,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				565115A51D335141008436A8 /* ProcessUtil.mm in Sources */,
 				56E311D41D22641400E24A52 /* NotificationManagerMac.mm in Sources */,
 				56E311CC1D22537100E24A52 /* NotificationSystemMessageHandler.cpp in Sources */,
 				561719381D22296E0097E837 /* NotificationSystem.cpp in Sources */,
 				56E311D11D2255E100E24A52 /* NotificationManager.cpp in Sources */,
 				56E311F31D238ABF00E24A52 /* LibraryMessageHandler.cpp in Sources */,
 				56E311F41D238ABF00E24A52 /* Paramters.cpp in Sources */,
+				565115A81D3352C6008436A8 /* StdCondVar.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
