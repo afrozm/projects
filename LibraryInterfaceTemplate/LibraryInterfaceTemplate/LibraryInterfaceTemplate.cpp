@@ -30,7 +30,7 @@ int main()
     printf("result=%s\n", result.c_str());
     msgSender.ProcessMessageWithArguments(msg, result, "param1", "help", "param2", "p2val", "testParam", "hell", NULL);
     printf("result=%s\n", result.c_str());
-
+    msgSender.ProcessMessageWithArguments("unknown_message", result, "param1", "help", "param2", "p2val", "testParam", "hell", NULL);
     return 0;
 }
 
