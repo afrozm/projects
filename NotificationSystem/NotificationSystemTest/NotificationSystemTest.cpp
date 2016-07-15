@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "NotificationSystem.h"
 
+
 static void MainNotificationHandler(NSCharPtr notificationName, NotificationData data, void *pUserData)
 {
     printf("Received notification: %s\nnotification data:%s\n", notificationName, data->ToString().c_str());
