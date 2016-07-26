@@ -13,12 +13,20 @@ Paramters::Paramters(const StringParam &inParams)
     FromString(inParams);
 }
 
-const Paramters::StringParam & Paramters::GetParamValue(const StringParam & inParamName, const StringParam & inDefaultValue) const
+const Paramters::StringParam& Paramters::GetParamValue(const StringParam & inParamName) const
 {
+    static const StringParam sEmptyValue;
     auto cit(mParamters.find(inParamName));
     if (cit != mParamters.end())
         return cit->second;
-    return inDefaultValue;
+    return sEmptyValue;
+}
+Paramters::StringParam Paramters::GetParamValue(const StringParam & inParamName, const StringParam & inDefaultValue) const
+{
+    StringParam paramValue(GetParamValue(inParamName));
+    if (paramValue.empty())
+        paramValue = inDefaultValue;
+    return paramValue;
 }
 
 void Paramters::SetParamValue(const StringParam & inParamName, const StringParam & inValue)
