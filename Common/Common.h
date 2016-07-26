@@ -4,14 +4,6 @@
 
 #ifdef _WIN32
 #include <tchar.h>
-#else
-
-#if defined(_UNICODE) || defined(UNICODE)
-#define lstrcmpi wcscasecmp
-#else
-#define lstrcmpi strcasecmp
-#endif
-#define _stricmp strcasecmp
 #endif
 
 #if defined(_UNICODE) || defined(UNICODE)
@@ -30,7 +22,6 @@ typedef std::wstring lstring;
 #define _T(x) __T(x)
 #endif
 
-typedef wchar_t TCHAR;
 
 #else
 #define lprintf printf
@@ -41,6 +32,20 @@ typedef wchar_t TCHAR;
 #define lfopen fopen
 typedef std::string lstring;
 
+#ifndef _WIN32
 #define _T(x) x
-typedef char TCHAR;
 #endif
+
+#endif
+
+#ifndef _WIN32
+#define _tcscpy_s(d,n,s) strlcpy(d,s,n)
+#if defined(_UNICODE) || defined(UNICODE)
+#define lstrcmpi wcscasecmp
+typedef wchar_t TCHAR;
+#else
+typedef char TCHAR;
+#define lstrcmpi strcasecmp
+#define _stricmp strcasecmp
+#endif
+#endif // !_WIN32

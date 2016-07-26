@@ -680,7 +680,7 @@ static BOOL AddAceToDesktop(HDESK hdesk, PSID psid)
    return bSuccess;
 }
 
-BOOL ProcessUtil::IsUserAdmin(VOID)
+bool ProcessUtil::IsUserAdmin()
 	/*++ 
 	Routine Description: This routine returns TRUE if the caller's
 	process is a member of the Administrators local group. Caller is NOT
@@ -710,7 +710,7 @@ BOOL ProcessUtil::IsUserAdmin(VOID)
 		FreeSid(AdministratorsGroup); 
 	}
 
-	return(b);
+	return b != FALSE;
 }
 
 typedef	 BOOL 
@@ -877,4 +877,9 @@ int ProcessUtil::GetCurrentThreadId()
 void ProcessUtil::Sleep(unsigned milliSeconds)
 {
     ::Sleep(milliSeconds);
+}
+
+unsigned long long ProcessUtil::GetTickCount()
+{
+    return ::GetTickCount64();
 }

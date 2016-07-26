@@ -28,4 +28,5 @@ namespace ProcessUtil {
     int GetCurrentThreadId();
 
     void Sleep(unsigned milliSeconds);
+    unsigned long long GetTickCount();
 }

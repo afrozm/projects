@@ -15,11 +15,10 @@ Paramters::Paramters(const StringParam &inParams)
 
 const Paramters::StringParam & Paramters::GetParamValue(const StringParam & inParamName, const StringParam & inDefaultValue) const
 {
-    static const StringParam sEmptyValue;
     auto cit(mParamters.find(inParamName));
     if (cit != mParamters.end())
         return cit->second;
-    return sEmptyValue;
+    return inDefaultValue;
 }
 
 void Paramters::SetParamValue(const StringParam & inParamName, const StringParam & inValue)

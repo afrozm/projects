@@ -3,11 +3,21 @@
 
 #include "stdafx.h"
 #include "NotificationSystem.h"
-
+#include "stlutils.h"
+#include "CountTimer.h"
 
 static void MainNotificationHandler(NSCharPtr notificationName, NotificationData data, void *pUserData)
 {
-    printf("Received notification: %s\nnotification data:%s\n", notificationName, data->ToString().c_str());
+    const char *chakri = "|/-|\\";
+    static CountTimer ct(false, 30);
+    static int iChakri(0);
+    const unsigned repeatCount(STLUtils::ChangeType<std::string, unsigned>(data->GetParamValue("__repeat", "0")));
+    if (repeatCount <= 1)
+        printf("Received notification: %s\nnotification data:%s\n", notificationName, data->ToString().c_str());
+    else if (ct.UpdateTimeDuration()) {
+        printf("\b%c", chakri[iChakri]);
+        iChakri = (iChakri + 1) % 5;
+    }
 }
 
 #ifdef _WIN32
@@ -59,8 +69,15 @@ int mac_main(int argc, const char * argv[])
                     }
                     Paramters prm(param);
                     NotificationData data(bHasData ? &prm : NULL);
-                    retVal = SendNotification(notName.c_str(), data);
+                    const unsigned repeatCount(STLUtils::ChangeType<std::string, unsigned>(prm.GetParamValue("__repeat", "1")));
+                    CountTimer ct;
+                    for (unsigned i=0; i<repeatCount; ++i)
+                        retVal = SendNotification(notName.c_str(), data);
                     printf("data:\n%s\n", prm.ToString().c_str());
+                    if (repeatCount > 1) {
+                        printf("num of requests:%d\n", repeatCount);
+                        printf("Time taken:%s\n", ct.GetString().c_str());
+                    }
                 }
                 printf("status: %d\n", retVal);
             }

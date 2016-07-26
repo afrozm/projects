@@ -1,17 +1,21 @@
 
 #include "stdafx.h"
 #include "CountTimer.h"
+#include "ProcessUtil.h"
+#include "stlutils.h"
+using namespace STLUtils;
+
 #define TIMER_SIZE 7
-static const TCHAR *sktimeNames[] = {
-    _T("year"),
-    _T("month"),
-    _T("day"),
-    _T("hour"),
-    _T("minute"),
-    _T("second"),
-    _T("millisecond"),
+static const char *sktimeNames[] = {
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "second",
+    "millisecond",
 };
-static const __int64 skTimeDuration[] = {
+static const long long skTimeDuration[] = {
     1000LL * 60LL * 60LL * 24LL * 365LL,
     1000 * 60 * 60 * 24 * 30UL,
     1000 * 60 * 60 * 24,
@@ -21,8 +25,8 @@ static const __int64 skTimeDuration[] = {
     1
 };
 struct STime {
-    __int64 times[TIMER_SIZE]; // index 0 - timeNames[0], 1 timeNames[1]
-    STime(__int64 milliSecs)
+    long long times[TIMER_SIZE]; // index 0 - timeNames[0], 1 timeNames[1]
+    STime(long long milliSecs)
     {
         for (int i = 0; i < TIMER_SIZE; i++) {
             times[i] = milliSecs / skTimeDuration[i];
@@ -30,45 +34,56 @@ struct STime {
         }
     }
 };
-CountTimer::CountTimer(bool bCountDownWards /* = false */, DWORD timerUpdateDuration /* = 1000 */)
+CountTimer::CountTimer(bool bCountDownWards /* = false */, long long timerUpdateDuration /* = 1000 */)
 {
     m_bCountDownWards = bCountDownWards;
-    mCurTime = mLastTime = GetTickCount();
+    mCurTime = mLastTime = ProcessUtil::GetTickCount();
     mTimeDuration = 0;
     mTimerUpdateDuration = timerUpdateDuration;
 }
-void CountTimer::SetTimeDuration(__int64 timeDuration)
+void CountTimer::SetTimeDuration(long long timeDuration)
 {
     m_bCountDownWards = true; // its a count down timer
     mTimeDuration = timeDuration;
 }
-__int64 CountTimer::GetTimeDuration(void)
+long long CountTimer::GetTimeDuration(bool bAfterForceUpdate /* = false */)
 {
-    UpdateTimeDuration();
+    UpdateTimeDuration(bAfterForceUpdate);
     return mTimeDuration;
 }
 
 void CountTimer::GetString(TCHAR *str, int size)
 {
-    STime sTime(mTimeDuration);
-    int i;
-    for (i = 0; i < TIMER_SIZE - 2; i++) {
-        if (sTime.times[i])
-            break;
-    }
-    int len = _sntprintf_s(str, size, size, _T("%d %s%s"), (int)sTime.times[i], sktimeNames[i],
-        (int)sTime.times[i] > 1 ? _T("s") : _T(""));
-    i++;
-    if (i < TIMER_SIZE - 1 && sTime.times[i] > 0) {
-        len = _sntprintf_s(str + len, size - len, size - len, _T(" %d %s%s"), (int)sTime.times[i], sktimeNames[i],
-            (int)sTime.times[i] > 1 ? _T("s") : _T(""));
+    std::string outTime(GetString());
+    if (str && size > 0) {
+        int i = 0;
+        for (i = 0; i < size-1&&i < outTime.length(); ++i)
+            str[i] = outTime[i];
+        str[i] = 0;
     }
 }
-bool CountTimer::UpdateTimeDuration()
+
+std::string CountTimer::GetString(unsigned timePrecision /* = 2 */)
 {
-    DWORD curTime = GetTickCount();
-    if (curTime - mCurTime > mTimerUpdateDuration) {
-        DWORD interval = curTime - mLastTime;
+    STime sTime(GetTimeDuration(true));
+    std::string outStr;
+    const int kiTimeStringCount(timePrecision ? timePrecision : 2);
+    for (int i = 0, pc=0; i < TIMER_SIZE && pc < kiTimeStringCount; i++) {
+        if (sTime.times[i] || pc==0 && i==TIMER_SIZE-1) {
+            std::string timeStr;
+            ChangeType(sTime.times[i], timeStr);
+            outStr += " " + timeStr + " " + sktimeNames[i] + (sTime.times[i] > 1 ? "s" : "");
+            ++pc;
+        }
+    }
+    return outStr;
+}
+
+bool CountTimer::UpdateTimeDuration(bool bForce /* = false */)
+{
+    long long curTime = ProcessUtil::GetTickCount();
+    if (bForce || curTime - mCurTime > mTimerUpdateDuration) {
+        long long interval = curTime - mLastTime;
         if (m_bCountDownWards) {
             mTimeDuration -= interval;
             if (mTimeDuration < 0)
@@ -83,13 +98,3 @@ bool CountTimer::UpdateTimeDuration()
     }
     return false;
 }
-void CountTimer::PrintTimeDuration()
-{
-    if (UpdateTimeDuration()) {
-        TCHAR str[32];
-        GetString(str, 32);
-        m_CP.Print(str);
-    }
-}
-
-
