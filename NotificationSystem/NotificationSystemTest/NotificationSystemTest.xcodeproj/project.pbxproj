@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		561C63521D473E140077C8FE /* CountTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 561C63511D473E140077C8FE /* CountTimer.cpp */; };
+		561C63551D473E640077C8FE /* ProcessUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 561C63541D473E640077C8FE /* ProcessUtil.mm */; };
 		56E311EB1D23834100E24A52 /* NotificationSystemTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311E91D23834100E24A52 /* NotificationSystemTest.cpp */; };
 		56E311F61D238B0900E24A52 /* LibraryMessageSender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F51D238B0900E24A52 /* LibraryMessageSender.cpp */; };
 		56E311F91D238B5F00E24A52 /* NotificationSystemClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56E311F81D238B5F00E24A52 /* NotificationSystemClient.cpp */; };
@@ -45,6 +47,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		561C63511D473E140077C8FE /* CountTimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CountTimer.cpp; path = /Users/afroz_muzammil/projects/NotificationSystem/NotificationSystem/../../Common/CountTimer.cpp; sourceTree = "<absolute>"; };
+		561C63531D473E260077C8FE /* CountTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CountTimer.h; path = ../../Common/CountTimer.h; sourceTree = "<group>"; };
+		561C63541D473E640077C8FE /* ProcessUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ProcessUtil.mm; path = /Users/afroz_muzammil/projects/NotificationSystem/NotificationSystem/../../Common/ProcessUtil.mm; sourceTree = "<absolute>"; };
+		561C63561D473E690077C8FE /* ProcessUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ProcessUtil.h; path = ../../Common/ProcessUtil.h; sourceTree = "<group>"; };
 		56E311DF1D23830200E24A52 /* NotificationSystemTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NotificationSystemTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		56E311E91D23834100E24A52 /* NotificationSystemTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NotificationSystemTest.cpp; sourceTree = SOURCE_ROOT; };
 		56E311EA1D23834100E24A52 /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = SOURCE_ROOT; };
@@ -116,6 +122,8 @@
 		56E311FF1D238DB600E24A52 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				561C63531D473E260077C8FE /* CountTimer.h */,
+				561C63561D473E690077C8FE /* ProcessUtil.h */,
 				56E311FE1D238DB600E24A52 /* STLUtils.h */,
 			);
 			name = Common;
@@ -159,6 +167,8 @@
 		56E312181D23C82200E24A52 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				561C63541D473E640077C8FE /* ProcessUtil.mm */,
+				561C63511D473E140077C8FE /* CountTimer.cpp */,
 				56E312161D23C81D00E24A52 /* nsapp_main.mm */,
 			);
 			name = Common;
@@ -254,11 +264,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				561C63551D473E640077C8FE /* ProcessUtil.mm in Sources */,
 				56E312171D23C81D00E24A52 /* nsapp_main.mm in Sources */,
 				56E311F91D238B5F00E24A52 /* NotificationSystemClient.cpp in Sources */,
 				56E312041D238F1300E24A52 /* Paramters.cpp in Sources */,
 				56E311F61D238B0900E24A52 /* LibraryMessageSender.cpp in Sources */,
 				56E311EB1D23834100E24A52 /* NotificationSystemTest.cpp in Sources */,
+				561C63521D473E140077C8FE /* CountTimer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

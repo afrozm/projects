@@ -69,7 +69,7 @@ std::string CountTimer::GetString(unsigned timePrecision /* = 2 */, bool bForceU
     std::string outStr;
     const int kiTimeStringCount(timePrecision ? timePrecision : 2);
     for (int i = 0, pc=0; i < TIMER_SIZE && pc < kiTimeStringCount; i++) {
-        if (sTime.times[i] || pc==0 && i==TIMER_SIZE-1) {
+        if (sTime.times[i] || (pc==0 && i==TIMER_SIZE-1)) {
             std::string timeStr;
             ChangeType(sTime.times[i], timeStr);
             outStr += " " + timeStr + " " + sktimeNames[i] + (sTime.times[i] > 1 ? "s" : "");
