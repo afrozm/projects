@@ -70,7 +70,7 @@ int mac_main(int argc, const char * argv[])
                     Paramters prm(param);
                     NotificationData data(bHasData ? &prm : NULL);
                     const unsigned repeatCount(STLUtils::ChangeType<std::string, unsigned>(prm.GetParamValue("__repeat", "1")));
-                    CountTimer ct;
+                    CountTimer ct(false, 1);
                     for (unsigned i=0; i<repeatCount; ++i)
                         retVal = SendNotification(notName.c_str(), data);
                     printf("data:\n%s\n", prm.ToString().c_str());

@@ -52,9 +52,9 @@ long long CountTimer::GetTimeDuration(bool bAfterForceUpdate /* = false */)
     return mTimeDuration;
 }
 
-void CountTimer::GetString(TCHAR *str, int size)
+void CountTimer::GetString(TCHAR *str, int size, bool bForceUpdate /* = false */)
 {
-    std::string outTime(GetString());
+    std::string outTime(GetString(bForceUpdate));
     if (str && size > 0) {
         int i = 0;
         for (i = 0; i < size-1&&i < outTime.length(); ++i)
@@ -63,9 +63,9 @@ void CountTimer::GetString(TCHAR *str, int size)
     }
 }
 
-std::string CountTimer::GetString(unsigned timePrecision /* = 2 */)
+std::string CountTimer::GetString(unsigned timePrecision /* = 2 */, bool bForceUpdate /* = false */)
 {
-    STime sTime(GetTimeDuration(true));
+    STime sTime(GetTimeDuration(bForceUpdate));
     std::string outStr;
     const int kiTimeStringCount(timePrecision ? timePrecision : 2);
     for (int i = 0, pc=0; i < TIMER_SIZE && pc < kiTimeStringCount; i++) {
@@ -97,4 +97,15 @@ bool CountTimer::UpdateTimeDuration(bool bForce /* = false */)
         return true;
     }
     return false;
+}
+
+void CountTimer::PrintTimeDuration()
+{
+    if (UpdateTimeDuration()) {
+        TCHAR timeDuration[256] = { 0 };
+        GetString(timeDuration, sizeof(timeDuration) / sizeof(timeDuration[0]));
+#ifndef DISABLE_CONSOLE_PRINTER
+        mCP.Print(timeDuration);
+#endif
+    }
 }

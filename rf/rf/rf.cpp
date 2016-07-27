@@ -44,7 +44,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		progress.SetTask(totalSize);
 		ConsoleProgress cp;
 		Path dstPath(argv[2]);
-		DWORD updateWSTime = GetTickCount(); // Update Writing speed time
+		auto updateWSTime = ProcessUtil::GetTickCount(); // Update Writing speed time
 		lprintf(_T("\nTime Elapsed: "));
 		CountTimer timeElapsed;
 		lprintf(_T("\t\t\t\tTime Remaining: "));
@@ -60,7 +60,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 currentDone = recoverManger.GetCurrentDone();
 				if (progress.UpdateProgress(currentDone))
 					cp.ShowPercentage(progress.GetCurrentPercentageDone());
-				DWORD curTime = GetTickCount();
+				auto curTime = ProcessUtil::GetTickCount();
 				if (curTime - updateWSTime >= 5000) { // 5 secs passed
 					timeRemaining.SetTimeDuration((timeElapsed.GetTimeDuration() * totalSize) / currentDone);
 					updateWSTime = curTime;
@@ -94,7 +94,7 @@ int _tmain(int argc, _TCHAR* argv[])
 						currentDone += nBytesRead;
 						if (progress.UpdateProgress(currentDone))
 							cp.ShowPercentage(progress.GetCurrentPercentageDone());
-						DWORD curTime = GetTickCount();
+						auto curTime = ProcessUtil::GetTickCount();
 						if (curTime - updateWSTime >= 5000) { // 5 secs passed
 							double p = progress.GetCurrentPercentageDone();
 							if (p < 0.01)
@@ -116,7 +116,7 @@ int _tmain(int argc, _TCHAR* argv[])
     else {
         bool bError(true);
         if (GetLastError() == ERROR_ACCESS_DENIED)
-            bError = !RunApplication(argc, (LPCTSTR*)argv, RAF_ADMIN);
+            bError = !ProcessUtil::RunApplication(argc, (LPCTSTR*)argv, RAF_ADMIN);
         if (bError)
             _tprintf(_T("Cannot open file: '%s'\nError: %d"), argv[1], GetLastError());
     }
