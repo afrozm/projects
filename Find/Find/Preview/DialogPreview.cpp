@@ -52,8 +52,8 @@ enum PreviewID { // *** Order is important ****
 	PreviewIDMedia,
 	PreviewIDHTML,
 	PreviewIDText,
-	PreviewIDExplorer,
-	PreviewIDPDF,
+    PreviewIDPDF,
+    PreviewIDExplorer,
 	PreviewIDError
 };
 static LPCTSTR GetPatternImages() {
@@ -93,10 +93,10 @@ CDialogPreview::CDialogPreview(CWnd* pParent /*=NULL*/)
 		GetPatternHTML,
 		// Text files
 		GetPatternText,
-		// Explorer
+        // pdf
+        GetPatternPDF,
+        // Explorer
 		GetPatternExplorer,
-		// pdf
-		GetPatternPDF,
 		// any other - no preview
 		GetPatternError
 	};
