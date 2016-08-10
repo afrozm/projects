@@ -304,7 +304,7 @@ Path Path::GetNextUniqueFileName() const
 {
 	if (Exists()) {
 		int nextFileName(0);
-		return GetUniqueFileName(nextFileName, GetExtension().c_str(), FileNameWithoutExt().c_str());
+		return Parent().GetUniqueFileName(nextFileName, GetExtension().c_str(), FileNameWithoutExt().c_str());
 	}
 	return *this;
 }
