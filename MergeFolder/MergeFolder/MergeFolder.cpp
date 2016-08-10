@@ -16,6 +16,7 @@
 #define MFF_CREATE_EMPTY_DIR FLAGBIT(3) // Print minimal information
 #define MFF_CONTENT_COMPARE FLAGBIT(4) // Compare contents before copying
 #define MFF_DELETE_MISSING FLAGBIT(5) // Compare contents before copying
+#define MFF_FORCE_COPY FLAGBIT(6) // Force copy
 
 unsigned guGlags(0);
 inline bool CheckFlag(unsigned uFlag)
@@ -162,8 +163,8 @@ DWORD WINAPI MergeCopyProgressRoutine(
 
 bool IsFileCopyRequired(const FindData& srcFileData, const Path &dstFile)
 {
-	bool bCopyRequired(!dstFile.Exists()); // File does not exists -- copy the new file
-	if (!bCopyRequired && !CheckFlag(MFF_SKIP_FILE_TIME_CHECK)) { // File aleardy exists - check lasr modifed time
+	bool bCopyRequired(CheckFlag(MFF_FORCE_COPY) || !dstFile.Exists()); // File does not exists -- copy the new file
+	if (!bCopyRequired && !CheckFlag(MFF_SKIP_FILE_TIME_CHECK)) { // File already exists - check last modified time
 		FILETIME lastWriteTime = {0};
 		if (dstFile.GetFileTime(NULL, NULL, &lastWriteTime)) {
 			bCopyRequired = CompareFileTime(&srcFileData.pFindData->ftLastWriteTime, &lastWriteTime) > 0;
@@ -193,6 +194,7 @@ BOOL MFCopyFile(LPCTSTR srcFile, LPCTSTR dstFile, LONGLONG llFileSize = -1)
 		progFn = (LPPROGRESS_ROUTINE)MergeCopyProgressRoutine;
 	_tprintf(_T("Copying file %s to %s\n"), srcFile, dstFile);
 	Path(dstFile).Parent().CreateDir();
+    SetFileAttributes(dstFile, GetFileAttributes(dstFile) & ~FILE_ATTRIBUTE_READONLY);
 	BOOL bSuccess(CopyFileEx(srcFile, dstFile, progFn, &curProgrss,
 		&bCancelled, 0));
 	if (bSuccess) {
@@ -360,12 +362,13 @@ int MergeFolder(LPCTSTR srcDir, LPCTSTR dstDir, LPCTSTR matchPattern = NULL, LPC
 	}
 	else {
 		Path dst(dstDir != NULL ? dstDir : _T(""));
-		MergeFolderFCBData mfdt(dst);
+        if (dst.Exists() && !dst.IsDir())
+            dst = dst.Parent();
+        MergeFolderFCBData mfdt(dst);
 		Finder finder(FindCallBack_MergeFolder, &mfdt, matchPattern, excludePattern);
-		if (CreateEmotyDiredtiesFlagSet()) {
+		if (CreateEmotyDiredtiesFlagSet())
 			mfdt.dst.CreateDir();
-		}
-		finder.StartFind(srcDir);
+        finder.StartFind(srcDir);
 		nFiles = mfdt.nFilesCopied;
 	}
 	return nFiles;
@@ -503,6 +506,7 @@ void Help()
 	_tprintf(_T("-nv : Suppress verbose output.\n"));
 	_tprintf(_T("-ced : Create empty directories.\n"));
 	_tprintf(_T("-cc : Compare contents.\n"));
+    _tprintf(_T("-fc : Force copy files. Will not compare modified file time\n"));
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -530,6 +534,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		ep = argv[nextArg]+4;
 	}
 	SetFlag(MFF_SKIP_FILE_TIME_CHECK, FindArg(argc, argv, _T("-st")) > 0);
+    SetFlag(MFF_FORCE_COPY, FindArg(argc, argv, _T("-fc")) > 0);
 	SetFlag(MFF_DIFF_ONLY, FindArg(argc, argv, _T("-cd")) > 0);
 	SetFlag(MFF_NO_VERBOSE, FindArg(argc, argv, _T("-nv")) > 0);
 	SetFlag(MFF_CREATE_EMPTY_DIR, FindArg(argc, argv, _T("-ced")) > 0);

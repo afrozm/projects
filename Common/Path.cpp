@@ -555,21 +555,32 @@ Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR ex
 }
 int Finder::StartFind(const lstring &dir)
 {
-	WIN32_FIND_DATA findFileData;
+    WIN32_FIND_DATA findFileData = {};
 	HANDLE hFind = FindFirstFile((dir + _T("\\*")).c_str(), &findFileData);
 	int c = 0;
-	if (hFind != INVALID_HANDLE_VALUE) {
+    Path srcDir(dir);
+    bool bSrcIsFile((!srcDir.IsDir() && srcDir.Exists()));
+    if (bSrcIsFile) {
+        _tcscpy_s(findFileData.cFileName, srcDir.FileName().c_str());
+        findFileData.dwFileAttributes = GetFileAttributes(srcDir.c_str());
+        LARGE_INTEGER li = {0};
+        li.QuadPart = (srcDir.GetSize());
+        findFileData.nFileSizeLow = li.LowPart;
+        findFileData.nFileSizeHigh = li.HighPart;
+        srcDir.GetFileTime(&findFileData.ftCreationTime, &findFileData.ftLastAccessTime, &findFileData.ftLastWriteTime);
+        srcDir = srcDir.Parent();
+    }
+	if (hFind != INVALID_HANDLE_VALUE || bSrcIsFile) {
 		do {
 			if (lstrcmp(findFileData.cFileName, _T(".")) && lstrcmp(findFileData.cFileName, _T(".."))) {
 				CAtlREMatchContext<> mc;
-				lstring file = dir + _T("\\");
-				file += findFileData.cFileName;
+				lstring file = srcDir.Append(findFileData.cFileName);
 				bool bMatched = mRegExp.Match(findFileData.cFileName, &mc) == TRUE;
 				if (mExcludePattern)
 					bMatched = bMatched && mExcludeRegExp.Match(findFileData.cFileName, &mc) == FALSE;
 				int fcbRetVal(mFindCallBack(FindData(&findFileData, file, bMatched), m_pUserParam));
-				while (fcbRetVal == FCBRV_STOP) {
-					fcbRetVal = mFindCallBack(FindData(&findFileData, file, bMatched), m_pUserParam);
+				while (fcbRetVal == FCBRV_PAUSE) {
+					fcbRetVal = mFindCallBack(FindData(&findFileData, file, false), m_pUserParam);
 					Sleep(10);
 				}
 				if (fcbRetVal == FCBRV_ABORT)
@@ -582,8 +593,10 @@ int Finder::StartFind(const lstring &dir)
 				if (bMatched)
 					c++;
 			}
-		} while (FindNextFile(hFind, &findFileData));
-		FindClose(hFind);
+		} while (hFind != INVALID_HANDLE_VALUE && FindNextFile(hFind, &findFileData));
+        if (hFind != INVALID_HANDLE_VALUE)
+		    FindClose(hFind);
+        hFind = INVALID_HANDLE_VALUE;
 	}
 	return c;
 }

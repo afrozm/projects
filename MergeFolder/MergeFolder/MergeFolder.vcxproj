@@ -32,9 +32,11 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Common\Common.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Common\Common.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -84,19 +86,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cMD5.cpp" />
+    <ClCompile Include="..\..\Common\cMD5.cpp" />
+    <ClCompile Include="..\..\Common\Path.cpp" />
+    <ClCompile Include="..\..\Common\Progress.cpp" />
     <ClCompile Include="MergeFolder.cpp" />
-    <ClCompile Include="Path.cpp" />
-    <ClCompile Include="Progress.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cMD5.h" />
-    <ClInclude Include="Path.h" />
-    <ClInclude Include="Progress.h" />
+    <ClInclude Include="..\..\Common\cMD5.h" />
+    <ClInclude Include="..\..\Common\Path.h" />
+    <ClInclude Include="..\..\Common\Progress.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

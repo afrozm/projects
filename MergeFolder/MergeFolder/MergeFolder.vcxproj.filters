@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{a0d2519b-e868-4822-a346-fbae994e5dae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common">
+      <UniqueIdentifier>{f8372b8b-e5f7-4d35-8260-8307c59ae120}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MergeFolder.cpp">
@@ -21,14 +27,14 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cMD5.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\Common\Path.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="Path.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\Common\Progress.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
-    <ClCompile Include="Progress.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\Common\cMD5.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -38,14 +44,14 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cMD5.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\Common\Progress.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="Path.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\Common\Path.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="Progress.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\Common\cMD5.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
