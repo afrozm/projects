@@ -62,11 +62,14 @@ void CExplorerPreviewManager::LoadSupportedExts()
 			break;
 		}
 	}
+    CString ownSupportedFormats(_T(".bat;.pdf;.cmd;.txt"));
 	for (POSITION pos = mExtVsCLSID.GetStartPosition(); pos != NULL;) {
 		CString ext;
 		CString clsid;
 		mExtVsCLSID.GetNextAssoc(pos, ext, clsid);
-		mPattern += ext + _T(";");
+        ext += _T(";");
+        if (ownSupportedFormats.Find(ext) < 0)
+            mPattern += ext;
 	}
 	mPattern = WildCardExpToRegExp(mPattern);
 }

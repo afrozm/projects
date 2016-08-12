@@ -51,10 +51,10 @@ enum PreviewID { // *** Order is important ****
 	PreviewIDImages,
 	PreviewIDMedia,
 	PreviewIDHTML,
-	PreviewIDText,
     PreviewIDPDF,
     PreviewIDExplorer,
-	PreviewIDError
+    PreviewIDText,
+    PreviewIDError
 };
 static LPCTSTR GetPatternImages() {
 	return _T("(.*\\.jpg)|(.*\\.jpe)|(.*\\.bmp)|(.*\\.dib)|(.*\\.gif)|(.*\\.tif)|(.*\\.png)|(.*\\.ico)");
@@ -69,7 +69,7 @@ static LPCTSTR GetPatternHTML() {
 	return _T("(.*\\.htm)");
 }
 static LPCTSTR GetPatternText() {
-	return _T("(.*\\.txt)|(.*\\.log)|(.*\\.as)|(.*\\.mx)|(.*\\.sh)|(.*\\.bat)|(.*\\.c)|(.*\\.h)|(.*\\.xml)|(.*\\.xsd)|(.*\\.in)|(.*\\.reg)|(.*\\.java)|(.*\\.js)|(.*\\.mak)|(.*\\.pl)|(.*\\.py)|(.*\\.rc)|(.*\\.xsl)");
+	return _T(".*"); //_T("(.*\\.txt)|(.*\\.log)|(.*\\.as)|(.*\\.mx)|(.*\\.sh)|(.*\\.bat)|(.*\\.c)|(.*\\.h)|(.*\\.xml)|(.*\\.xsd)|(.*\\.in)|(.*\\.reg)|(.*\\.java)|(.*\\.js)|(.*\\.mak)|(.*\\.pl)|(.*\\.py)|(.*\\.rc)|(.*\\.xsl)");
 }
 static LPCTSTR GetPatternPDF() {
 	return _T("(.*\\.pdf)");
@@ -91,13 +91,13 @@ CDialogPreview::CDialogPreview(CWnd* pParent /*=NULL*/)
 		GetPatternMedia,
 		// HTML files
 		GetPatternHTML,
-		// Text files
-		GetPatternText,
         // pdf
         GetPatternPDF,
         // Explorer
 		GetPatternExplorer,
-		// any other - no preview
+        // Text files
+        GetPatternText,
+        // any other - no preview
 		GetPatternError
 	};
 	for (int i = 0; i < sizeof(patterns)/sizeof(patterns[0]); ++i)

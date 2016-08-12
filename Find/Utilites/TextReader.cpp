@@ -10,6 +10,18 @@ CTextReader::CTextReader(LPCTSTR fileName)
 {
 	SetFile(fileName);
 }
+BOOL CTextReader::IsTextFile() const
+{
+    unsigned char text[256];
+    DWORD nBytesRead = 0;
+    ReadFile(m_hFile, text, sizeof(text), &nBytesRead, NULL);
+    BOOL isTextFile(TRUE);
+
+    for (DWORD i = 0; i < nBytesRead && isTextFile; ++i)
+        isTextFile = isprint(text[i]) || isspace(text[i]);
+    SetFilePos(0);
+    return isTextFile;
+}
 BOOL CTextReader::SetFile(LPCTSTR fileName)
 {
 	mFileEncoding = FileEncoding_ANSI;
@@ -49,8 +61,13 @@ BOOL CTextReader::SetFile(LPCTSTR fileName)
 					mFileEncoding = FileEncoding_UNICODE_BIG;
 				SetFilePos(0);
 			}
-		}
-	}
+            if (mFileEncoding == FileEncoding_ANSI) {
+                bSuccess = IsTextFile();
+                if (!bSuccess)
+                    SetFile();
+            }
+        }
+    }
 	return bSuccess;
 }
 
@@ -59,7 +76,7 @@ CTextReader::~CTextReader(void)
 	SetFile();
 }
 
-LONGLONG CTextReader::SetFilePos(LONGLONG filePos, DWORD dwMoveMethod)
+LONGLONG CTextReader::SetFilePos(LONGLONG filePos, DWORD dwMoveMethod) const
 {
 	LARGE_INTEGER fp;
 	fp.QuadPart = filePos;

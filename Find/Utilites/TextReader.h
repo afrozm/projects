@@ -18,9 +18,10 @@ public:
 	virtual BOOL SetFile(LPCTSTR fileName = NULL);
 	LONGLONG GetFileSize();
 	CString Read(DWORD nBytes = TR_DEFAULT_CHUNK_SIZE);
-	LONGLONG SetFilePos(LONGLONG filePos, DWORD dwMoveMethod = FILE_BEGIN);
+	LONGLONG SetFilePos(LONGLONG filePos, DWORD dwMoveMethod = FILE_BEGIN) const;
 	LONGLONG GetFilePos();
 private:
+    BOOL IsTextFile() const;
 	HANDLE m_hFile;
 	FileEncoding mFileEncoding;
 };
