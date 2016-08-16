@@ -205,11 +205,13 @@ void CZipFileFinder::CloseContext()
 		delete (UZ_FileInfo*)m_pFileInfo;
 	m_pFoundInfo = NULL;
 	m_pNextInfo = NULL;
+    m_pFileInfo = NULL;
 	CUnzipper *pUnzipper((CUnzipper *)m_hContext);
 	if (pUnzipper != NULL) {
 		delete pUnzipper;
 	}
 	m_hContext = NULL;
+    mRootItems.RemoveAll();
 }
 BOOL CZipFileFinder::JumpToChildPath(LPCTSTR childPath)
 {
@@ -255,6 +257,15 @@ BOOL CZipFileFinder::FindNext()
 			}
 			if (!mbRecrursive) {
 				mbFound = mChildPath == Path(pUzFileInfo->szFileName).Parent();
+                if (!mbFound) {
+                    CString rootItem(Path(pUzFileInfo->szFileName).GetRoot());
+                    if (mRootItems.Find(rootItem) < 0) {
+                        mRootItems.InsertUnique(rootItem);
+                        pUzFileInfo->bFolder = true;
+                        _tcscpy_s(pUzFileInfo->szFileName, rootItem);
+                        mbFound = true;
+                    }
+                }
 			}
 			else mbFound = mChildPath.IsEmpty() || mChildPath.IsParentOf(Path(pUzFileInfo->szFileName));
 		}

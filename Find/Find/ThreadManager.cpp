@@ -132,15 +132,18 @@ bool ThreadManager::IsValidThread(DWORD threadID)
 	CAutoReadLock autoLock(mArrayLocker);
 	return mThreads.PLookup(threadID) != NULL;
 }
-void ThreadManager::TerminateThreads(int iThreadClass)
+void ThreadManager::TerminateThreads(int iThreadClass /* = -1 */, DWORD dwMilliSeconds /* = 0 */)
 {
 	CAutoReadLock autoLock(mArrayLocker);
 	for (POSITION pos(mThreads.GetStartPosition()); pos != NULL; ) {
 		TMThreadData *pThread(NULL);
 		DWORD threadID((DWORD)-1);
 		mThreads.GetNextAssoc(pos, threadID, pThread);
-		if (iThreadClass < 0 || pThread->GetThreadClass() == iThreadClass)
-			pThread->Terminate();
+        if (iThreadClass < 0 || pThread->GetThreadClass() == iThreadClass) {
+            pThread->Terminate();
+            if (dwMilliSeconds)
+                WaitForThread(pThread->GetThreadId(), dwMilliSeconds);
+        }
 	}
 }
 INT_PTR ThreadManager::GetAllThreadCount()

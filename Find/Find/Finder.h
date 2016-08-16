@@ -121,6 +121,7 @@ protected:
 	bool mbRecrursive;
 	bool mbFound;
 	void *m_pFileInfo;
+    CSortedArrayCString mRootItems;
 };
 /*class CRegExpContainer
 {

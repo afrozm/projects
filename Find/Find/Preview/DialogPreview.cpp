@@ -13,6 +13,7 @@
 #include "DialogPreviewExplorer.h"
 #include "DialogPreviewText.h"
 #include "DialogPreviewHtml.h"
+#include "DialogPreviewZIP.h"
 
 #define WM_SHOW_PREVIEW WM_USER+0x700
 
@@ -37,9 +38,8 @@ bool CPreviewContainer::CanShowPreview(const CString &fileName)
 }
 CDialogPreviewBase* CPreviewContainer::GetPreviewDialogObject(CDialogPreview *pDialogPreview, int iPreviewID)
 {
-	if (m_pPreviewDialog == NULL) {
-		m_pPreviewDialog = pDialogPreview->GetDialogPreviews(iPreviewID);
-	}
+	if (m_pPreviewDialog == NULL)
+        m_pPreviewDialog = (CDialogPreviewBase*)theApp.GetMainWnd()->SendMessage(WM_CREATE_PREVIEW, (WPARAM)pDialogPreview, iPreviewID);
 	return m_pPreviewDialog;
 }
 // CDialogPreview dialog
@@ -53,6 +53,7 @@ enum PreviewID { // *** Order is important ****
 	PreviewIDHTML,
     PreviewIDPDF,
     PreviewIDExplorer,
+    PreviewZIP,
     PreviewIDText,
     PreviewIDError
 };
@@ -73,6 +74,9 @@ static LPCTSTR GetPatternText() {
 }
 static LPCTSTR GetPatternPDF() {
 	return _T("(.*\\.pdf)");
+}
+static LPCTSTR GetPatternZIP() {
+    return _T("(.*\\.zip)|(.*\\.tar)|(.*\\.iso)|(.*\\.gz)|(.*\\.7z)|(.*\\.rar)|(.*\\.war)|(.*\\.jar)|(.*\\.ar)");
 }
 static LPCTSTR GetPatternError() {
 	return _T(".*");
@@ -95,6 +99,8 @@ CDialogPreview::CDialogPreview(CWnd* pParent /*=NULL*/)
         GetPatternPDF,
         // Explorer
 		GetPatternExplorer,
+        // ZIP files
+        GetPatternZIP,
         // Text files
         GetPatternText,
         // any other - no preview
@@ -246,7 +252,10 @@ CDialogPreviewBase* CDialogPreview::GetDialogPreviewsEx(int iPreviewID)
 	case PreviewIDPDF:
 		pDialogPreview = new CDialogPreviewPDF(this);
 		break;
-	case PreviewIDError:
+    case PreviewZIP:
+        pDialogPreview = new CDialogPreviewZIP(this);
+        break;
+    case PreviewIDError:
 	default:
 		pDialogPreview = new CDialogPreviewError(this);
 		break;
@@ -260,7 +269,7 @@ CDialogPreviewBase* CDialogPreview::GetDialogPreviewsEx(int iPreviewID)
 }
 CDialogPreviewBase* CDialogPreview::GetDialogPreviews(int iPreviewID)
 {
-	return (CDialogPreviewBase*)theApp.GetMainWnd()->SendMessage(WM_CREATE_PREVIEW, (WPARAM)this, iPreviewID);
+    return m_CArrayCPreviewContainer.GetAt(iPreviewID)->GetPreviewDialogObject(this, iPreviewID);
 }
 BOOL CDialogPreview::ShowWindow(int nCmdShow)
 {

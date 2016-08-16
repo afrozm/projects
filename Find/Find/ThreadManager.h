@@ -27,7 +27,7 @@ public:
 	bool CreateThread(ThreadProcFn proc, LPVOID pUserData = NULL, int iThreadClass = 0, LPDWORD outThreadID = NULL);
 	bool RemoveThread(DWORD threadID);
 	bool IsValidThread(DWORD threadID);
-	void TerminateThreads(int iThreadClass = -1);
+	void TerminateThreads(int iThreadClass = -1, DWORD dwMilliSeconds = 0);
 	INT_PTR GetAllThreadCount();
 	INT_PTR GetThreadCount(int iThreadClass = 0, bool bMatchingClass = true);
 	INT_PTR GetThreadCount(const CArrayEx<int> &threadClass, bool bOnyInArray = true);

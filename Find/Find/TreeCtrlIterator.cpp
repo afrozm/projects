@@ -15,7 +15,8 @@ CTreeCtrlIterator::~CTreeCtrlIterator(void)
 
 void CTreeCtrlIterator::StartIteration()
 {
-	StartIterationEx(m_pTreeCtrl->GetRootItem());
+    if (m_pTreeCtrl->GetSafeHwnd())
+	    StartIterationEx(m_pTreeCtrl->GetRootItem());
 }
 
 void CTreeCtrlIterator::StartIterationEx(HTREEITEM hItem)

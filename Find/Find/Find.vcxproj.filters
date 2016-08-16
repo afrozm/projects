@@ -342,6 +342,9 @@
     <ClInclude Include="..\Utilites\RefCountObj.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Preview\DialogPreviewZIP.h">
+      <Filter>Source Files\Preview</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Preview\CAcroAXDocShim.cpp">
@@ -550,6 +553,9 @@
     </ClCompile>
     <ClCompile Include="..\Utilites\RefCountObj.cpp">
       <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview\DialogPreviewZIP.cpp">
+      <Filter>Source Files\Preview</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

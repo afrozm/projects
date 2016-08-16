@@ -727,7 +727,7 @@ void CFindDlg::Find() // Start Find
 		if (IsDiplayFindOption()) {
 			mFindOptionDlg.DoModal();
 			SetDiplayFindOption(false);
-			mTreeCtrlDomain->EnableSearchInZip(mFindOptionDlg.IsSearchZipEnabled());
+			mTreeCtrlDomain->SetSearchInZip(mFindOptionDlg.IsSearchZipEnabled());
 		}
 		GetFindList();
 		mListResult->DeleteAllItems();
@@ -1083,7 +1083,7 @@ void CFindDlg::LoadSearchKeyWords()
 		if (prefName.GetCount() >= 2)
 			mPreferenceName = prefName.GetAt(1);
 		mFindOptionDlg.LoadDefault(prefDataBase);
-		mTreeCtrlDomain->EnableSearchInZip(mFindOptionDlg.IsSearchZipEnabled());
+		mTreeCtrlDomain->SetSearchInZip(mFindOptionDlg.IsSearchZipEnabled());
 		mListResult->LoadDefault(prefDataBase);
 	}
     bool isTreeVisible = prefDataBase.GetProperty(L"isTreeDomainVisible") == L"1";

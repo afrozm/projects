@@ -53,7 +53,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRTDBG_MAP_ALLOC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\Utilites;$(ProjectDir)..\..\Database;$(ProjectDir)EmbedControls;$(ProjectDir)Preview;$(ProjectDir)..;$(ProjectDir);C:\Program Files (x86)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -166,6 +166,7 @@
     <ClInclude Include="Preview\DialogPreviewMedia.h" />
     <ClInclude Include="Preview\DialogPreviewPDF.h" />
     <ClInclude Include="Preview\DialogPreviewText.h" />
+    <ClInclude Include="Preview\DialogPreviewZIP.h" />
     <ClInclude Include="Preview\ExplorerPreviewManager.h" />
     <ClInclude Include="Preview\PreviewController.h" />
     <ClInclude Include="Preview\VLCWrapper.h" />
@@ -253,6 +254,7 @@
     <ClCompile Include="Preview\DialogPreviewMedia.cpp" />
     <ClCompile Include="Preview\DialogPreviewPDF.cpp" />
     <ClCompile Include="Preview\DialogPreviewText.cpp" />
+    <ClCompile Include="Preview\DialogPreviewZIP.cpp" />
     <ClCompile Include="Preview\ExplorerPreviewManager.cpp" />
     <ClCompile Include="Preview\PreviewController.cpp" />
     <ClCompile Include="Preview\VLCWrapper.cpp" />

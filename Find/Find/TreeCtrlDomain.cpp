@@ -18,9 +18,9 @@
 IMPLEMENT_DYNAMIC(CTreeCtrlDomain, CTreeCtrl)
 
 CTreeCtrlDomain::CTreeCtrlDomain()
-: mbUseThread(true), mbSearchInZip(false)
+: m_uFlags(0)
 {
-
+    SetUseThread();
 }
 
 CTreeCtrlDomain::~CTreeCtrlDomain()
@@ -51,8 +51,23 @@ CString CTreeCtrlDomain::GetFilePath(HTREEITEM hItem, bool bMakeUNCPath)
 		if (hItem)
 			str = CString(_T("\\")) + str;
 	}
-	return str;
+	return mRootPath + str;
 }
+
+CString CTreeCtrlDomain::SetRootPath(const CString &inNewRootPath)
+{
+    CString oldRootPath(GetRootPath());
+    mRootPath = inNewRootPath;
+    if (!mRootPath.IsEmpty() && mRootPath[mRootPath.GetLength() - 1] != '\\')
+        mRootPath = mRootPath + _T("\\");
+    return oldRootPath;
+}
+
+const CString& CTreeCtrlDomain::GetRootPath() const
+{
+    return mRootPath;
+}
+
 static int CheckTreeIteratorCallBack(TreeIteratorCallBackData *pData, void *pUserParam)
 {
 	pData->pTree->SetCheck(pData->hItem, (BOOL)(pUserParam != NULL));
@@ -342,7 +357,8 @@ void CTreeCtrlDomain::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 HTREEITEM CTreeCtrlDomain::InsertNewItem(HTREEITEM hItem, LPCTSTR name, DWORD_PTR itemData)
 {
 	hItem = InsertItem(name, hItem, NULL);
-	InsertItem(name, hItem, NULL);
+    if (itemData != NULL)
+	    InsertItem(name, hItem, NULL);
 	SetItemData(hItem, itemData);
 	return hItem;
 }
@@ -405,9 +421,13 @@ static int FreeTreeNodeIteratorCallBack(TreeIteratorCallBackData *pData, void *p
 
 void CTreeCtrlDomain::DeleteAllTreeItem(void)
 {
-	CTreeCtrlIterator cti(this, FreeTreeNodeIteratorCallBack);
-	cti.StartIteration();
-	CTreeCtrlDomain::DeleteAllItems();
+    if (IsUseThread())
+        ThreadManager::GetInstance().TerminateThreads(1);
+    if (GetSafeHwnd()) {
+        CTreeCtrlIterator cti(this, FreeTreeNodeIteratorCallBack);
+        cti.StartIteration();
+        CTreeCtrlDomain::DeleteAllItems();
+    }
 }
 BOOL CTreeCtrlDomain::DeleteItem(HTREEITEM hItem)
 {
@@ -446,11 +466,13 @@ static int NetWorkFindCallBackDomain(LPNETRESOURCE lpNetRes, void *pUserParam)
 static int FindCallBackDomain(CFileFindEx *pFindFile, bool bFileMatched, void *pUserParam)
 {
 	TVExpandData *fcbData = (TVExpandData *)pUserParam;
-	if (pFindFile->IsDirectory() && bFileMatched) {
-		CTreeCtrlDomain *treeCtrl = (CTreeCtrlDomain*)fcbData->pTreeCtrl;
-		CString filename = pFindFile->GetFileName();
-		treeCtrl->InsertNewItem(fcbData->hItem, filename, (DWORD_PTR)fcbData->folderOrNetWork);
-	}
+    if (bFileMatched) {
+        CTreeCtrlDomain *treeCtrl = (CTreeCtrlDomain*)fcbData->pTreeCtrl;
+        CString filename = pFindFile->GetFileName();
+        if (pFindFile->IsDirectory() || treeCtrl->IsFileListing())
+            treeCtrl->InsertNewItem(fcbData->hItem, filename,
+                pFindFile->IsDirectory() ? (DWORD_PTR)fcbData->folderOrNetWork : NULL);
+    }
 	return ThreadManager::GetInstance().IsThreadTerminated(fcbData->threadID) ? FCB_ABORT : FCB_CONTINUE;
 }
 
@@ -466,7 +488,7 @@ static int ExpandTreeThreadProcFn(LPVOID pThread)
 		mTreeCtrlDomain->DeleteItem(mTreeCtrlDomain->GetChildItem(fcbData->hItem));
 		CFinder cf(NULL, FindCallBackDomain, false, fcbData);
 		mTreeCtrlDomain->GetParent()->SendMessage(WM_SET_STATUS_MESSAGE, (WPARAM)(LPCTSTR)statusText);
-		cf.Find(mTreeCtrlDomain->GetFilePath(fcbData->hItem), mTreeCtrlDomain->SearchInZip());
+		cf.Find(mTreeCtrlDomain->GetFilePath(fcbData->hItem), mTreeCtrlDomain->IsSearchInZip());
 		mTreeCtrlDomain->GetParent()->SendMessage(WM_SET_STATUS_MESSAGE);
 	}
 	else {
@@ -513,14 +535,14 @@ void CTreeCtrlDomain::OnTvnItemexpanding(NMHDR *pNMHDR, LRESULT *pResult)
 	if (fcbData.folderOrNetWork == 0)
 		return;
 	LPVOID pThreaData(new TVExpandData(fcbData));
-	if (mbUseThread)
+	if (IsUseThread())
 		ThreadManager::GetInstance().CreateThread(ExpandTreeThreadProcFn, pThreaData, 1);
 	else
 		ExpandTreeThreadProcFn(pThreaData);
 }
 BOOL CTreeCtrlDomain::Expand(HTREEITEM hItem, UINT nCode, bool bThreaded)
 {
-	mbUseThread = bThreaded;
+	SetUseThread(bThreaded);
 	if (!bThreaded) {
 		NMTREEVIEWW nmTV = {0};
 		nmTV.action = nCode;
@@ -529,7 +551,7 @@ BOOL CTreeCtrlDomain::Expand(HTREEITEM hItem, UINT nCode, bool bThreaded)
 		OnTvnItemexpanding((NMHDR*)&nmTV, &lResult);
 	}
 	BOOL bSuccess(CTreeCtrl::Expand(hItem, nCode));
-	mbUseThread = true;
+	SetUseThread(true);
 	return bSuccess;
 }
 static int GetCheckTreeIteratorCallBack(TreeIteratorCallBackData *pData, void *pUserParam)
@@ -549,6 +571,7 @@ void CTreeCtrlDomain::GetCheckList(HTREEITEMVec &outCheckList)
 }
 BOOL CTreeCtrlDomain::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 {
+
 	PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)dwData;
 
 	switch(nEventType )
