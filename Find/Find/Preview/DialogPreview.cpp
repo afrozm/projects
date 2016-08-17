@@ -159,11 +159,11 @@ bool CDialogPreview::ShowPreview(const CString &path)
 	ThreadManager::GetInstance().TerminateThreads(TM_PREVIEW_THREAD_CLASS);
 	m_FileToPreview = path;
 	CDialogPreviewBase *pPreviewDialog(NULL);
-	CString fileName(Path(path).FileName());
+	CString extName(Path(path).GetExtension());
 	INT_PTR nPreviewCount(m_CArrayCPreviewContainer.GetCount());
 	for (INT_PTR i = 0; i < nPreviewCount; ++i) {
 		CPreviewContainer &previewContainer(*m_CArrayCPreviewContainer.GetAt(i));
-		if (previewContainer.CanShowPreview(fileName)) {
+		if (previewContainer.CanShowPreview(extName)) {
 			pPreviewDialog = previewContainer.GetPreviewDialogObject(this, (int)i);
 			break;
 		}

@@ -255,6 +255,13 @@ BOOL CUnzipper::GotoNextFile(LPCTSTR szChildPath)
 
 }
 
+static int UTF8ToUniCodeString(const char *inStr, wchar_t *outStr, int inOutStrLen)
+{
+    int len = MultiByteToWideChar(CP_UTF8, 0, inStr, -1, outStr,
+        inOutStrLen);
+    return len;
+}
+
 BOOL CUnzipper::GetFileInfo(UZ_FileInfo& info)
 {
 	if (!m_uzFile)
@@ -268,10 +275,10 @@ BOOL CUnzipper::GetFileInfo(UZ_FileInfo& info)
 	char szComment[MAX_COMMENT+1];
 	if (UNZ_OK != unzGetCurrentFileInfo64(m_uzFile, &uzfi, szFileName, MAX_PATH, NULL, 0, szComment, MAX_COMMENT))
 		return FALSE;
-	MultiByteToWideChar(CP_UTF8, 0, szFileName, -1, info.szFileName,
-		sizeof(szFileName)/sizeof(TCHAR));
-	MultiByteToWideChar(CP_UTF8, 0, szComment, -1, info.szComment,
-		sizeof(szComment)/sizeof(TCHAR));
+    UTF8ToUniCodeString(szFileName, info.szFileName,
+		sizeof(info.szFileName)/sizeof(TCHAR));
+    UTF8ToUniCodeString(szComment, info.szComment,
+		sizeof(info.szComment)/sizeof(TCHAR));
 
 	// copy across
 	info.dwVersion = uzfi.version;	

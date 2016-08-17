@@ -42,4 +42,5 @@ public:
 	HICON GetIcon(bool bSmallIcon = true) const;
 	Path GetMachineNameFromUNCPath() const;
 	Path MakeUNCPath() const;
+    BOOL OpenInExplorer() const;
 };

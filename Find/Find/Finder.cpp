@@ -215,6 +215,7 @@ void CZipFileFinder::CloseContext()
 }
 BOOL CZipFileFinder::JumpToChildPath(LPCTSTR childPath)
 {
+    mRootItems.RemoveAll();
 	mChildPath = Path(childPath);
 	CUnzipper *pUnzipper((CUnzipper *)m_hContext);
 	if (pUnzipper != NULL)
@@ -256,16 +257,24 @@ BOOL CZipFileFinder::FindNext()
 				m_pNextInfo = NULL;
 			}
 			if (!mbRecrursive) {
-				mbFound = mChildPath == Path(pUzFileInfo->szFileName).Parent();
-                if (!mbFound) {
-                    CString rootItem(Path(pUzFileInfo->szFileName).GetRoot());
-                    if (mRootItems.Find(rootItem) < 0) {
-                        mRootItems.InsertUnique(rootItem);
-                        pUzFileInfo->bFolder = true;
-                        _tcscpy_s(pUzFileInfo->szFileName, rootItem);
-                        mbFound = true;
+                Path zipPath(pUzFileInfo->szFileName);
+                int parentCount(0);
+                do {
+                    Path childPath(zipPath);
+                    zipPath = zipPath.Parent();
+                    if (mChildPath == zipPath) {
+                        if (mRootItems.Find(childPath) < 0) {
+                            mRootItems.InsertUnique(childPath);
+                            if (parentCount > 0) {
+                                _tcscpy_s(pUzFileInfo->szFileName, childPath);
+                                pUzFileInfo->bFolder = true;
+                            }
+                            mbFound = true;
+                        }
+                        break;
                     }
-                }
+                    ++parentCount;
+                } while (!zipPath.IsEmpty());
 			}
 			else mbFound = mChildPath.IsEmpty() || mChildPath.IsParentOf(Path(pUzFileInfo->szFileName));
 		}

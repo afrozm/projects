@@ -620,7 +620,7 @@ void CFindDlg::OnTvnKeydownTreeDomain(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMTVKEYDOWN pTVKeyDown = reinterpret_cast<LPNMTVKEYDOWN>(pNMHDR);
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
-	if (pTVKeyDown->wVKey == VK_F5) // Refress Tree
+	if (pTVKeyDown->wVKey == VK_F5) // Refresh Tree
 		RefreshDomainTree();
 	else if (pTVKeyDown->wVKey == VK_CANCEL && IsSearchStarted()) // Cancel
 		SetSearchCancelled(true);

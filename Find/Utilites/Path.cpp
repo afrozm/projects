@@ -314,3 +314,22 @@ Path Path::MakeUNCPath() const
 	outPath = _T("\\\\") + outPath;
 	return outPath;
 }
+
+BOOL Path::OpenInExplorer() const
+{
+    Path path(*this);
+    CString cParams;
+    SHELLEXECUTEINFO shExInfo = { sizeof(SHELLEXECUTEINFO) };
+    BOOL isDir(IsDir() || GetExtension().IsEmpty() || PathIsNetworkPath(*this));
+    if (!isDir) {
+        cParams = _T("/select,") + path;
+        path = Path(_T("explorer.exe"));
+        shExInfo.lpParameters = cParams;
+    }
+    else
+        shExInfo.lpVerb = _T("open");
+    shExInfo.nShow = SW_SHOWDEFAULT;
+    shExInfo.lpFile = path;
+    BOOL l = ShellExecuteEx(&shExInfo);
+    return l;
+}

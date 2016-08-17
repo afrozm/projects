@@ -319,13 +319,8 @@ void CTreeCtrlDomain::OnToggleITemCheck(UINT nFlags, HTREEITEM hItem, bool bNoti
 void CTreeCtrlDomain::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
 	HTREEITEM hITem = HitTest(point);
-	if (nFlags & MK_CONTROL) {
-		if (hITem != NULL) {
-			CString path = GetFilePath(hITem);
-			if (PathIsDirectory(path) || PathIsNetworkPath(path))
-				ShellExecute(NULL, _T("open"), path, NULL, NULL, SW_SHOWDEFAULT);
-		}
-	}
+	if (hITem != NULL)
+		Path(GetFilePath(hITem)).OpenInExplorer();
 	BOOL bChecked = hITem ? GetCheck(hITem) : FALSE;
 	CTreeCtrl::OnLButtonDblClk(nFlags, point);
 	if (hITem && bChecked != GetCheck(hITem)) {
