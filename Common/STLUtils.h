@@ -16,6 +16,12 @@
 #define SET_UNSET_FLAGBIT(f,fb,s) (f)=(s)?((f)|FLAGBIT(fb)):((f)&~FLAGBIT(fb))
 #define IS_FLAGBIT_SET(f,fb) (((f)&FLAGBIT(fb))!=0)
 
+#define DEFINE_FUNCTION_SET_FLAGBIT(f,fb) void Set##fb(bool bSet##fb=true) {SET_UNSET_FLAGBIT(f,fb,bSet##fb);}
+#define DEFINE_FUNCTION_IS_FLAGBIT_SET(f,fb) bool Is##fb() const {return IS_FLAGBIT_SET(f,fb);}
+#define DEFINE_FUNCTION_SET_GET_FLAGBIT(f,fb) DEFINE_FUNCTION_SET_FLAGBIT(f,fb)\
+	DEFINE_FUNCTION_IS_FLAGBIT_SET(f,fb)
+
+
 #endif
 
 #include <map>

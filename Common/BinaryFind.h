@@ -18,6 +18,7 @@ public:
     operator void*() const;
     size_t Size() const;
     size_t DataSize() const;
+    void SetDataSize(size_t dataSize);
     bool operator < (const BinaryData &inData) const;
     int Compare(const BinaryData &inData) const;
     unsigned char operator[](size_t index) const;

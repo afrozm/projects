@@ -64,6 +64,13 @@ size_t BinaryData::DataSize() const
     return mDataSize;
 }
 
+void BinaryData::SetDataSize(size_t dataSize)
+{
+    mDataSize = dataSize;
+    if (mDataSize > Size())
+        mDataSize = Size();
+}
+
 bool BinaryData::operator<(const BinaryData & inData) const
 {
     return Compare(inData) < 0;
