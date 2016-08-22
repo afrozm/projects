@@ -7,7 +7,7 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
     CHttpClient httpClient;
-    httpClient.Request(argc > 1 ? argv[1] : _T("google.com"));
+    httpClient.Request(argc > 1 ? argv[1] : _T("http://www.google.com"));
     return 0;
 }
 

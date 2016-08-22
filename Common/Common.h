@@ -47,5 +47,26 @@ typedef wchar_t TCHAR;
 typedef char TCHAR;
 #define lstrcmpi strcasecmp
 #define _stricmp strcasecmp
+#define lstrlen strlen
+#define lstrcat strcat
+#define _tprintf printf
 #endif
+
+#define _TCHAR TCHAR
+#define _tmain main
+#define UNREFERENCED_PARAMETER(x)
+
+typedef const TCHAR* LPCTSTR;
+typedef TCHAR* LPTSTR;
+
+typedef long long INT64;
+
+#ifndef HMODULE
+typedef void* HMODULE;
+#endif
+
+typedef unsigned int DWORD;
+typedef unsigned long long ULONGLONG;
+
+
 #endif // !_WIN32

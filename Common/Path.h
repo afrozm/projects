@@ -1,6 +1,12 @@
 #pragma once
 #include "Common.h"
-#include "atlrx.h"
+
+#include <regex>
+#ifndef _WIN32
+#include <sys/stat.h>
+typedef timespec FILETIME;
+typedef FILETIME*  LPFILETIME;
+#endif
 
 class Path : public lstring
 {
@@ -54,10 +60,16 @@ bool operator != (const Path& p1, const Path& p2);
 
 
 struct FindData {
-	WIN32_FIND_DATA *pFindData;
 	const lstring &fullPath;
 	bool fileMatched;
-	FindData(WIN32_FIND_DATA *pFD, const lstring &fp, bool fm)
+#ifdef _WIN32
+    typedef WIN32_FIND_DATA PLAT_FIND_DATA;
+#else
+    struct PLAT_FIND_DATA {
+    };
+#endif
+    PLAT_FIND_DATA *pFindData;
+	FindData(PLAT_FIND_DATA *pFD, const lstring &fp, bool fm)
 		: pFindData(pFD), fullPath(fp), fileMatched(fm)
 	{}
     long long GetFileSize() const;
@@ -70,8 +82,7 @@ typedef int(*FindCallBack)(FindData&, void *pUserParam);
 struct Finder {
 	Finder(FindCallBack fcb, void *pUserParam = NULL, LPCTSTR pattern = NULL, LPCTSTR excludePattern = NULL);
 	int StartFind(const lstring &dir);
-	CAtlRegExp<> mRegExp;
-	CAtlRegExp<> mExcludeRegExp;
+    std::basic_regex<TCHAR> mRegExp, mExcludeRegExp;
 	LPCTSTR mExcludePattern;
 	FindCallBack mFindCallBack;
 	void *m_pUserParam;

@@ -1,6 +1,12 @@
 #include "stdafx.h"
 #include "BinaryFind.h"
 
+#ifndef _WIN32
+#define memcpy_s(d,dn,s,sn) memcpy(d,s,dn<sn?dn:sn)
+#define _fseeki64 fseeko
+#define fread_s(d,dn,ds,n,f) fread(d,dn<n?dn:n,ds,f)
+#define _stprintf_s sprintf
+#endif
 
 
 BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
@@ -8,6 +14,7 @@ BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
 {
     SetData(pBuffer, bufLen, bStore);
 }
+
 
 void BinaryData::SetData(const void *pBuffer /*= NULL*/, size_t bufLen /*= 0*/, bool bStore /*= true*/)
 {
@@ -123,6 +130,7 @@ size_t BinaryData::ReadFromFile(FILE *pFile, size_t nBytesRead /* = 0 */, long l
     return nBytesRead;
 }
 
+#ifdef _WIN32
 size_t BinaryData::ReadFromFile(HANDLE hFile, size_t nBytesRead, long long fileOffset)
 {
     mDataSize = 0;
@@ -159,10 +167,11 @@ size_t BinaryData::ReadFromResource(LPCTSTR lpName, LPCTSTR lpType, HMODULE hMod
     }
     return Size();
 }
+#endif
 
 BinaryData BinaryData::GetDataRef(size_t offset, size_t inSize)
 {
-    if (inSize < 0 || inSize > Size())
+    if (inSize > Size())
         inSize = Size();
     if (offset > Size())
         offset = Size();
@@ -388,7 +397,9 @@ static char getHexByte(wchar_t ch)
         return 0xA + ch - 'a';
     return (char)ch;
 }
-static char getHexByte(const wchar_t *inStr)
+
+template <typename T>
+static char getHexByte(const T *inStr)
 {
     char ch = 0;
     if (inStr) {

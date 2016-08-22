@@ -1,0 +1,9 @@
+//
+//  Common.xcconfig
+//  HttpClientTest
+//
+//  Created by Afroz Muzammil on 22/8/16.
+//  Copyright © 2016 Afroz Muzammil. All rights reserved.
+//
+
+HEADER_SEARCH_PATHS=$(inherited) $(SRCROOT)/$(PROJECT_NAME) $(SRCROOT) $(SRCROOT)/../Common
