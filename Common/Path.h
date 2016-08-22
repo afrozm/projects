@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 typedef timespec FILETIME;
 typedef FILETIME*  LPFILETIME;
+#else
+#include <windows.h>
 #endif
 
 class Path : public lstring

@@ -3,6 +3,8 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 
+#pragma comment(lib, "Shlwapi.lib")
+
 Path::Path()
 {
 }
@@ -547,9 +549,9 @@ Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR ex
 		pat = inpattern;
 	if (pat.empty())
 		pat = _T("*");
-	mRegExp.Parse(WildCardExpToRegExp(pat.c_str()).c_str(), FALSE);
+    mRegExp.assign(WildCardExpToRegExp(pat.c_str()).c_str(), std::regex_constants::icase);
 	if (mExcludePattern)
-		mExcludeRegExp.Parse(WildCardExpToRegExp(mExcludePattern).c_str(), FALSE);
+        mExcludeRegExp.assign(WildCardExpToRegExp(mExcludePattern).c_str(), std::regex_constants::icase);
 	m_pUserParam = pUserParam;
 	mFindCallBack = fcb;
 }
@@ -573,11 +575,10 @@ int Finder::StartFind(const lstring &dir)
 	if (hFind != INVALID_HANDLE_VALUE || bSrcIsFile) {
 		do {
 			if (lstrcmp(findFileData.cFileName, _T(".")) && lstrcmp(findFileData.cFileName, _T(".."))) {
-				CAtlREMatchContext<> mc;
 				lstring file = srcDir.Append(findFileData.cFileName);
-				bool bMatched = mRegExp.Match(findFileData.cFileName, &mc) == TRUE;
+                bool bMatched = std::regex_match(findFileData.cFileName, mRegExp);
 				if (mExcludePattern)
-					bMatched = bMatched && mExcludeRegExp.Match(findFileData.cFileName, &mc) == FALSE;
+                    bMatched = bMatched && std::regex_match(findFileData.cFileName, mExcludeRegExp);
 				int fcbRetVal(mFindCallBack(FindData(&findFileData, file, bMatched), m_pUserParam));
 				while (fcbRetVal == FCBRV_PAUSE) {
 					fcbRetVal = mFindCallBack(FindData(&findFileData, file, false), m_pUserParam);
