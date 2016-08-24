@@ -13,6 +13,7 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
+    afx_msg void OnDropFiles(HDROP hDropInfo);
 	CTreeCtrlDomain();
 	virtual ~CTreeCtrlDomain();
 	CString GetFilePath(HTREEITEM hItem, bool bMakeUNCPath = true);

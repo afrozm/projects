@@ -345,6 +345,9 @@
     <ClInclude Include="Preview\DialogPreviewZIP.h">
       <Filter>Source Files\Preview</Filter>
     </ClInclude>
+    <ClInclude Include="ComboBoxDragDrop.h">
+      <Filter>Source Files\Find\Client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Preview\CAcroAXDocShim.cpp">
@@ -556,6 +559,9 @@
     </ClCompile>
     <ClCompile Include="Preview\DialogPreviewZIP.cpp">
       <Filter>Source Files\Preview</Filter>
+    </ClCompile>
+    <ClCompile Include="ComboBoxDragDrop.cpp">
+      <Filter>Source Files\Find\Client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

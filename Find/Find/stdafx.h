@@ -69,6 +69,7 @@
 #define WM_LOAD_PREVIEW WM_USER+0x504
 #define WM_RESIZE_PREVIEW WM_USER+0x505
 #define WM_SERVER_ADDTSPANEL WM_USER+0x506
+#define WM_FINDTREE_EXPAND_PATH WM_USER+0x507
 
 typedef CStringArray CArrayCString;
 typedef CSortedArray<CString> CSortedArrayCString;

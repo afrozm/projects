@@ -126,6 +126,7 @@
     <ClInclude Include="..\Utilites\TextReader.h" />
     <ClInclude Include="CmdEditCtrl.h" />
     <ClInclude Include="CombinedButton.h" />
+    <ClInclude Include="ComboBoxDragDrop.h" />
     <ClInclude Include="CommitResultTimer.h" />
     <ClInclude Include="ControlResizer.h" />
     <ClInclude Include="Drawer.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="..\Utilites\TextReader.cpp" />
     <ClCompile Include="CmdEditCtrl.cpp" />
     <ClCompile Include="CombinedButton.cpp" />
+    <ClCompile Include="ComboBoxDragDrop.cpp" />
     <ClCompile Include="CommitResultTimer.cpp" />
     <ClCompile Include="ControlResizer.cpp" />
     <ClCompile Include="Drawer.cpp" />

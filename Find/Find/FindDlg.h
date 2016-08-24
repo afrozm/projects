@@ -11,6 +11,7 @@
 #include "CommitResultTimer.h"
 #include "PreviewController.h"
 #include "CountTimer.h"
+#include "ComboBoxDragDrop.h"
 
 #define FINDF_SEARCH_FILE_STARTED FLAGBIT(31)
 
@@ -25,7 +26,7 @@ typedef enum {
 	THREAD_OP_DODRAG_DROP,
 	THREAD_OP_FILTER_DUPLICATES,
 	THREAD_OP_LOAD_LAST_RESULT,
-	THREAD_OP_FIND_FILE_CONTENT
+    THREAD_OP_FIND_FILE_CONTENT
 } ThreadOperation;
 
 
@@ -42,6 +43,7 @@ public:
 	enum { IDD = IDD_FIND_DIALOG };
 	CTreeCtrlDomain *mTreeCtrlDomain;
 	CSaveListResultCtrl *mListResult;
+    CComboBoxDragDrop mComboBoxFindText;
 	CResizeBar *mResizeBar;
 	HTREEITEMVec mSearchList;
 
@@ -93,6 +95,7 @@ protected:
 	afx_msg void OnSizing(UINT nSize, LPRECT lpRect);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg HCURSOR OnQueryDragIcon();
+    afx_msg void OnDropFiles(HDROP hDropInfo);
 	DECLARE_MESSAGE_MAP()
 	void GetFindList();
 	HTREEITEM SearchForNetWorkPC(const CString &networkPath);

@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(CTreeCtrlDomain, CTreeCtrl)
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_KEYDOWN()
+    ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 CString CTreeCtrlDomain::GetFilePath(HTREEITEM hItem, bool bMakeUNCPath)
@@ -359,7 +360,9 @@ HTREEITEM CTreeCtrlDomain::InsertNewItem(HTREEITEM hItem, LPCTSTR name, DWORD_PT
 }
 HTREEITEM CTreeCtrlDomain::Expand(const CString &inPath, HTREEITEM hPrentItem, UINT nCode)
 {
-	Path path(inPath);
+    Path path(inPath);
+    if (!IsFileListing() && !Path(inPath).IsDir())
+        path = path.Parent();
 	if (path.IsUNC())
 		path.Delete(0, 2);
 	while (path != _T("")) {
@@ -373,6 +376,8 @@ HTREEITEM CTreeCtrlDomain::Expand(const CString &inPath, HTREEITEM hPrentItem, U
 		}
 		else break;
 	}
+    if (hPrentItem == TVI_ROOT)
+        hPrentItem = NULL;
 	return hPrentItem;
 }
 void CTreeCtrlDomain::RefreshDomainTree(void)
@@ -597,4 +602,17 @@ BOOL CTreeCtrlDomain::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 		;
 	}
 	return TRUE;
+}
+
+void CTreeCtrlDomain::OnDropFiles(HDROP hDropInfo)
+{
+    int nFilesDropped = DragQueryFile(hDropInfo, 0xFFFFFFFF, NULL, 0);
+    if (nFilesDropped > 0) {
+        DWORD   nBuffer = DragQueryFile(hDropInfo, 0, NULL, 0);
+        CString sFile;
+        DragQueryFile(hDropInfo, 0, sFile.GetBuffer(nBuffer + 1), nBuffer + 1);
+        sFile.ReleaseBuffer();
+        GetParent()->PostMessage(WM_FINDTREE_EXPAND_PATH, (WPARAM)(new CString(sFile)));
+    }
+    DragFinish(hDropInfo);
 }

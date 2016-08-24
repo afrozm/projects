@@ -186,6 +186,7 @@ BEGIN_MESSAGE_MAP(CFindDlg, CDialog)
 //	ON_NOTIFY(LVN_DELETEALLITEMS, IDC_LIST_RESULT, &CFindDlg::OnLvnDeleteallitemsListResult)
 	ON_COMMAND(ID_FILE_PREFERENCES, &CFindDlg::OnFilePreferences)
 	ON_WM_DEVICECHANGE()
+    ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 // CFindDlg message handlers
@@ -262,13 +263,18 @@ LRESULT CFindDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		case TIMER_TERMINATE:
 			if (m_pPreviewController == NULL || m_pPreviewController->IsPreviewTerminated())
 				PostMessage(WM_CLOSE);
-		}
-	case TIMER_UPDATESTATUS:
-		SetForceUpdateStatus();
-		SetStatusMessage(_T("%s"), CString(mStatusMsg));
-		KillTimer(TIMER_UPDATESTATUS);
-		SetStatusTimerStarted(false);
-		break;
+            break;
+        case TIMER_UPDATESTATUS:
+            SetForceUpdateStatus();
+            SetStatusMessage(_T("%s"), CString(mStatusMsg));
+            KillTimer(TIMER_UPDATESTATUS);
+            SetStatusTimerStarted(false);
+            break;
+        }
+        break;
+    case WM_FINDTREE_EXPAND_PATH:
+        StartThreadOperation(THREAD_OP_EXPAND_TREE_NODE, (LPVOID)wParam);
+        break;
 	}
 	return CDialog::WindowProc(message, wParam, lParam);
 }
@@ -383,6 +389,7 @@ void CFindDlg::OnCancel()
 BOOL CFindDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+    DragAcceptFiles();
 	// Add "About..." menu item to system menu.
 
 	// IDM_ABOUTBOX must be in the system command range.
@@ -416,6 +423,9 @@ BOOL CFindDlg::OnInitDialog()
 	GetDlgItem(IDC_STATIC_VERT_SEP)->SetWindowPos(NULL, 0, 0, SystemUtils::GetTranslatedDPIPixelX(5), rc.bottom-rc.top, SWP_NOMOVE|SWP_NOZORDER);
 	mTreeCtrlDomain = new CTreeCtrlDomain();
 	mTreeCtrlDomain->SubclassDlgItem(IDC_TREE_DOMAIN, this);
+    mTreeCtrlDomain->DragAcceptFiles();
+    mComboBoxFindText.SubclassDlgItem(IDC_COMBO_FIND, this);
+    mComboBoxFindText.DragAcceptFiles();
 	mListResult = new CSaveListResultCtrl(this);
 	mListResult->SubclassDlgItem(IDC_LIST_RESULT, this);
 	mCommitResultTimer.SetListCtrl(mListResult);
@@ -601,6 +611,11 @@ void CFindDlg::OnPaint()
 HCURSOR CFindDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+void CFindDlg::OnDropFiles(HDROP hDropInfo)
+{
+    mTreeCtrlDomain->OnDropFiles(hDropInfo);
 }
 
 void CFindDlg::OnTvnItemexpandingTreeDomain(NMHDR *pNMHDR, LRESULT *pResult)
@@ -952,6 +967,13 @@ int CFindDlg::DoThreadOperation(ThreadOperation threadOp, LPVOID pThreadData)
 	case THREAD_OP_FIND_FILE_CONTENT:
 		SearchFileContent((CListResItemData *)pThreadData);
 		break;
+    case THREAD_OP_EXPAND_TREE_NODE:
+    {
+        CString *pPath((CString*)pThreadData);
+        SearchForNetWorkPC(*pPath);
+        delete pPath;
+    }
+    break;
 	}
 	return 0;
 }
