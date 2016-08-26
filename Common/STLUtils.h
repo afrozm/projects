@@ -24,8 +24,10 @@
 
 #endif
 
+#include <string>
 #include <map>
 #include <sstream>
+#include <codecvt>
 
 template<class KEY, class VALUE>
 class KeyValueMap : public std::map<KEY, VALUE> {
@@ -48,7 +50,46 @@ public:
 
 namespace STLUtils {
 
-	template<typename Source, typename Target>
+    inline bool ChangeType(const std::string &inSource, std::wstring &outTarget)
+    {
+        try {
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+            outTarget = converter.from_bytes(inSource);
+        }
+        catch (...) {
+            return false;
+        }
+        return true;
+    }
+
+    inline bool ChangeType(const std::wstring &inSource, std::string &outTarget)
+    {
+        try {
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+            outTarget = converter.to_bytes(inSource);
+        }
+        catch (...) {
+            return false;
+        }
+        return true;
+    }
+
+#ifdef _UNICODE
+    template<typename Source>
+    bool ChangeType(const Source &inSource, std::wstring &outTarget)
+    {
+        std::wstringstream interpreter;
+        return interpreter << inSource && interpreter >> outTarget;
+    }
+    template<typename Target>
+    bool ChangeType(const std::wstring &inSource, Target &outTarget)
+    {
+        std::wstringstream interpreter;
+        return interpreter << inSource && interpreter >> outTarget;
+    }
+#endif // _UNICODE
+
+    template<typename Source, typename Target>
 	bool ChangeType(const Source &inSource, Target &outTarget)
 	{
         std::stringstream interpreter;
@@ -72,8 +113,8 @@ namespace STLUtils {
     }
 }
 
-#ifdef _WIN32
-#ifdef CArray
+#ifdef _MFC_VER
+
 typedef int (__cdecl *GenericCompareFn)(const void * elem1, const void * elem2);
 
 template<class TYPE, class CT>
@@ -228,5 +269,5 @@ public:
 		return false;
 	}
 };
-#endif
+
 #endif
