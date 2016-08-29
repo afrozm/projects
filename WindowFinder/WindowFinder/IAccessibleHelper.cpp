@@ -11,6 +11,7 @@ IAccessibleHelper::MapGetterAPI IAccessibleHelper::mMapGetterAPI;
 
 IAccessibleHelper::IAccessibleHelper()
 {
+    ZeroMemory((void*)mLocation, sizeof(mLocation));
 }
 
 
@@ -65,6 +66,16 @@ bool IAccessibleHelper::GetChild(_variant_t &childVt, IAccessibleHelper &outChil
         }
     }
     return bSuccess;
+}
+
+void IAccessibleHelper::GetRect(RECT &outRect, bool bCallLocation /*= false*/) const
+{
+    if (bCallLocation)
+        Location();
+    outRect.left = mLocation[0];
+    outRect.top = mLocation[1];
+    outRect.right = outRect.left + mLocation[2];
+    outRect.bottom = outRect.top + mLocation[3];
 }
 
 lstring IAccessibleHelper::GetValue(const lstring & fieldName) const
@@ -233,11 +244,11 @@ lstring IAccessibleHelper::DefaultAction() const
 
 lstring IAccessibleHelper::Location() const
 {
+    ZeroMemory((void*)mLocation, sizeof(mLocation));
     lstring outStr;
     if (m_pIAcc) {
-        long pos[4] = { 0 };
-        if (SUCCEEDED(m_pIAcc->accLocation(pos, pos+1, pos+2, pos+3, m_vt))) {
-            for (auto p : pos)
+        if (SUCCEEDED(m_pIAcc->accLocation(mLocation, mLocation +1, mLocation +2, mLocation +3, m_vt))) {
+            for (auto p : mLocation)
             {
                 lstring str;
                 ChangeType(p, str);

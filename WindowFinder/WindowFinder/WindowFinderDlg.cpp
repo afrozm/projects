@@ -12,6 +12,7 @@
 #endif
 
 #define TIMER_ID_REFRESH 11
+#define TIMER_REFRESH_INTERVAL 100 // 100 ms
 
 
 // CAboutDlg dialog used for App About
@@ -51,9 +52,15 @@ END_MESSAGE_MAP()
 
 
 CWindowFinderDlg::CWindowFinderDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDlg(CWindowFinderDlg::IDD, pParent), mCurWindow(NULL), mbKeyUp(true), mbTracking(true)
+	: CBaseDlg(CWindowFinderDlg::IDD, pParent), mbKeyUp(true), mbTracking(true),
+    mhWndCurrent(NULL), mChildItemAccessibleUpdatedTime(0), mbChildItemChanged(FALSE), mAttachedThreaDID(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateSelfText));
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateChildItemText));
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateParentText));
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateForegroundText));
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateFocusText));
 }
 
 void CWindowFinderDlg::DoDataExchange(CDataExchange* pDX)
@@ -105,7 +112,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	SetTimer(TIMER_ID_REFRESH, 100, NULL);
+	SetTimer(TIMER_ID_REFRESH, TIMER_REFRESH_INTERVAL, NULL);
 	GetControlResizer().AddControl(IDC_EDIT_INFO);
 	GetControlResizer().AddControl(IDC_STATIC_COORD_SELF, RSZF_RIGHT_FIXED | RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
 	GetControlResizer().AddControl(IDC_STATIC_TITLE_SELF, RSZF_RIGHT_FIXED | RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
@@ -115,6 +122,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	CString title;
 	title.Format(_T("WindowFinder - %s"), mbTracking ? _T("ON") : _T("OFF"));
 	SetWindowText(title);
+    GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 static void SetTopMost( HWND hWnd, const BOOL TopMost )
@@ -192,6 +200,8 @@ CString CWindowFinderDlg::getWindowText(HWND hWnd) const
 	if (hWnd != GetDlgItem(IDC_EDIT_INFO)->GetSafeHwnd()) {
 
 		int textLen = (int)::SendMessage(hWnd, WM_GETTEXTLENGTH, 0, 0) + 1;
+        if (textLen > 256)
+            textLen = 256;
 		TCHAR *text = new TCHAR[textLen];
 		::SendMessage(hWnd, WM_GETTEXT, textLen, (LPARAM)text);
 		outStr = text;
@@ -201,10 +211,21 @@ CString CWindowFinderDlg::getWindowText(HWND hWnd) const
 	return outStr;
 }
 
+static CString getRectText(const CRect &inRect, const CString &inRectName)
+{
+    CString outText;
+
+    outText.Format(_T("%s: %d,%d   %d,%d - (%d,%d)\r\n"), inRectName,
+        inRect.left, inRect.top, inRect.right, inRect.bottom,
+        inRect.Width(), inRect.Height());
+
+    return outText;
+}
+
 void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
 {
 	KillTimer(TIMER_ID_REFRESH);
-	while (mbTracking) {
+	if (mbTracking) {
 		CPoint curPoint;
 		GetCursorPos(&curPoint);
 		CWnd *pCurWind(WindowFromPoint(curPoint));
@@ -215,98 +236,34 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
 			if (pChildWnd)
 				pCurWind = pChildWnd;
 		}
+        mhWndCurrent = pCurWind->GetSafeHwnd();
 		CWnd *pParent(pCurWind ? pCurWind->GetParent() : NULL);
 		if (curPoint != mCurPoint) {
 			mCurPoint = curPoint;
-			CString coord;
+            UpdateChildItemLocation();
+            CString coord;
 			coord.Format(_T("%d,%d"), mCurPoint.x, mCurPoint.y);
 			SetDlgItemText(IDC_STATIC_COORD, coord);
 			coord = _T("");
 			if (pCurWind) {
-				pCurWind->ScreenToClient(&curPoint);
+                if (!mChildItemRect.IsRectEmpty()) {
+                    curPoint.x = mCurPoint.x - mChildItemRect.left;
+                    curPoint.y = mCurPoint.y - mChildItemRect.top;
+                }
+                else {
+                    pCurWind->ScreenToClient(&curPoint);
+                }
 				coord.Format(_T("%d,%d"), curPoint.x, curPoint.y);
 			}
 			SetDlgItemText(IDC_STATIC_COORD_SELF, coord);
 			coord = _T("");
 			curPoint = mCurPoint;
-			if (pParent) {
+            if (pParent)
 				pParent->ScreenToClient(&curPoint);
-				coord.Format(_T("%d,%d"), curPoint.x, curPoint.y);
-			}
-			SetDlgItemText(IDC_STATIC_COORD_WND, coord);
+            coord.Format(_T("%d,%d"), curPoint.x, curPoint.y);
+            SetDlgItemText(IDC_STATIC_COORD_WND, coord);
 		}
-		HWND curHWND = pCurWind->GetSafeHwnd();
-		if (curHWND == mCurWindow)
-			break;
-		if (pCurWind->GetSafeHwnd() == NULL)
-			break;
-		mCurWindow = curHWND;
-		CString wndInfo, text;
-		text.Format(_T("Handle: 0x%x (%d)"), mCurWindow, mCurWindow);
-		wndInfo += text + _T("\r\n");
-        text.Empty();
-        //if (mCurWindow != GetDlgItem(IDC_EDIT_INFO)->GetSafeHwnd()) {
-        //    mAccessibleHelper.InitFromPoint(mCurPoint.x, mCurPoint.y);
-        //    text = mAccessibleHelper.GetValue(_T("Name")).c_str();
-        //    if (text.IsEmpty())
-        //        text = mAccessibleHelper.GetValue(_T("Value")).c_str();
-        //}
-        if (text.IsEmpty())
-		    text = getWindowText(mCurWindow);
-		wndInfo += _T("Title: ") + text + _T("\r\n");
-		{
-			TCHAR className[1024] = {0};
-			GetClassName(curHWND, className, sizeof(className)/sizeof(className[0]));
-			text = className;
-			wndInfo += _T("Class: ") + text + _T("\r\n");
-		}
-		if (pParent) {
-			text.Format(_T("Parent Handle: 0x%x (%d)"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
-			wndInfo += text + _T("\r\n");
-			text = getWindowText(pParent->GetSafeHwnd());
-			wndInfo += _T("Parent Title: ") + text + _T("\r\n");
-		}
-		CRect cr;
-		pCurWind->GetWindowRect(cr);
-		text.Format(_T("Screen Window Rect: left: %d, top: %d, right: %d, bottom: %d, width: %d, height: %d"), cr.left, cr.top, cr.right, cr.bottom, cr.Width(), cr.Height());
-		wndInfo += text + _T("\r\n");
-		if (pParent) {
-			pParent->ScreenToClient(cr);
-			text.Format(_T("Parent Window Rect: left: %d, top: %d, right: %d, bottom: %d, width: %d, height: %d"), cr.left, cr.top, cr.right, cr.bottom, cr.Width(), cr.Height());
-			wndInfo += text + _T("\r\n");
-		}
-		pCurWind->GetClientRect(cr);
-		text.Format(_T("Client Rect: left: %d, top: %d, right: %d, bottom: %d, width: %d, height: %d"), cr.left, cr.top, cr.right, cr.bottom, cr.Width(), cr.Height());
-		wndInfo += text + _T("\r\n");
-		pParent = GetForegroundWindow();
-		BOOL bAttached(FALSE);
-		DWORD attachedThreaDID(-1);
-		if (pParent) {
-			attachedThreaDID = GetWindowThreadProcessId(pParent->GetSafeHwnd(), NULL);
-			bAttached = AttachThreadInput(GetCurrentThreadId(), attachedThreaDID, TRUE);
-			DWORD le =  GetLastError();
-			text.Format(_T("Foregorund Handle: 0x%x (%d)"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
-			wndInfo += text + _T("\r\n");
-			text = _T("");
-			text = getWindowText(pParent->GetSafeHwnd());
-			wndInfo += _T("Foregorund Title: ") + text + _T("\r\n");
-		}
-		pParent = GetFocus();
-		if (pParent) {
-			text.Format(_T("Focus Handle: 0x%x (%d)"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
-			wndInfo += text + _T("\r\n");
-			text = _T("");
-			text = getWindowText(pParent->GetSafeHwnd());
-			wndInfo += _T("Focus Title: ") + text + _T("\r\n");
-			TCHAR className[1024] = {0};
-			GetClassName(pParent->GetSafeHwnd(), className, sizeof(className)/sizeof(className[0]));
-			text = className;
-			wndInfo += _T("Focus Class: ") + text + _T("\r\n");
-		}
-		if (bAttached)
-			AttachThreadInput(GetCurrentThreadId(), attachedThreaDID, FALSE);
-		SetDlgItemText(IDC_EDIT_INFO, wndInfo);
-		break;
+        UpdateText();
 	}
 	if (GetAsyncKeyState(VK_CONTROL)) {
 		if (mbKeyUp) {
@@ -316,7 +273,7 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
 	}
 	else
 		mbKeyUp = true;
-	SetTimer(TIMER_ID_REFRESH, 100, NULL);
+    SetTimer(TIMER_ID_REFRESH, TIMER_REFRESH_INTERVAL, NULL);
 }
 
 void CWindowFinderDlg::OnSizing( UINT nSide, LPRECT lpRect )
@@ -355,6 +312,157 @@ void CWindowFinderDlg::ToggleTracking()
 	SetWindowText(title);
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
 	pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, mbTracking ? MF_CHECKED : MF_UNCHECKED);
+    GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
 }
 
+bool CWindowFinderDlg::UpdateChildItemText(WindowInfo& wi)
+{
+    bool bChildItemUpdated(false);
+    if (mbTracking) {
+        if (mhWndCurrent != GetDlgItem(IDC_EDIT_INFO)->GetSafeHwnd()) {
+            UpdateChildItemLocation();
+            CString &text(wi.wndText);
+            TCHAR *feildsName[] = {
+                _T("Name"),
+                _T("Value"),
+                _T("Description")
+            };
+            for (auto name : feildsName) {
+                text = mAccessibleHelper.GetValue(_T("Name")).c_str();
+                if (!text.IsEmpty())
+                    break;
+            }
+            text = _T("Child Item: ") + text + _T("   ");
+            text += getRectText(mChildItemRect, _T("Screen Rect"));
+            bChildItemUpdated = mbChildItemChanged != FALSE;
+        }
+    }
+    return bChildItemUpdated;
+}
 
+bool CWindowFinderDlg::UpdateSelfText(WindowInfo& wi)
+{
+    bool bUpdated(wi.hWnd != mhWndCurrent);
+    if (bUpdated) {
+        wi.hWnd = mhWndCurrent;
+        CString &text(wi.wndText);
+        text.Format(_T("Handle: 0x%x (%d)\r\n"), mhWndCurrent, mhWndCurrent);
+        text += _T("Title: ") + getWindowText(mhWndCurrent) + _T("\r\n");
+        {
+            TCHAR className[1024] = { 0 };
+            GetClassName(mhWndCurrent, className, sizeof(className) / sizeof(className[0]));
+            text += _T("Class: ") + CString(className) + _T("\r\n");
+        }
+        CWnd *pCurWind(FromHandle(mhWndCurrent));
+        CRect cr;
+        pCurWind->GetWindowRect(cr);
+        text += getRectText(cr, _T("Screen Rect"));
+        CWnd *pParent(pCurWind->GetParent());
+        if (pParent) {
+            pParent->ScreenToClient(cr);
+            text += getRectText(cr, _T("Rect wrt Parent"));
+        }
+        pCurWind->GetClientRect(cr);
+        text += getRectText(cr, _T("Client Rect"));
+    }
+    return bUpdated;
+}
+
+bool CWindowFinderDlg::UpdateParentText(WindowInfo& wi)
+{
+    CWnd *pParent(mhWndCurrent ? FromHandle(mhWndCurrent)->GetParent() : NULL);
+    bool bUpdated(wi.hWnd != pParent->GetSafeHwnd());
+    if (bUpdated) {
+        wi.hWnd = pParent->GetSafeHwnd();
+        CString &text(wi.wndText);
+        if (pParent) {
+            text.Format(_T("Parent Handle: 0x%x (%d)\r\n"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
+            text += _T("Parent Title: ") + getWindowText(pParent->GetSafeHwnd()) + _T("\r\n");
+        }
+        else
+            text.Empty();
+    }
+    return bUpdated;
+}
+
+bool CWindowFinderDlg::UpdateForegroundText(WindowInfo& wi)
+{
+    CWnd *pParent = GetForegroundWindow();
+    bool bUpdated(wi.hWnd != pParent->GetSafeHwnd());
+    if (bUpdated) {
+        wi.hWnd = pParent->GetSafeHwnd();
+        DWORD attachedThreaDID(-1);
+        CString &text(wi.wndText);
+        if (pParent) {
+            if (mAttachedThreaDID)
+                AttachThreadInput(GetCurrentThreadId(), mAttachedThreaDID, FALSE);
+            mAttachedThreaDID = GetWindowThreadProcessId(pParent->GetSafeHwnd(), NULL);
+            BOOL bAttached = AttachThreadInput(GetCurrentThreadId(), mAttachedThreaDID, TRUE);
+            if (!bAttached)
+                mAttachedThreaDID = 0;
+            DWORD le = GetLastError();
+            text.Format(_T("Foregorund Handle: 0x%x (%d)\r\n"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
+            text += _T("Foregorund Title: ") + getWindowText(pParent->GetSafeHwnd()) + _T("\r\n");
+        }
+        else
+            text.Empty();
+    }
+    return bUpdated;
+}
+
+bool CWindowFinderDlg::UpdateFocusText(WindowInfo& wi)
+{
+    CWnd *pParent = GetFocus();
+    bool bUpdated(wi.hWnd != pParent->GetSafeHwnd());
+    if (bUpdated) {
+        wi.hWnd = pParent->GetSafeHwnd();
+        CString &text(wi.wndText);
+        if (pParent) {
+            text.Format(_T("Focus Handle: 0x%x (%d)\r\n"), pParent->GetSafeHwnd(), pParent->GetSafeHwnd());
+            text += _T("Focus Title: ") + getWindowText(pParent->GetSafeHwnd()) + _T("\r\n");
+            TCHAR className[1024] = { 0 };
+            GetClassName(pParent->GetSafeHwnd(), className, sizeof(className) / sizeof(className[0]));
+            text += _T("Focus Class: ") + CString(className) + _T("\r\n");
+        }
+        else
+            text.Empty();
+    }
+    return bUpdated;
+}
+
+bool CWindowFinderDlg::UpdateText()
+{
+    bool bUpdated(false);
+    for (INT_PTR i = 0; i < mWindowsInfo.GetCount(); ++i) {
+        WindowInfo &wi(mWindowsInfo.ElementAt(i));
+        if ((this->*wi.fnUpdateTextProc)(wi))
+            bUpdated = true;
+    }
+    if (bUpdated) {
+        CString text;
+        for (INT_PTR i = 0; i < mWindowsInfo.GetCount(); ++i)
+            text += mWindowsInfo.ElementAt(i).wndText;
+
+        SetDlgItemText(IDC_EDIT_INFO, text);
+    }
+
+    return bUpdated;
+}
+
+void CWindowFinderDlg::UpdateChildItemLocation()
+{
+    if ((GetTickCount() - mChildItemAccessibleUpdatedTime) > (TIMER_REFRESH_INTERVAL-10)) {
+        mAccessibleHelper.InitFromPoint(mCurPoint.x, mCurPoint.y);
+        mAccessibleHelper.Location();
+        CRect oldRecr(mChildItemRect);
+        mAccessibleHelper.GetRect(mChildItemRect);
+        mbChildItemChanged = oldRecr != mChildItemRect;
+        mChildItemAccessibleUpdatedTime = GetTickCount();
+    }
+}
+
+CWindowFinderDlg::WindowInfo::WindowInfo(UpdateTextProc proc)
+    : bUpdated(false), hWnd(NULL), fnUpdateTextProc(proc)
+{
+
+}

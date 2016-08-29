@@ -24,13 +24,37 @@ public:
 protected:
 	HICON m_hIcon;
 	CPoint mCurPoint;
-	HWND mCurWindow;
+    HWND mhWndCurrent;
 	bool mbKeyUp;
 	bool mbTracking;
+    DWORD mAttachedThreaDID;
+
     IAccessibleHelper mAccessibleHelper;
+    CRect mChildItemRect;
+    DWORD mChildItemAccessibleUpdatedTime;
+    BOOL mbChildItemChanged;
+
+    struct WindowInfo;
+    typedef bool (CWindowFinderDlg::*UpdateTextProc)(WindowInfo&);
+    struct WindowInfo {
+        HWND hWnd;
+        CString wndText;
+        bool bUpdated;
+        UpdateTextProc fnUpdateTextProc;
+        WindowInfo(UpdateTextProc proc=NULL);
+    };
+    CArray<WindowInfo> mWindowsInfo;
 
 	// Generated message map functions
 	void ToggleTracking();
+    bool UpdateSelfText(WindowInfo& wi);
+    bool UpdateChildItemText(WindowInfo& wi);
+    bool UpdateParentText(WindowInfo& wi);
+    bool UpdateForegroundText(WindowInfo& wi);
+    bool UpdateFocusText(WindowInfo& wi);
+    bool UpdateText();
+
+    void UpdateChildItemLocation();
 
 	CString getWindowText(HWND hWnd) const;
 	virtual BOOL OnInitDialog();

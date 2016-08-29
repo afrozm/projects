@@ -14,6 +14,8 @@ public:
     void InitFromPoint(int x = -1, int y = -1);
     bool GetChild(_variant_t &childVt, IAccessibleHelper &outChild) const;
 
+    void GetRect(RECT &outRect, bool bCallLocation = false) const; // Must be called after Location
+
     lstring GetValue(const lstring &fieldName) const;
     lstring ChildCount() const;
     lstring Name() const;
@@ -34,5 +36,6 @@ private:
     static MapGetterAPI mMapGetterAPI;
     IAccessiblePtr m_pIAcc; // IAccessible Object
     _variant_t m_vt;
+    mutable long mLocation[4];
 };
 
