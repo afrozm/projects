@@ -29,7 +29,7 @@ IAccessibleHelper::operator bool() const
 
 #define ADD_MAP_GETTER_API(a) mMapGetterAPI[_T(#a)]=&IAccessibleHelper::a
 
-void IAccessibleHelper::InitFromPoint(int x, int y)
+void IAccessibleHelper::CommonInit()
 {
     if (mMapGetterAPI.empty()) {
         ADD_MAP_GETTER_API(ChildCount);
@@ -47,8 +47,32 @@ void IAccessibleHelper::InitFromPoint(int x, int y)
     if (m_pIAcc)
         m_pIAcc.Release();
     m_vt.Clear();
+    m_hWnd = NULL;
+}
+
+bool IAccessibleHelper::InitFromPoint(int x, int y)
+{
+    bool bSuccess(false);
+    CommonInit();
     if (x >= 0 && y >= 0)
-        SUCCEEDED(AccessibleObjectFromPoint({ x,y }, &m_pIAcc, &m_vt));
+        bSuccess = SUCCEEDED(AccessibleObjectFromPoint({ x,y }, &m_pIAcc, &m_vt));
+
+    return bSuccess;
+}
+
+bool IAccessibleHelper::InitFromWindow(HWND hWnd, DWORD objID /*= OBJID_WINDOW*/)
+{
+    bool bSuccess(false);
+    CommonInit();
+    IAccessible *pIAccessible(NULL);
+    bSuccess = SUCCEEDED(AccessibleObjectFromWindow(hWnd, objID, IID_IAccessible, (void **)&pIAccessible));
+    if (pIAccessible) {
+        m_pIAcc = pIAccessible;
+        m_vt.vt = VT_I4;
+        m_vt.lVal = CHILDID_SELF;
+        m_hWnd = hWnd;
+    }
+    return bSuccess;
 }
 
 bool IAccessibleHelper::GetChild(_variant_t &childVt, IAccessibleHelper &outChild) const
@@ -68,14 +92,37 @@ bool IAccessibleHelper::GetChild(_variant_t &childVt, IAccessibleHelper &outChil
     return bSuccess;
 }
 
-void IAccessibleHelper::GetRect(RECT &outRect, bool bCallLocation /*= false*/) const
+void IAccessibleHelper::GetRect(RECT &outRect, unsigned rectFlags /* = GRF_None */)
 {
-    if (bCallLocation)
+    if (rectFlags & GRF_CallLocation)
         Location();
     outRect.left = mLocation[0];
     outRect.top = mLocation[1];
     outRect.right = outRect.left + mLocation[2];
     outRect.bottom = outRect.top + mLocation[3];
+    if (rectFlags & (GRF_WRTParent|GRF_WRTSelf)) {
+        HWND hWnd(GetWindow());
+        if (hWnd && (rectFlags&GRF_WRTParent)) {
+            HWND hWndp = GetParent(hWnd);
+            if (hWndp)
+                hWnd = hWndp;
+        }
+        if (hWnd) {
+            LPPOINT pt((LPPOINT)&outRect);
+            ScreenToClient(hWnd, pt);
+            ScreenToClient(hWnd, pt+1);
+        }
+    }
+}
+
+HWND IAccessibleHelper::GetWindow()
+{
+    HWND &hWnd(m_hWnd);
+
+    if (!hWnd && m_pIAcc)
+        WindowFromAccessibleObject(m_pIAcc, &hWnd);
+
+    return hWnd;
 }
 
 lstring IAccessibleHelper::GetValue(const lstring & fieldName) const

@@ -4,10 +4,11 @@
 #include "stdafx.h"
 
 #include "ProcessUtil.h"
-#include "Common.h"
 #include <Shellapi.h>
 #pragma comment(lib, "advapi32.lib")
-//#pragma comment(lib, "Shell32.lib")
+#include <Psapi.h>
+#pragma comment(lib, "Psapi.lib")
+#include <map>
 
 static BOOL GetLogonSID (HANDLE hToken, PSID *ppsid) 
 {
@@ -882,4 +883,56 @@ void ProcessUtil::Sleep(unsigned milliSeconds)
 unsigned long long ProcessUtil::GetTickCount()
 {
     return ::GetTickCount64();
+}
+
+BOOL DevicePathToNativePath(LPTSTR outPath, DWORD nSize)
+{
+    static std::map<std::wstring, std::wstring> _hardDiskCollection;
+    if (_hardDiskCollection.empty()) {
+        TCHAR tszLinkName[MAX_PATH] = { 0 };
+        TCHAR tszDevName[MAX_PATH] = { 0 };
+        TCHAR tcDrive = 0;
+
+        _tcscpy_s(tszLinkName, MAX_PATH, _T("A:"));
+        for (tcDrive = _T('A'); tcDrive < _T('Z'); ++tcDrive)
+        {
+            tszLinkName[0] = tcDrive;
+            if (QueryDosDevice(tszLinkName, tszDevName, MAX_PATH))
+                _hardDiskCollection[tszDevName] = tszLinkName;
+        }
+    }
+    BOOL bRet(FALSE);
+    std::wstring sPath(outPath);
+    if (sPath.find(_T("\\Device\\")) == 0) {
+        std::size_t pos(-1);
+        for (int i = 0; i < 3; ++i)
+            pos = sPath.find('\\', ++pos);
+        std::wstring devicePath(sPath.substr(0, pos));
+        auto cit(_hardDiskCollection.find(devicePath));
+        if (cit != _hardDiskCollection.end()) {
+            sPath.replace(0, pos, cit->second);
+            _tcscpy_s(outPath, nSize, sPath.c_str());
+            bRet = TRUE;
+        }
+    }
+    return bRet;
+}
+DWORD ProcessUtil::GetProcessExePath(DWORD pid, LPTSTR outPath, DWORD nSize)
+{
+    if (NULL != outPath && nSize > 0)
+        outPath[0] = 0;
+    DWORD retSize(0);
+    HANDLE  processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (processHandle != NULL) {
+        retSize = GetModuleFileNameEx(processHandle, NULL, outPath, nSize);
+        if (retSize == 0) {
+            retSize = nSize;
+            QueryFullProcessImageName(processHandle, PROCESS_NAME_NATIVE, outPath, &retSize);
+            DevicePathToNativePath(outPath, nSize);
+        }
+        if (retSize == 0)
+            retSize = GetProcessImageFileName(processHandle, outPath, nSize);
+        CloseHandle(processHandle);
+    }
+    return nSize;
 }

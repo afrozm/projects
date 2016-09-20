@@ -11,10 +11,19 @@ public:
     IAccessibleHelper();
     ~IAccessibleHelper();
     operator bool() const;
-    void InitFromPoint(int x = -1, int y = -1);
+    bool InitFromPoint(int x = -1, int y = -1);
+    bool InitFromWindow(HWND hWnd, DWORD objID = OBJID_WINDOW);
     bool GetChild(_variant_t &childVt, IAccessibleHelper &outChild) const;
 
-    void GetRect(RECT &outRect, bool bCallLocation = false) const; // Must be called after Location
+    enum GetRectFlags {
+        GRF_None = 0x0,
+        GRF_CallLocation = 0x1,
+        GRF_WRTSelf = 0x2,
+        GRF_WRTParent = 0x4
+    };
+    // rectFlags - values from GetRectFlags
+    void GetRect(RECT &outRect, unsigned rectFlags = GRF_None); // Must be called after Location
+    HWND GetWindow();
 
     lstring GetValue(const lstring &fieldName) const;
     lstring ChildCount() const;
@@ -31,11 +40,13 @@ public:
 
 
 private:
+    void CommonInit();
     typedef lstring (IAccessibleHelper::*GetterAPI)() const;
     typedef std::map<lstring, IAccessibleHelper::GetterAPI> MapGetterAPI;
     static MapGetterAPI mMapGetterAPI;
     IAccessiblePtr m_pIAcc; // IAccessible Object
     _variant_t m_vt;
     mutable long mLocation[4];
+    HWND m_hWnd;
 };
 

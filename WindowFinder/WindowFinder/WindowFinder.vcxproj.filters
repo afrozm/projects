@@ -19,6 +19,12 @@
     <Filter Include="Header Files\Utils">
       <UniqueIdentifier>{40d739b6-3cc0-43c6-8217-3f4b5222e982}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Common">
+      <UniqueIdentifier>{603ff12f-0e2a-4f2c-a494-966fe2bd0a5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{ff296cd7-9653-4af2-9c98-980fb066d01e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -57,6 +63,9 @@
     <ClInclude Include="IAccessibleHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\ProcessUtil.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WindowFinder.cpp">
@@ -76,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="IAccessibleHelper.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\ProcessUtil.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

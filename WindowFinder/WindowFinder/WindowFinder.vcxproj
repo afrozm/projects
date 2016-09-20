@@ -101,6 +101,7 @@
     <None Include="res\WindowFinder.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\ProcessUtil.h" />
     <ClInclude Include="BaseDlg.h" />
     <ClInclude Include="ControlResizer.h" />
     <ClInclude Include="IAccessibleHelper.h" />
@@ -112,6 +113,7 @@
     <ClInclude Include="WindowFinderDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\ProcessUtil.cpp" />
     <ClCompile Include="BaseDlg.cpp" />
     <ClCompile Include="ControlResizer.cpp" />
     <ClCompile Include="IAccessibleHelper.cpp" />

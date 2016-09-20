@@ -57,6 +57,21 @@ bool CHttpClient::Request(const TCHAR * pURL)
                 dwDword, NULL);
             if (http != NULL) {
                 if (HttpSendRequest(http, GET_PTR_FROM_STR(mhttpHeaders), (DWORD)mhttpHeaders.length(), mDataToSend, (DWORD)mDataToSend.DataSize())) {
+                    int statusCode(0);
+                    {
+                        wchar_t responseText[1024]; // change to wchar_t for unicode
+                        DWORD responseTextSize = sizeof(responseText);
+
+                        //Check existence of page (for 404 error)
+                        if (!HttpQueryInfo(http,
+                            HTTP_QUERY_STATUS_CODE,
+                            &responseText,
+                            &responseTextSize,
+                            NULL))
+                            statusCode = GetLastError();
+                        else
+                            STLUtils::ChangeType(lstring(responseText), statusCode);
+                    }
                     BinaryData inDataRead(NULL, 1024*1024*4); // 4MB
                     while (InternetReadFile(http, inDataRead, (DWORD)inDataRead.Size(), &dwDword) && dwDword > 0)
                     {

@@ -18,13 +18,14 @@ public:
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
+    virtual BOOL DestroyWindow();
 
 // Implementation
 protected:
 	HICON m_hIcon;
 	CPoint mCurPoint;
-    HWND mhWndCurrent;
+    HWND mhWndCurrent, mhWndEdit;
+    bool mbCurrentWndHang;
 	bool mbKeyUp;
 	bool mbTracking;
     DWORD mAttachedThreaDID;
@@ -49,14 +50,19 @@ protected:
 	void ToggleTracking();
     bool UpdateSelfText(WindowInfo& wi);
     bool UpdateChildItemText(WindowInfo& wi);
+    bool UpdateProcessText(WindowInfo& wi);
+    bool UpdateStyleText(WindowInfo& wi);
     bool UpdateParentText(WindowInfo& wi);
     bool UpdateForegroundText(WindowInfo& wi);
     bool UpdateFocusText(WindowInfo& wi);
     bool UpdateText();
+    const WindowInfo& GetWindowInfo(INT_PTR i = 0) const;
 
     void UpdateChildItemLocation();
 
-	CString getWindowText(HWND hWnd) const;
+	CString getWindowText(HWND hWnd, bool &bOutIsHanged) const;
+    HWND GetEditInfoWnd() const { return mhWndEdit; }
+    bool IsCurrentWindowHung() const { return mbCurrentWndHang; }
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
