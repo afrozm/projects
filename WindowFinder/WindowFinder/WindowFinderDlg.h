@@ -63,11 +63,15 @@ protected:
 	CString getWindowText(HWND hWnd, bool &bOutIsHanged) const;
     HWND GetEditInfoWnd() const { return mhWndEdit; }
     bool IsCurrentWindowHung() const { return mbCurrentWndHang; }
+    void UpdateLinks();
+
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnSizing(UINT nSide, LPRECT lpRect);
+    afx_msg void OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg LRESULT OnUpdateLinks(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };

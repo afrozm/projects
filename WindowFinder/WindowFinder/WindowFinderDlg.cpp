@@ -7,6 +7,7 @@
 #include "WindowFinderDlg.h"
 #include "afxdialogex.h"
 #include "ProcessUtil.h"
+#include <stlutils.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,16 +80,81 @@ BOOL CWindowFinderDlg::DestroyWindow()
     return __super::DestroyWindow();
 }
 
+#define WM_WF_UPDATE_LINKS WM_USER+0x593
+
 BEGIN_MESSAGE_MAP(CWindowFinderDlg, CBaseDlg)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
 	ON_WM_SIZING()
+    ON_NOTIFY(EN_LINK, IDC_EDIT_INFO, &CWindowFinderDlg::OnEnLinkEditInfo)
+    ON_MESSAGE(WM_WF_UPDATE_LINKS, OnUpdateLinks)
 END_MESSAGE_MAP()
 
 
 // CWindowFinderDlg message handlers
+
+#define IS_HEX(c) (((c)>='0'&&(c)<='9')||(c)>='A'&&(c)<='F'||(c)>='a'&&(c)<='f')
+
+static int GetHexCharsEnd(LPCTSTR hexStr)
+{
+    int hexend(-1);
+
+    if (hexStr) {
+        if (hexStr[0] == '0') {
+            if (hexStr[1] == 'x' || hexStr[1] == 'X') {
+                hexStr += 2;
+                while (*hexStr)
+                {
+                    TCHAR ch(*hexStr);
+                    if (!IS_HEX(ch))
+                        break;
+                    ++hexend;
+                    ++hexStr;
+                }
+                if (hexend > -1)
+                    hexend += 2;
+            }
+        }
+    }
+    return hexend;
+}
+
+void CWindowFinderDlg::UpdateLinks()
+{
+    CString text;
+    CRichEditCtrl *pCtrl((CRichEditCtrl *)GetDlgItem(IDC_EDIT_INFO));
+    pCtrl->GetWindowText(text);
+    pCtrl->SetWindowText(text);
+    if (!mbTracking) {
+        long pos = 0;
+        CString handleText(_T("Handle: "));
+        FINDTEXTEX ft = { { pos,-1 }, handleText };
+        while (pos >= 0)
+        {
+            ft.chrg.cpMin = pos;
+            pos = pCtrl->FindText(FR_DOWN, &ft);
+            if (pos < 0)
+                continue;
+            pos += handleText.GetLength();
+            CString wndText;
+            pCtrl->GetTextRange(pos, pos + 32, wndText);
+            int endPod(GetHexCharsEnd(wndText));
+            if (endPod < 0)
+                continue;
+            {
+                pCtrl->SetSel(pos, pos+endPod+1);
+                CHARFORMAT2 cf2;
+                ZeroMemory(&cf2, sizeof(cf2));
+                cf2.cbSize = sizeof(cf2);
+                cf2.dwMask = CFM_LINK;
+                cf2.dwEffects = CFE_LINK;
+                pCtrl->SetSelectionCharFormat(cf2);
+            }
+        }
+    }
+}
 
 BOOL CWindowFinderDlg::OnInitDialog()
 {
@@ -112,7 +178,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_SEPARATOR);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+1, _T("Always On Top"));
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+2, _T("Tracking"));
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+2, _T("Tracking\tPause"));
 			if (mbTracking)
 				pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, MF_CHECKED);
 		}
@@ -128,6 +194,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	GetControlResizer().AddControl(IDC_EDIT_INFO);
 	GetControlResizer().AddControl(IDC_STATIC_COORD_SELF, RSZF_RIGHT_FIXED | RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
 	GetControlResizer().AddControl(IDC_STATIC_TITLE_SELF, RSZF_RIGHT_FIXED | RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
+    GetControlResizer().AddControl(IDC_COMBO_SEARCH_WINDOW, RSZF_RIGHT_FIXED | RSZF_BOTTOM_FIXED | RSZF_SIZEY_FIXED);
 	int cids[] = {IDC_STATIC_TITLE_SCREEN, IDC_STATIC_COORD, IDC_STATIC_TITLE_WND, IDC_STATIC_COORD_WND};
 	for (int i = 0; i < sizeof(cids)/sizeof(cids[0]); ++i)
 		GetControlResizer().AddControl(cids[i], RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
@@ -135,6 +202,14 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	title.Format(_T("WindowFinder - %s"), mbTracking ? _T("ON") : _T("OFF"));
 	SetWindowText(title);
     GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
+    SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, mbTracking ? _T("Press Pause key to toggle tracking.") : _T(""));
+
+    CRichEditCtrl *pCtrl = (CRichEditCtrl*)GetDlgItem(IDC_EDIT_INFO);
+    pCtrl->SetEventMask(ENM_LINK);
+    pCtrl->SendMessage(EM_AUTOURLDETECT, TRUE);
+    if (pCtrl->GetStyle() & ES_READONLY)
+        pCtrl->SetBackgroundColor(FALSE, GetSysColor(CTLCOLOR_DLG));
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 static void SetTopMost( HWND hWnd, const BOOL TopMost )
@@ -297,7 +372,7 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
         SetTimer(TIMER_ID_REFRESH, TIMER_REFRESH_INTERVAL, NULL);
     }
     else { // TIMER_ID_KEY
-        if (GetAsyncKeyState(VK_CONTROL)) {
+        if (GetAsyncKeyState(VK_PAUSE)) {
             if (mbKeyUp) {
                 mbKeyUp = false;
                 ToggleTracking();
@@ -336,6 +411,36 @@ void CWindowFinderDlg::OnSizing( UINT nSide, LPRECT lpRect )
 	__super::OnSizing(nSide, lpRect);
 }
 
+void CWindowFinderDlg::OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult)
+{
+    if (mbTracking)
+        return;
+    ENLINK *pEnLink = reinterpret_cast<ENLINK *>(pNMHDR);
+    if (pEnLink && pEnLink->msg == WM_LBUTTONUP) {
+        CRichEditCtrl *pCtrl = (CRichEditCtrl*)GetDlgItem(IDC_EDIT_INFO);
+        CString text;
+        pCtrl->GetTextRange(pEnLink->chrg.cpMin, pEnLink->chrg.cpMax, text);
+        if (text.Find(_T("0x")) == 0) { // window handle
+            std::string strHwnd;
+            STLUtils::ChangeType(std::wstring(text), strHwnd);
+            void *pWnd(NULL);
+            STLUtils::ChangeType(strHwnd, pWnd);
+            const WindowInfo &wi(GetWindowInfo());
+            ((WindowInfo*)&wi)->hWnd = NULL;
+            mhWndCurrent = (HWND)pWnd;
+            UpdateText();
+            PostMessage(WM_WF_UPDATE_LINKS);
+        }
+        *pResult = 0;
+    }
+}
+
+LRESULT CWindowFinderDlg::OnUpdateLinks(WPARAM /*wParam*/, LPARAM /*lParam*/)
+{
+    UpdateLinks();
+    return TRUE;
+}
+
 void CWindowFinderDlg::ToggleTracking()
 {
 	mbTracking = !mbTracking;
@@ -345,16 +450,18 @@ void CWindowFinderDlg::ToggleTracking()
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
 	pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, mbTracking ? MF_CHECKED : MF_UNCHECKED);
     GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
+    SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, mbTracking ? _T("Press Pause key to toggle tracking.") : _T(""));
+    UpdateLinks();
 }
 
 bool CWindowFinderDlg::UpdateChildItemText(WindowInfo& wi)
 {
     bool &bChildItemUpdated(wi.bUpdated);
-    if (mbTracking) {
-        if (mhWndCurrent != GetEditInfoWnd()) {
+    if (mhWndCurrent != GetEditInfoWnd()) {
+        CString &text(wi.wndText);
+        text.Empty();
+        if (mbTracking) {
             UpdateChildItemLocation();
-            CString &text(wi.wndText);
-            text.Empty();
             if (!IsCurrentWindowHung() && mAccessibleHelper) {
                 TCHAR *feildsName[] = {
                     _T("Name"),
@@ -516,7 +623,7 @@ bool CWindowFinderDlg::UpdateSelfText(WindowInfo& wi)
     if (wi.bUpdated) {
         wi.hWnd = mhWndCurrent;
         CString &text(wi.wndText);
-        text.Format(_T("Handle: 0x%x (%d)\r\n"), mhWndCurrent, mhWndCurrent);
+        text.Format(_T("Handle: 0x%x\r\n"), mhWndCurrent);
         bool bHang(false);
         CString titleText(IsCurrentWindowHung() ? TEXT_WINDOW_NOT_RESPONDING : getWindowText(mhWndCurrent, bHang));
         text += _T("Title: ") + titleText + _T("\r\n");
@@ -549,7 +656,7 @@ bool CWindowFinderDlg::UpdateParentText(WindowInfo& wi)
             wi.hWnd = hWndPArent;
             CString &text(wi.wndText);
             if (hWndPArent) {
-                text.Format(_T("Parent Handle: 0x%x (%d)\r\n"), hWndPArent, hWndPArent);
+                text.Format(_T("Parent Handle: 0x%x\r\n"), hWndPArent);
                 bool bHang(false);
                 text += _T("Parent Title: ") + getWindowText(hWndPArent, bHang) + _T("\r\n");
             }
@@ -576,7 +683,7 @@ bool CWindowFinderDlg::UpdateForegroundText(WindowInfo& wi)
             if (!bAttached)
                 mAttachedThreaDID = 0;
             DWORD le = GetLastError();
-            text.Format(_T("Foregorund Handle: 0x%x (%d)\r\n"), hWndForeground, hWndForeground);
+            text.Format(_T("Foregorund Handle: 0x%x\r\n"), hWndForeground);
             bool bHung(false);
             CString title = getWindowText(hWndForeground, bHung);
             if (bHung)
@@ -597,7 +704,7 @@ bool CWindowFinderDlg::UpdateFocusText(WindowInfo& wi)
         wi.hWnd = hWndFocus;
         CString &text(wi.wndText);
         if (hWndFocus) {
-            text.Format(_T("Focus Handle: 0x%x (%d)\r\n"), hWndFocus, hWndFocus);
+            text.Format(_T("Focus Handle: 0x%x\r\n"), hWndFocus);
             bool bHang(false);
             CString focusText(getWindowText(hWndFocus, bHang));
             if (!bHang && hWndFocus != GetEditInfoWnd()
