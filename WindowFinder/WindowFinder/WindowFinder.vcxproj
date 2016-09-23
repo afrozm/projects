@@ -102,27 +102,33 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\ProcessUtil.h" />
+    <ClInclude Include="..\..\Common\stlutils.h" />
     <ClInclude Include="BaseDlg.h" />
     <ClInclude Include="ControlResizer.h" />
     <ClInclude Include="IAccessibleHelper.h" />
     <ClInclude Include="MFCBaseDlg.h" />
+    <ClInclude Include="RefreshWindowThread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowFinder.h" />
     <ClInclude Include="WindowFinderDlg.h" />
+    <ClInclude Include="WindowIterator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\Path.cpp" />
     <ClCompile Include="..\..\Common\ProcessUtil.cpp" />
     <ClCompile Include="BaseDlg.cpp" />
     <ClCompile Include="ControlResizer.cpp" />
     <ClCompile Include="IAccessibleHelper.cpp" />
+    <ClCompile Include="RefreshWindowThread.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WindowFinder.cpp" />
     <ClCompile Include="WindowFinderDlg.cpp" />
+    <ClCompile Include="WindowIterator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WindowFinder.rc" />

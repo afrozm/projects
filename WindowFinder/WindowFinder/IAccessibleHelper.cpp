@@ -259,17 +259,29 @@ lstring IAccessibleHelper::Focus() const
     if (m_pIAcc) {
         BSTR pName = NULL;
         _variant_t vt;
-        m_pIAcc->get_accFocus(&vt);
-        if (vt) {
-            if (vt.lVal == CHILDID_SELF)
-                outStr = Name();
-            else {
-                IAccessibleHelper child;
-                if (GetChild(vt, child))
-                    outStr = child.Name();
+
+        if (SUCCEEDED(m_pIAcc->get_accFocus(&vt))) {
+            IAccessibleHelper iah;
+            const IAccessibleHelper *pIAH(&iah);
+            if (vt.vt == VT_EMPTY
+                && m_hWnd)
+                vt.vt = VT_I4;
+
+            if (vt.vt == VT_I4) {
+                if (vt.lVal == CHILDID_SELF)
+                    pIAH = this;
+                else GetChild(vt, iah);
             }
-            if (outStr.empty())
-                ChangeType(vt.lVal, outStr);
+            else if (vt.vt == VT_DISPATCH){
+                iah.m_pIAcc = vt;
+                iah.m_vt.vt = VT_I4;
+                iah.m_vt.lVal = CHILDID_SELF;
+            }
+            if (*pIAH) {
+                outStr = pIAH->Value();
+                if (outStr.empty())
+                    outStr = pIAH->Name();
+            }
         }
     }
     return outStr;

@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "ProcessUtil.h"
 #include <stlutils.h>
+#include "RefreshWindowThread.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,6 +81,22 @@ BOOL CWindowFinderDlg::DestroyWindow()
     return __super::DestroyWindow();
 }
 
+BOOL CWindowFinderDlg::PreTranslateMessage(MSG* pMsg)
+{
+    switch (pMsg->message)
+    {
+    case WM_KEYUP:
+        if (VK_F5 == pMsg->wParam) {
+            RefreshComboSearchWindows();
+            return TRUE;
+        }
+        break;
+    default:
+        break;
+    }
+    return __super::PreTranslateMessage(pMsg);
+}
+
 #define WM_WF_UPDATE_LINKS WM_USER+0x593
 
 BEGIN_MESSAGE_MAP(CWindowFinderDlg, CBaseDlg)
@@ -90,6 +107,9 @@ BEGIN_MESSAGE_MAP(CWindowFinderDlg, CBaseDlg)
 	ON_WM_SIZING()
     ON_NOTIFY(EN_LINK, IDC_EDIT_INFO, &CWindowFinderDlg::OnEnLinkEditInfo)
     ON_MESSAGE(WM_WF_UPDATE_LINKS, OnUpdateLinks)
+    ON_MESSAGE(WM_WINDOW_ITER_OP, OnWindowIterOp)
+    ON_CBN_EDITCHANGE(IDC_COMBO_SEARCH_WINDOW, &CWindowFinderDlg::OnCbnEditchangeComboSearchWindow)
+    ON_CBN_SELCHANGE(IDC_COMBO_SEARCH_WINDOW, &CWindowFinderDlg::OnCbnSelchangeComboSearchWindow)
 END_MESSAGE_MAP()
 
 
@@ -154,6 +174,23 @@ void CWindowFinderDlg::UpdateLinks()
             }
         }
     }
+}
+
+void CWindowFinderDlg::SetCurrentWindow(HWND hWnd)
+{
+    if (hWnd) {
+        const WindowInfo &wi(GetWindowInfo());
+        ((WindowInfo*)&wi)->hWnd = NULL; // Set it null so that current window text is refreshed
+        mhWndCurrent = hWnd;
+        UpdateText();
+        PostMessage(WM_WF_UPDATE_LINKS);
+    }
+}
+
+void CWindowFinderDlg::RefreshComboSearchWindows()
+{
+    if (!mbTracking)
+        CRefreshWindowThread::GetInstance()->RefreshWindows();
 }
 
 BOOL CWindowFinderDlg::OnInitDialog()
@@ -281,7 +318,7 @@ HCURSOR CWindowFinderDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-CString CWindowFinderDlg::getWindowText(HWND hWnd, bool &bOutIsHanged) const
+CString CWindowFinderDlg::getWindowText(HWND hWnd, bool &bOutIsHanged, int maxTextLength /* = 256 */) const
 {
 	CString outStr;
     bool bCheckOnlyHang(bOutIsHanged);
@@ -298,8 +335,8 @@ CString CWindowFinderDlg::getWindowText(HWND hWnd, bool &bOutIsHanged) const
         if (result == 0)
             break;
         unsigned textLen((unsigned)result + 1);
-        if (textLen > 256)
-            textLen = 256;
+        if (maxTextLength > 0 && textLen > (unsigned)maxTextLength)
+            textLen = maxTextLength;
 		TCHAR *text = new TCHAR[textLen];
         text[0] = 0;
 		::SendMessage(hWnd, WM_GETTEXT, textLen, (LPARAM)text);
@@ -410,7 +447,18 @@ void CWindowFinderDlg::OnSizing( UINT nSide, LPRECT lpRect )
 	}
 	__super::OnSizing(nSide, lpRect);
 }
-
+static HWND HWNDFromString(LPCTSTR lpstrHwnd)
+{
+    CString str(lpstrHwnd ? lpstrHwnd : _T("0x0"));
+    str.Trim();
+    HWND hWnd(NULL);
+    std::string strHwnd;
+    STLUtils::ChangeType(std::wstring(str), strHwnd);
+    void *pWnd(NULL);
+    STLUtils::ChangeType(strHwnd, pWnd);
+    hWnd = (HWND)pWnd;
+    return hWnd;
+}
 void CWindowFinderDlg::OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
     if (mbTracking)
@@ -421,15 +469,8 @@ void CWindowFinderDlg::OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult)
         CString text;
         pCtrl->GetTextRange(pEnLink->chrg.cpMin, pEnLink->chrg.cpMax, text);
         if (text.Find(_T("0x")) == 0) { // window handle
-            std::string strHwnd;
-            STLUtils::ChangeType(std::wstring(text), strHwnd);
-            void *pWnd(NULL);
-            STLUtils::ChangeType(strHwnd, pWnd);
-            const WindowInfo &wi(GetWindowInfo());
-            ((WindowInfo*)&wi)->hWnd = NULL;
-            mhWndCurrent = (HWND)pWnd;
-            UpdateText();
-            PostMessage(WM_WF_UPDATE_LINKS);
+            HWND hWnd(HWNDFromString(text));
+            SetCurrentWindow(hWnd);
         }
         *pResult = 0;
     }
@@ -439,6 +480,96 @@ LRESULT CWindowFinderDlg::OnUpdateLinks(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
     UpdateLinks();
     return TRUE;
+}
+
+LRESULT CWindowFinderDlg::OnWindowIterOp(WPARAM wParam, LPARAM lParam)
+{
+    if (wParam == 0) {// iter finished
+        if (lParam) { //child windows of a window
+
+        }
+        else { //top level windows
+            OnCbnEditchangeComboSearchWindowImp();
+        }
+    }
+    return TRUE;
+}
+
+void CWindowFinderDlg::OnCbnEditchangeComboSearchWindow()
+{
+    OnCbnEditchangeComboSearchWindowImp(true);
+}
+
+void CWindowFinderDlg::OnCbnSelchangeComboSearchWindow()
+{
+    CComboBox *pComboBox((CComboBox*)GetDlgItem(IDC_COMBO_SEARCH_WINDOW));
+    int curSel = pComboBox->GetCurSel();
+    HWND hWnd(curSel >= 0 ? (HWND)pComboBox->GetItemData(curSel) : NULL);
+    SetCurrentWindow(hWnd);
+}
+
+static INT_PTR SplitString(const CString& inString, CStringArray &outStrings, LPCTSTR sep)
+{
+    outStrings.RemoveAll();
+    CString str(inString);
+    while (1) {
+        int pos = str.FindOneOf(sep);
+        if (pos >= 0) {
+            CString addStr(str.Left(pos).Trim());
+            if (!addStr.IsEmpty())
+                outStrings.Add(addStr);
+            str.Delete(0, pos + 1);
+        }
+        else break;
+    }
+    if (!str.IsEmpty()) {
+        CString addStr(str.Trim());
+            if (!addStr.IsEmpty())
+                outStrings.Add(addStr);
+    }
+    return outStrings.GetCount();
+}
+
+void CWindowFinderDlg::OnCbnEditchangeComboSearchWindowImp(bool bFromEvent /* = false */)
+{
+    CComboBox *pComboBox((CComboBox*)GetDlgItem(IDC_COMBO_SEARCH_WINDOW));
+    CString text;
+    pComboBox->GetWindowText(text);
+    text.MakeLower();
+    CStringArray texts;
+    const INT_PTR textsCount(SplitString(text, texts, _T(" \t\r\n")));
+    COMBOBOXINFO cbi = { sizeof(COMBOBOXINFO) };
+    pComboBox->GetComboBoxInfo(&cbi);
+    ::SendMessage(cbi.hwndList, LB_RESETCONTENT, 0, 0);
+    if (bFromEvent)
+        pComboBox->ShowDropDown();
+    else if (::GetForegroundWindow() == GetSafeHwnd()
+        && ::GetFocus() != cbi.hwndItem)
+        pComboBox->SetFocus();
+    const CArray<CWindowEntry>& windowList(CRefreshWindowThread::GetInstance()->GetWindowList(true));
+    for (INT_PTR i = 0; i < windowList.GetCount(); ++i) {
+        bool bAdd(textsCount == 0);
+        const CWindowEntry &we(windowList[i]);
+        if (!bAdd) {
+            bAdd = true;
+            const CString &windowText(we.GetDesc(CWindowEntry::Long));
+            for (INT_PTR k = 0; k < textsCount && bAdd; ++k)
+                bAdd = windowText.Find(texts[k]) >= 0;
+        }
+        if (bAdd) {
+            int row = pComboBox->AddString(we.GetDesc());
+            pComboBox->SetItemData(row, (DWORD_PTR)(HWND)we);
+        }
+    }
+    if (bFromEvent && pComboBox->GetCount() == 0) { // Not found - but a valid window handle - add it
+        HWND hwnd(HWNDFromString(text));
+        if (hwnd && IsWindow(hwnd)) {
+            CWindowEntry we(hwnd);
+            we.UpdateDesc();
+            int row = pComboBox->AddString(we.GetDesc());
+            pComboBox->SetItemData(row, (DWORD_PTR)(HWND)we);
+        }
+    }
 }
 
 void CWindowFinderDlg::ToggleTracking()
@@ -452,6 +583,7 @@ void CWindowFinderDlg::ToggleTracking()
     GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
     SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, mbTracking ? _T("Press Pause key to toggle tracking.") : _T(""));
     UpdateLinks();
+    RefreshComboSearchWindows();
 }
 
 bool CWindowFinderDlg::UpdateChildItemText(WindowInfo& wi)
@@ -712,13 +844,13 @@ bool CWindowFinderDlg::UpdateFocusText(WindowInfo& wi)
                 IAccessibleHelper ih;
                 ih.InitFromWindow(hWndFocus);
                 TCHAR *feildsName[] = {
+                    _T("Focus"),
                     _T("Value"),
                     _T("Name"),
                     _T("Description"),
-                    _T("Focus")
                 };
                 for (auto name : feildsName) {
-                    focusText = mAccessibleHelper.GetValue(name).c_str();
+                    focusText = ih.GetValue(name).c_str();
                     if (!focusText.IsEmpty())
                         break;
                 }

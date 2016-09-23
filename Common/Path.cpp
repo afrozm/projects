@@ -605,8 +605,6 @@ int Finder::StartFind(const Path &dir)
 				if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					&& fcbRetVal != FCBRV_SKIPDIR) {
 					c += StartFind(file);
-                    fd.pFindData = NULL;
-                    fd.fileMatched = false;
 					mFindCallBack(FindData(NULL, file, false), m_pUserParam);
 				}
 				if (bMatched)

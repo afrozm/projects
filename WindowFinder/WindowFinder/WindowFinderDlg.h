@@ -5,6 +5,7 @@
 #pragma once
 #include "BaseDlg.h"
 #include "IAccessibleHelper.h"
+#include "resource.h"
 
 // CWindowFinderDlg dialog
 class CWindowFinderDlg : public CBaseDlg
@@ -12,6 +13,7 @@ class CWindowFinderDlg : public CBaseDlg
 // Construction
 public:
 	CWindowFinderDlg(CWnd* pParent = NULL);	// standard constructor
+    CString getWindowText(HWND hWnd, bool &bOutIsHanged, int maxTextLength = 256) const;
 
 // Dialog Data
 	enum { IDD = IDD_WINDOWFINDER_DIALOG };
@@ -19,6 +21,7 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
     virtual BOOL DestroyWindow();
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 // Implementation
 protected:
@@ -60,10 +63,13 @@ protected:
 
     void UpdateChildItemLocation();
 
-	CString getWindowText(HWND hWnd, bool &bOutIsHanged) const;
     HWND GetEditInfoWnd() const { return mhWndEdit; }
     bool IsCurrentWindowHung() const { return mbCurrentWndHang; }
     void UpdateLinks();
+    void SetCurrentWindow(HWND hWnd);
+    void RefreshComboSearchWindows();
+
+    void OnCbnEditchangeComboSearchWindowImp(bool bFromEvent = false);
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -73,5 +79,8 @@ protected:
 	afx_msg void OnSizing(UINT nSide, LPRECT lpRect);
     afx_msg void OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg LRESULT OnUpdateLinks(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnWindowIterOp(WPARAM wParam, LPARAM lParam);
+    afx_msg void OnCbnEditchangeComboSearchWindow();
+    afx_msg void OnCbnSelchangeComboSearchWindow();
 	DECLARE_MESSAGE_MAP()
 };

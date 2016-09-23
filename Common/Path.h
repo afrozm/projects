@@ -17,6 +17,7 @@ public:
 	Path();
 	Path(const lstring &inPath);
 	Path(LPCTSTR inPath);
+    operator LPCTSTR () const {return c_str();}
 	Path Parent() const;
 	Path FileName() const;
 	Path FileNameWithoutExt() const;

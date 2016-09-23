@@ -66,6 +66,15 @@
     <ClInclude Include="..\..\Common\ProcessUtil.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="RefreshWindowThread.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowIterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\stlutils.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WindowFinder.cpp">
@@ -87,6 +96,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\ProcessUtil.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="RefreshWindowThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowIterator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\Path.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>

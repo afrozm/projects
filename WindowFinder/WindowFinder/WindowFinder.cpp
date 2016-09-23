@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "WindowFinder.h"
 #include "WindowFinderDlg.h"
+#include "RefreshWindowThread.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,7 +34,7 @@ CWindowFinderApp::CWindowFinderApp()
 // The one and only CWindowFinderApp object
 
 CWindowFinderApp theApp;
-
+CWindowFinderDlg *theMainDlg = NULL;
 
 // CWindowFinderApp initialization
 
@@ -68,7 +69,8 @@ BOOL CWindowFinderApp::InitInstance()
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
 	CWindowFinderDlg dlg;
-	m_pMainWnd = &dlg;
+    theMainDlg = &dlg;
+	m_pMainWnd = theMainDlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
@@ -80,13 +82,13 @@ BOOL CWindowFinderApp::InitInstance()
 		// TODO: Place code here to handle when the dialog is
 		//  dismissed with Cancel
 	}
-
 	// Delete the shell manager created above.
 	if (pShellManager != NULL)
 	{
 		delete pShellManager;
 	}
-
+    CRefreshWindowThread::Shutdown();
+    theMainDlg = NULL;
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
