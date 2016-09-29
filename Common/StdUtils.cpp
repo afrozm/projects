@@ -89,20 +89,3 @@ static lstring WildCardToRegExp(LPCTSTR wildCard)
 
 	return regExpStr;
 }
-
-lstring WildCardExpToRegExp(LPCTSTR wildCardExp)
-{
-	TCHAR *exp = new TCHAR[lstrlen(wildCardExp)+1];
-	lstrcpy(exp, wildCardExp);
-	LPTSTR nexttoken(NULL);
-	LPTSTR token = _tcstok_s(exp, _T(";"), &nexttoken);
-	lstring regExp;
-	while (token != NULL) {
-		regExp += _T("(") + WildCardToRegExp(token) + _T(")");
-		token = _tcstok_s(NULL, _T(";"), &nexttoken);
-		if (token != NULL) {
-			regExp +=_T("|");
-		}
-	}
-	return regExp;
-}

@@ -6,6 +6,7 @@
 #include "BaseDlg.h"
 #include "IAccessibleHelper.h"
 #include "resource.h"
+#include "EditFindCtrl.h"
 
 // CWindowFinderDlg dialog
 class CWindowFinderDlg : public CBaseDlg
@@ -27,16 +28,22 @@ public:
 protected:
 	HICON m_hIcon;
 	CPoint mCurPoint;
-    HWND mhWndCurrent, mhWndEdit;
-    bool mbCurrentWndHang;
-	bool mbKeyUp;
-	bool mbTracking;
+    HWND mhWndCurrent;
+    CEditFindCtrl mEditWndTxt;
+    enum 
+    {
+        CurrentWndHang,
+        KeyUp,
+        Tracking,
+        ChildItemChanged,
+        TrackingChanged,
+    };
+    unsigned m_uFlags;
     DWORD mAttachedThreaDID;
 
     IAccessibleHelper mAccessibleHelper;
     CRect mChildItemRect;
     DWORD mChildItemAccessibleUpdatedTime;
-    BOOL mbChildItemChanged;
 
     struct WindowInfo;
     typedef bool (CWindowFinderDlg::*UpdateTextProc)(WindowInfo&);
@@ -49,25 +56,31 @@ protected:
     };
     CArray<WindowInfo> mWindowsInfo;
 
-	// Generated message map functions
-	void ToggleTracking();
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, CurrentWndHang)
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, KeyUp)
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, Tracking)
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, ChildItemChanged)
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, TrackingChanged)
+    // Generated message map functions
+	void ToggleTracking(bool bToggle = true);
     bool UpdateSelfText(WindowInfo& wi);
     bool UpdateChildItemText(WindowInfo& wi);
     bool UpdateProcessText(WindowInfo& wi);
     bool UpdateStyleText(WindowInfo& wi);
     bool UpdateParentText(WindowInfo& wi);
+    bool UpdateChildrenText(WindowInfo& wi);
     bool UpdateForegroundText(WindowInfo& wi);
     bool UpdateFocusText(WindowInfo& wi);
     bool UpdateText();
-    const WindowInfo& GetWindowInfo(INT_PTR i = 0) const;
+    WindowInfo& GetWindowInfo(UpdateTextProc forProc = NULL);
 
     void UpdateChildItemLocation();
 
-    HWND GetEditInfoWnd() const { return mhWndEdit; }
-    bool IsCurrentWindowHung() const { return mbCurrentWndHang; }
+    HWND GetEditInfoWnd() const { return mEditWndTxt.GetSafeHwnd(); }
     void UpdateLinks();
     void SetCurrentWindow(HWND hWnd);
     void RefreshComboSearchWindows();
+    void RefreshText();
 
     void OnCbnEditchangeComboSearchWindowImp(bool bFromEvent = false);
 

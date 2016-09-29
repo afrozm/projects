@@ -56,7 +56,7 @@ void CWindowEntry::UpdateDesc(LPCTSTR procName /*= NULL*/)
             mDesc += CString(_T("|")) + text.Left(32);
             mDescLong += _T("|") + text;
         }
-        if (procName && procName[0])
+        if (procName)
             text = procName;
         else
             text = GetProcessNameFromWindow(m_hWnd);
@@ -99,12 +99,14 @@ static BOOL CALLBACK EnumChildProc_WindowIterator(
 
 int CWindowIterator::Iterate(HWND hWnd)
 {
+    if (IsSearching())
+        return 1;
     m_hWnd = hWnd;
     SetSearching();
     mProcessName.Empty();
     mWindows.RemoveAll();
     if (hWnd)
-        mProcessName = GetProcessNameFromWindow(hWnd);
+        mProcessName = _T(""); //GetProcessNameFromWindow(hWnd);
     EnumChildWindows(hWnd, EnumChildProc_WindowIterator, (LPARAM)this);
     SetSearching(false);
     return 0;

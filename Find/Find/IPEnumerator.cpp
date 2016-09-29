@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "IPEnumerator.h"
 #include "SocketUitl.h"
-#include "STLUtil.h"
+#include "STLUtils.h"
 
 static int Def_IPEnumerator_Callback(IPEnumCBData *ipData, void *pUSerData)
 {
@@ -25,7 +25,7 @@ void IPEnumerator::SetCallBack(IPEnumerator_Callback callbackFn, void *pUSerData
 unsigned IPEnumerator::Enumerate(DWORD startIP, DWORD endIp)
 {
 	if (startIP > endIp)
-		STLUtil::Swap(startIP, endIp);
+        STLUtils::Swap(startIP, endIp);
 	while (startIP < endIp) {
 		if (FindHostName(startIP++))
 			break;

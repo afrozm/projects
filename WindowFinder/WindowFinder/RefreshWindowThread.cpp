@@ -79,8 +79,10 @@ END_MESSAGE_MAP()
 
 // CRefreshWindowThread message handlers
 
-void CRefreshWindowThread::RefreshWindows()
+void CRefreshWindowThread::RefreshWindows(HWND hWnd /* = NULL */)
 {
-    PostThreadMessage(WM_RWT_REFRESH_WINDOWS, 0, 0);
+    CWindowIterator *pIter(hWnd ? &m_WindowIterator : &m_TopWindowIterator);
+    if (!pIter->IsSearching())
+        PostThreadMessage(WM_RWT_REFRESH_WINDOWS, (WPARAM)hWnd, 0);
 }
 

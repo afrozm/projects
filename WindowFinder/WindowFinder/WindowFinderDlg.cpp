@@ -9,6 +9,7 @@
 #include "ProcessUtil.h"
 #include <stlutils.h>
 #include "RefreshWindowThread.h"
+#include "StringUtils.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,6 +19,9 @@
 #define TIMER_ID_KEY 12
 #define TIMER_REFRESH_INTERVAL 300 // 300 ms
 
+
+#define LINK_TEXT_HANDLE _T("Handle: ")
+#define LINK_TEXT_CHILD_ELEM _T("Child Elements:")
 
 // CAboutDlg dialog used for App About
 
@@ -52,20 +56,23 @@ END_MESSAGE_MAP()
 
 // CWindowFinderDlg dialog
 
-
+#define WF_GET_FN_ADDR(f) &CWindowFinderDlg::f
+#define GetWindowInfoEx(f) GetWindowInfo(WF_GET_FN_ADDR(f))
 
 
 CWindowFinderDlg::CWindowFinderDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDlg(CWindowFinderDlg::IDD, pParent), mbKeyUp(true), mbTracking(true),
-    mhWndCurrent(NULL), mChildItemAccessibleUpdatedTime(0), mbChildItemChanged(FALSE), mAttachedThreaDID(0),
-    mbCurrentWndHang(false), mhWndEdit(NULL)
+	: CBaseDlg(CWindowFinderDlg::IDD, pParent), m_uFlags(0),
+    mhWndCurrent(NULL), mChildItemAccessibleUpdatedTime(0), mAttachedThreaDID(0)
 {
+    SetKeyUp();
+    SetTracking();
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateSelfText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateChildItemText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateProcessText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateStyleText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateParentText));
+    mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateChildrenText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateForegroundText));
     mWindowsInfo.Add(WindowInfo(&CWindowFinderDlg::UpdateFocusText));
 }
@@ -134,7 +141,7 @@ static int GetHexCharsEnd(LPCTSTR hexStr)
                     ++hexStr;
                 }
                 if (hexend > -1)
-                    hexend += 2;
+                    hexend += 3; // 0x plus the last char matched
             }
         }
     }
@@ -147,30 +154,42 @@ void CWindowFinderDlg::UpdateLinks()
     CRichEditCtrl *pCtrl((CRichEditCtrl *)GetDlgItem(IDC_EDIT_INFO));
     pCtrl->GetWindowText(text);
     pCtrl->SetWindowText(text);
-    if (!mbTracking) {
-        long pos = 0;
-        CString handleText(_T("Handle: "));
-        FINDTEXTEX ft = { { pos,-1 }, handleText };
-        while (pos >= 0)
-        {
-            ft.chrg.cpMin = pos;
-            pos = pCtrl->FindText(FR_DOWN, &ft);
-            if (pos < 0)
-                continue;
-            pos += handleText.GetLength();
-            CString wndText;
-            pCtrl->GetTextRange(pos, pos + 32, wndText);
-            int endPod(GetHexCharsEnd(wndText));
-            if (endPod < 0)
-                continue;
+    if (!IsTracking()) {
+        LPCTSTR links[] = { LINK_TEXT_HANDLE, LINK_TEXT_CHILD_ELEM };
+        for (auto link : links) {
+            long pos = 0;
+            const long linkLen = lstrlen(link);
+            FINDTEXTEX ft = { { pos,-1 }, link };
+            while (pos >= 0)
             {
-                pCtrl->SetSel(pos, pos+endPod+1);
-                CHARFORMAT2 cf2;
-                ZeroMemory(&cf2, sizeof(cf2));
-                cf2.cbSize = sizeof(cf2);
-                cf2.dwMask = CFM_LINK;
-                cf2.dwEffects = CFE_LINK;
-                pCtrl->SetSelectionCharFormat(cf2);
+                ft.chrg.cpMin = pos;
+                pos = pCtrl->FindText(FR_DOWN, &ft);
+                if (pos < 0)
+                    continue;
+                int startPos(pos), endPos(-1);
+                CString wndText;
+                pos += linkLen;
+                const int wndTextLen(pCtrl->GetTextRange(pos, pos + 32, wndText));
+                if (LINK_TEXT_HANDLE == link) {
+                    startPos += linkLen;
+                    endPos = GetHexCharsEnd(wndText);
+                }
+                else {
+                    TCHAR ch(wndTextLen > 0 ? wndText.GetAt(0) : 0);
+                    if (STR_CHAR_IS_LINE(ch))
+                        endPos = linkLen;
+                }
+                if (endPos < 0)
+                    continue;
+                {
+                    pCtrl->SetSel(startPos, startPos + endPos);
+                    CHARFORMAT2 cf2;
+                    ZeroMemory(&cf2, sizeof(cf2));
+                    cf2.cbSize = sizeof(cf2);
+                    cf2.dwMask = CFM_LINK;
+                    cf2.dwEffects = CFE_LINK;
+                    pCtrl->SetSelectionCharFormat(cf2);
+                }
             }
         }
     }
@@ -179,18 +198,24 @@ void CWindowFinderDlg::UpdateLinks()
 void CWindowFinderDlg::SetCurrentWindow(HWND hWnd)
 {
     if (hWnd) {
-        const WindowInfo &wi(GetWindowInfo());
-        ((WindowInfo*)&wi)->hWnd = NULL; // Set it null so that current window text is refreshed
+        //const WindowInfo &wi(GetWindowInfo());
+        GetWindowInfo().hWnd = NULL;
+        //((WindowInfo*)&wi)->hWnd = NULL; // Set it null so that current window text is refreshed
         mhWndCurrent = hWnd;
-        UpdateText();
-        PostMessage(WM_WF_UPDATE_LINKS);
+        RefreshText();
     }
 }
 
 void CWindowFinderDlg::RefreshComboSearchWindows()
 {
-    if (!mbTracking)
+    if (!IsTracking())
         CRefreshWindowThread::GetInstance()->RefreshWindows();
+}
+
+void CWindowFinderDlg::RefreshText()
+{
+    UpdateText();
+    PostMessage(WM_WF_UPDATE_LINKS);
 }
 
 BOOL CWindowFinderDlg::OnInitDialog()
@@ -215,8 +240,8 @@ BOOL CWindowFinderDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_SEPARATOR);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+1, _T("Always On Top"));
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+2, _T("Tracking\tPause"));
-			if (mbTracking)
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX+2, _T("Tracking\tPause/Ctl+Alt+P"));
+			if (IsTracking())
 				pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, MF_CHECKED);
 		}
 	}
@@ -225,7 +250,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
-    mhWndEdit = GetDlgItem(IDC_EDIT_INFO)->GetSafeHwnd();
+    mEditWndTxt.SubclassDlgItem(IDC_EDIT_INFO, this);
 	SetTimer(TIMER_ID_REFRESH, TIMER_REFRESH_INTERVAL, NULL);
     SetTimer(TIMER_ID_KEY, 100, NULL);
 	GetControlResizer().AddControl(IDC_EDIT_INFO);
@@ -235,12 +260,7 @@ BOOL CWindowFinderDlg::OnInitDialog()
 	int cids[] = {IDC_STATIC_TITLE_SCREEN, IDC_STATIC_COORD, IDC_STATIC_TITLE_WND, IDC_STATIC_COORD_WND};
 	for (int i = 0; i < sizeof(cids)/sizeof(cids[0]); ++i)
 		GetControlResizer().AddControl(cids[i], RSZF_BOTTOM_FIXED | RSZF_SIZE_FIXED);
-	CString title;
-	title.Format(_T("WindowFinder - %s"), mbTracking ? _T("ON") : _T("OFF"));
-	SetWindowText(title);
-    GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
-    SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, mbTracking ? _T("Press Pause key to toggle tracking.") : _T(""));
-
+    ToggleTracking(false);
     CRichEditCtrl *pCtrl = (CRichEditCtrl*)GetDlgItem(IDC_EDIT_INFO);
     pCtrl->SetEventMask(ENM_LINK);
     pCtrl->SendMessage(EM_AUTOURLDETECT, TRUE);
@@ -362,7 +382,7 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
 {
     if (nIDEvent == TIMER_ID_REFRESH) {
         KillTimer(TIMER_ID_REFRESH);
-        if (mbTracking) {
+        if (IsTracking()) {
             CPoint curPoint;
             GetCursorPos(&curPoint);
             HWND hCurWind(::WindowFromPoint(curPoint));
@@ -375,8 +395,9 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
             }
             if (mhWndCurrent != hCurWind) {
                 mhWndCurrent = hCurWind;
-                mbCurrentWndHang = true;
-                getWindowText(mhWndCurrent, mbCurrentWndHang);
+                bool bCurrentWndHang = true;
+                getWindowText(mhWndCurrent, bCurrentWndHang);
+                SetCurrentWndHang(bCurrentWndHang);
             }
             if (curPoint != mCurPoint) {
                 mCurPoint = curPoint;
@@ -409,14 +430,21 @@ void CWindowFinderDlg::OnTimer( UINT_PTR nIDEvent )
         SetTimer(TIMER_ID_REFRESH, TIMER_REFRESH_INTERVAL, NULL);
     }
     else { // TIMER_ID_KEY
-        if (GetAsyncKeyState(VK_PAUSE)) {
-            if (mbKeyUp) {
-                mbKeyUp = false;
+        int shorcutKeysp[] = { VK_CONTROL, VK_MENU, 'P' };
+        bool bShorcurPressed(true);
+        for (auto sk : shorcutKeysp) {
+            bShorcurPressed = bShorcurPressed && GetAsyncKeyState(sk);
+            if (!bShorcurPressed)
+                break;
+        }
+        if (GetAsyncKeyState(VK_PAUSE)||bShorcurPressed) {
+            if (IsKeyUp()) {
+                SetKeyUp(false);
                 ToggleTracking();
             }
         }
-        else
-            mbKeyUp = true;
+        else if (!IsKeyUp())
+            SetKeyUp(true);
     }
 }
 
@@ -461,7 +489,7 @@ static HWND HWNDFromString(LPCTSTR lpstrHwnd)
 }
 void CWindowFinderDlg::OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult)
 {
-    if (mbTracking)
+    if (IsTracking())
         return;
     ENLINK *pEnLink = reinterpret_cast<ENLINK *>(pNMHDR);
     if (pEnLink && pEnLink->msg == WM_LBUTTONUP) {
@@ -471,6 +499,9 @@ void CWindowFinderDlg::OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult)
         if (text.Find(_T("0x")) == 0) { // window handle
             HWND hWnd(HWNDFromString(text));
             SetCurrentWindow(hWnd);
+        }
+        else if (text == LINK_TEXT_CHILD_ELEM) {
+            CRefreshWindowThread::GetInstance()->RefreshWindows(mhWndCurrent);
         }
         *pResult = 0;
     }
@@ -486,7 +517,11 @@ LRESULT CWindowFinderDlg::OnWindowIterOp(WPARAM wParam, LPARAM lParam)
 {
     if (wParam == 0) {// iter finished
         if (lParam) { //child windows of a window
-
+            HWND hWndParent((HWND)lParam);
+            if (hWndParent && hWndParent == mhWndCurrent) {
+                GetWindowInfoEx(UpdateChildrenText).hWnd = hWndParent;
+                RefreshText(); // Got list of child windows - refresh the text
+            }
         }
         else { //top level windows
             OnCbnEditchangeComboSearchWindowImp();
@@ -572,17 +607,21 @@ void CWindowFinderDlg::OnCbnEditchangeComboSearchWindowImp(bool bFromEvent /* = 
     }
 }
 
-void CWindowFinderDlg::ToggleTracking()
+void CWindowFinderDlg::ToggleTracking(bool bToggle /* = true */)
 {
-	mbTracking = !mbTracking;
+    if (bToggle) {
+        SetTracking(!IsTracking());
+        SetTrackingChanged();
+    }
 	CString title;
-	title.Format(_T("WindowFinder - %s"), mbTracking ? _T("ON") : _T("OFF"));
+	title.Format(_T("WindowFinder - %s"), IsTracking() ? _T("ON") : _T("OFF"));
 	SetWindowText(title);
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, mbTracking ? MF_CHECKED : MF_UNCHECKED);
-    GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!mbTracking);
-    SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, mbTracking ? _T("Press Pause key to toggle tracking.") : _T(""));
-    UpdateLinks();
+	pSysMenu->CheckMenuItem(IDM_ABOUTBOX+2, IsTracking() ? MF_CHECKED : MF_UNCHECKED);
+    GetDlgItem(IDC_COMBO_SEARCH_WINDOW)->EnableWindow(!IsTracking());
+    SetDlgItemText(IDC_COMBO_SEARCH_WINDOW, IsTracking() ? _T("Press Pause or Ctl+Alt+P keys to toggle tracking.") : _T(""));
+    if (bToggle)
+        RefreshText();
     RefreshComboSearchWindows();
 }
 
@@ -591,10 +630,13 @@ bool CWindowFinderDlg::UpdateChildItemText(WindowInfo& wi)
     bool &bChildItemUpdated(wi.bUpdated);
     if (mhWndCurrent != GetEditInfoWnd()) {
         CString &text(wi.wndText);
-        text.Empty();
-        if (mbTracking) {
+        if (!IsTrackingChanged())
+            text.Empty();
+        if (IsTracking()) {
+            text.Empty();
             UpdateChildItemLocation();
-            if (!IsCurrentWindowHung() && mAccessibleHelper) {
+            bChildItemUpdated = IsChildItemChanged() || IsTrackingChanged();
+            if (!IsCurrentWndHang() && mAccessibleHelper && bChildItemUpdated) {
                 TCHAR *feildsName[] = {
                     _T("Name"),
                     _T("Value"),
@@ -613,7 +655,6 @@ bool CWindowFinderDlg::UpdateChildItemText(WindowInfo& wi)
                 mAccessibleHelper.GetRect(rect, IAccessibleHelper::GRF_WRTParent);
                 text += getRectText(rect, _T("Child Item Rect wrt parent"));
             }
-            bChildItemUpdated = mbChildItemChanged != FALSE;
         }
     }
     return bChildItemUpdated;
@@ -755,9 +796,9 @@ bool CWindowFinderDlg::UpdateSelfText(WindowInfo& wi)
     if (wi.bUpdated) {
         wi.hWnd = mhWndCurrent;
         CString &text(wi.wndText);
-        text.Format(_T("Handle: 0x%x\r\n"), mhWndCurrent);
+        text.Format(_T("%s0x%x\r\n"), LINK_TEXT_HANDLE, mhWndCurrent);
         bool bHang(false);
-        CString titleText(IsCurrentWindowHung() ? TEXT_WINDOW_NOT_RESPONDING : getWindowText(mhWndCurrent, bHang));
+        CString titleText(IsCurrentWndHang() ? TEXT_WINDOW_NOT_RESPONDING : getWindowText(mhWndCurrent, bHang));
         text += _T("Title: ") + titleText + _T("\r\n");
         {
             TCHAR className[1024] = { 0 };
@@ -788,7 +829,7 @@ bool CWindowFinderDlg::UpdateParentText(WindowInfo& wi)
             wi.hWnd = hWndPArent;
             CString &text(wi.wndText);
             if (hWndPArent) {
-                text.Format(_T("Parent Handle: 0x%x\r\n"), hWndPArent);
+                text.Format(_T("Parent %s0x%x\r\n"), LINK_TEXT_HANDLE, hWndPArent);
                 bool bHang(false);
                 text += _T("Parent Title: ") + getWindowText(hWndPArent, bHang) + _T("\r\n");
             }
@@ -797,6 +838,36 @@ bool CWindowFinderDlg::UpdateParentText(WindowInfo& wi)
         }
     }
     return wi.bUpdated;
+}
+
+bool CWindowFinderDlg::UpdateChildrenText(WindowInfo& wi)
+{
+    bool bUpdated(false);
+    CString &text(wi.wndText);
+    if (IsTracking()) {// Tracking - no update
+        if (wi.bUpdated) {
+            wi.bUpdated = false;
+            bUpdated = true;
+            text.Empty();
+        }
+    }
+    else {      // Not tracking
+        text = LINK_TEXT_CHILD_ELEM _T("\r\n");
+        if (!wi.bUpdated) { // First call after toggle tracking
+            bUpdated = wi.bUpdated = true;      // Update text only
+        }
+        else if (wi.hWnd) {     // Second call when children found
+            bUpdated = wi.bUpdated = true; // update children
+            wi.hWnd = NULL;     // set to null so that subsequent call does not update again
+            const CArray<CWindowEntry>& windowList(CRefreshWindowThread::GetInstance()->GetWindowList(false));
+            for (INT_PTR i = 0; i < windowList.GetCount(); ++i) {
+                CString childText;
+                childText.Format(_T("   %d. Child %s%s\r\n"), i+1, LINK_TEXT_HANDLE, (LPCTSTR)windowList[i].GetDesc());
+                text += childText;
+            }
+        }
+    }
+    return bUpdated;
 }
 
 bool CWindowFinderDlg::UpdateForegroundText(WindowInfo& wi)
@@ -815,7 +886,7 @@ bool CWindowFinderDlg::UpdateForegroundText(WindowInfo& wi)
             if (!bAttached)
                 mAttachedThreaDID = 0;
             DWORD le = GetLastError();
-            text.Format(_T("Foregorund Handle: 0x%x\r\n"), hWndForeground);
+            text.Format(_T("Foregorund %s0x%x\r\n"), LINK_TEXT_HANDLE, hWndForeground);
             bool bHung(false);
             CString title = getWindowText(hWndForeground, bHung);
             if (bHung)
@@ -836,9 +907,12 @@ bool CWindowFinderDlg::UpdateFocusText(WindowInfo& wi)
         wi.hWnd = hWndFocus;
         CString &text(wi.wndText);
         if (hWndFocus) {
-            text.Format(_T("Focus Handle: 0x%x\r\n"), hWndFocus);
+            text.Format(_T("Focus %s0x%x\r\n"), LINK_TEXT_HANDLE, hWndFocus);
             bool bHang(false);
             CString focusText(getWindowText(hWndFocus, bHang));
+            TCHAR className[1024] = { 0 };
+            GetClassName(hWndFocus, className, sizeof(className) / sizeof(className[0]));
+            text += _T("Focus Class: ") + CString(className) + _T("\r\n");
             if (!bHang && hWndFocus != GetEditInfoWnd()
                 && focusText.IsEmpty()) {
                 IAccessibleHelper ih;
@@ -856,9 +930,6 @@ bool CWindowFinderDlg::UpdateFocusText(WindowInfo& wi)
                 }
             }
             text += _T("Focus Title: ") + focusText + _T("\r\n");
-            TCHAR className[1024] = { 0 };
-            GetClassName(hWndFocus, className, sizeof(className) / sizeof(className[0]));
-            text += _T("Focus Class: ") + CString(className) + _T("\r\n");
         }
         else
             text.Empty();
@@ -881,20 +952,25 @@ bool CWindowFinderDlg::UpdateText()
 
         SetDlgItemText(IDC_EDIT_INFO, text);
     }
-
+    SetTrackingChanged(false);
     return bUpdated;
 }
 
-const CWindowFinderDlg::WindowInfo& CWindowFinderDlg::GetWindowInfo(INT_PTR i /*= 0*/) const
+CWindowFinderDlg::WindowInfo& CWindowFinderDlg::GetWindowInfo(UpdateTextProc inProc /* = NULL */)
 {
-    if (i<0 || i>mWindowsInfo.GetCount())
-        i = 0;
-    return mWindowsInfo[i];
+    if (inProc == NULL && mWindowsInfo.GetCount() > 0)
+        inProc = mWindowsInfo[0].fnUpdateTextProc;
+    for (INT_PTR i = 0; i < mWindowsInfo.GetCount();++i) {
+        if (inProc == mWindowsInfo[i].fnUpdateTextProc)
+            return mWindowsInfo[i];
+    }
+    static WindowInfo wi;
+    return wi;
 }
 
 void CWindowFinderDlg::UpdateChildItemLocation()
 {
-    if (IsCurrentWindowHung()) {
+    if (IsCurrentWndHang()) {
         if (!mChildItemRect.IsRectEmpty())
             mChildItemRect.SetRectEmpty();
         return;
@@ -904,7 +980,7 @@ void CWindowFinderDlg::UpdateChildItemLocation()
         mAccessibleHelper.Location();
         CRect oldRecr(mChildItemRect);
         mAccessibleHelper.GetRect(mChildItemRect);
-        mbChildItemChanged = oldRecr != mChildItemRect;
+        SetChildItemChanged((oldRecr != mChildItemRect) != FALSE);
         mChildItemAccessibleUpdatedTime = GetTickCount();
     }
 }

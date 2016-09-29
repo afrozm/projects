@@ -168,25 +168,10 @@
     <ClInclude Include="Preview\VLCWrapperImpl.h">
       <Filter>Header Files\Preview</Filter>
     </ClInclude>
-    <ClInclude Include="EmbedControls\EmbedComboBox.h">
-      <Filter>Header Files\EmbedControls</Filter>
-    </ClInclude>
-    <ClInclude Include="EmbedControls\EmbedEditControl.h">
-      <Filter>Header Files\EmbedControls</Filter>
-    </ClInclude>
-    <ClInclude Include="EmbedControls\EmbedHeaderCtlrl.h">
-      <Filter>Header Files\EmbedControls</Filter>
-    </ClInclude>
-    <ClInclude Include="EmbedControls\EmbedListCtrl.h">
-      <Filter>Header Files\EmbedControls</Filter>
-    </ClInclude>
     <ClInclude Include="..\Utilites\Logger.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Utilites\LoggerFactory.h">
-      <Filter>Header Files\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Utilites\StdUtils.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Utilites\SystemUtils.h">
@@ -220,9 +205,6 @@
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Utilites\SocketUitl.h">
-      <Filter>Header Files\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Utilites\STLUtil.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Utilites\CountTimer.h">
@@ -288,21 +270,6 @@
     <ClInclude Include="CombinedButton.h">
       <Filter>Header Files\UtilControls</Filter>
     </ClInclude>
-    <ClInclude Include="ControlResizer.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Drawer.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
-    <ClInclude Include="EditFindCtrl.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
-    <ClInclude Include="ListCtrlUtil.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
-    <ClInclude Include="ResizeBar.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
     <ClInclude Include="FilterDuplicateDialog.h">
       <Filter>Header Files\Find\Client</Filter>
     </ClInclude>
@@ -330,9 +297,6 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files\Find</Filter>
     </ClInclude>
-    <ClInclude Include="LogEditCtrl.h">
-      <Filter>Header Files\UtilControls</Filter>
-    </ClInclude>
     <ClInclude Include="..\Utilites\ReadWriteLock.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
@@ -347,6 +311,39 @@
     </ClInclude>
     <ClInclude Include="ComboBoxDragDrop.h">
       <Filter>Source Files\Find\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedHeaderCtlrl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedListCtrl.h">
+      <Filter>Header Files\EmbedControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\ControlResizer.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\Drawer.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\EditFindCtrl.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\LogEditCtrl.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\MFC\UtilControls\ResizeBar.h">
+      <Filter>Header Files\UtilControls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\StdUtils.h">
+      <Filter>Header Files\Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -386,18 +383,6 @@
     <ClCompile Include="Preview\vlc\vlcapiwrapper.cpp">
       <Filter>Header Files\Preview\vlc</Filter>
     </ClCompile>
-    <ClCompile Include="EmbedControls\EmbedComboBox.cpp">
-      <Filter>Source Files\EmbedControls</Filter>
-    </ClCompile>
-    <ClCompile Include="EmbedControls\EmbedEditControl.cpp">
-      <Filter>Source Files\EmbedControls</Filter>
-    </ClCompile>
-    <ClCompile Include="EmbedControls\EmbedHeaderCtlrl.cpp">
-      <Filter>Source Files\EmbedControls</Filter>
-    </ClCompile>
-    <ClCompile Include="EmbedControls\EmbedListCtrl.cpp">
-      <Filter>Source Files\EmbedControls</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\Find</Filter>
     </ClCompile>
@@ -405,9 +390,6 @@
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\Utilites\LoggerFactory.cpp">
-      <Filter>Source Files\Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Utilites\StdUtils.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\Utilites\SystemUtils.cpp">
@@ -446,19 +428,7 @@
     <ClCompile Include="..\Utilites\CountTimer.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="ListCtrlUtil.cpp">
-      <Filter>Source Files\UtilControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Drawer.cpp">
-      <Filter>Source Files\UtilControls</Filter>
-    </ClCompile>
-    <ClCompile Include="EditFindCtrl.cpp">
-      <Filter>Source Files\UtilControls</Filter>
-    </ClCompile>
     <ClCompile Include="CombinedButton.cpp">
-      <Filter>Source Files\UtilControls</Filter>
-    </ClCompile>
-    <ClCompile Include="ResizeBar.cpp">
       <Filter>Source Files\UtilControls</Filter>
     </ClCompile>
     <ClCompile Include="CmdEditCtrl.cpp">
@@ -466,9 +436,6 @@
     </ClCompile>
     <ClCompile Include="CommitResultTimer.cpp">
       <Filter>Source Files\Find\Client</Filter>
-    </ClCompile>
-    <ClCompile Include="ControlResizer.cpp">
-      <Filter>Source Files\UtilControls</Filter>
     </ClCompile>
     <ClCompile Include="DupFileFilter.cpp">
       <Filter>Source Files\Find\Client</Filter>
@@ -545,9 +512,6 @@
     <ClCompile Include="Find.cpp">
       <Filter>Source Files\Find</Filter>
     </ClCompile>
-    <ClCompile Include="LogEditCtrl.cpp">
-      <Filter>Source Files\UtilControls</Filter>
-    </ClCompile>
     <ClCompile Include="..\Utilites\ReadWriteLock.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
@@ -562,6 +526,39 @@
     </ClCompile>
     <ClCompile Include="ComboBoxDragDrop.cpp">
       <Filter>Source Files\Find\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedHeaderCtlrl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedListCtrl.cpp">
+      <Filter>Source Files\EmbedControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\ControlResizer.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\Drawer.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\EditFindCtrl.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\LogEditCtrl.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\MFC\UtilControls\ResizeBar.cpp">
+      <Filter>Source Files\UtilControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\StdUtils.cpp">
+      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -101,12 +101,12 @@
     <None Include="res\WindowFinder.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\MFC\BaseDlg.h" />
+    <ClInclude Include="..\..\Common\MFC\MFCBaseDlg.h" />
+    <ClInclude Include="..\..\Common\MFC\UtilControls\EditFindCtrl.h" />
     <ClInclude Include="..\..\Common\ProcessUtil.h" />
     <ClInclude Include="..\..\Common\stlutils.h" />
-    <ClInclude Include="BaseDlg.h" />
-    <ClInclude Include="ControlResizer.h" />
     <ClInclude Include="IAccessibleHelper.h" />
-    <ClInclude Include="MFCBaseDlg.h" />
     <ClInclude Include="RefreshWindowThread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -116,10 +116,12 @@
     <ClInclude Include="WindowIterator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\MFC\BaseDlg.cpp" />
+    <ClCompile Include="..\..\Common\MFC\UtilControls\ControlResizer.cpp" />
+    <ClCompile Include="..\..\Common\MFC\UtilControls\EditFindCtrl.cpp" />
     <ClCompile Include="..\..\Common\Path.cpp" />
     <ClCompile Include="..\..\Common\ProcessUtil.cpp" />
-    <ClCompile Include="BaseDlg.cpp" />
-    <ClCompile Include="ControlResizer.cpp" />
+    <ClCompile Include="..\..\Common\StdUtils.cpp" />
     <ClCompile Include="IAccessibleHelper.cpp" />
     <ClCompile Include="RefreshWindowThread.cpp" />
     <ClCompile Include="stdafx.cpp">

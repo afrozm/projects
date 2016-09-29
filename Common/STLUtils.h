@@ -21,6 +21,8 @@
 #define DEFINE_FUNCTION_SET_GET_FLAGBIT(f,fb) DEFINE_FUNCTION_SET_FLAGBIT(f,fb)\
 	DEFINE_FUNCTION_IS_FLAGBIT_SET(f,fb)
 
+#define MS_FLAGBIT(t) (FLAGBIT((sizeof(t)<<3)-1))
+#define MSN_FLAGBIT(t,n) (FLAGBIT((sizeof(t)<<3)-((n)+1)))
 
 #endif
 
@@ -49,7 +51,14 @@ public:
 };
 
 namespace STLUtils {
-
+	template <class T>
+	void Swap(T &a, T &b)
+	{
+		T t = a;
+		a = b;
+		b = t;
+	}
+    
     inline bool ChangeType(const std::string &inSource, std::wstring &outTarget)
     {
         try {
@@ -197,7 +206,7 @@ template<class TYPE>
 class CSortedArray : public CArray<TYPE>
 {
 public:
-	CSortedArray(GenericCompareFn cmfn)
+	CSortedArray(GenericCompareFn cmfn = NULL)
 		: CArray(), mCompareFn(cmfn)
 	{
 	}

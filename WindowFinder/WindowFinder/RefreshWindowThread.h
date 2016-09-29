@@ -20,7 +20,7 @@ public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
 
-    void RefreshWindows();
+    void RefreshWindows(HWND hWnd = NULL);
     static CRefreshWindowThread* GetInstance();
     static void Shutdown();
     void CancelRefresh();
