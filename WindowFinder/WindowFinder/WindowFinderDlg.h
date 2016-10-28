@@ -36,9 +36,8 @@ protected:
         KeyUp,
         Tracking,
         ChildItemChanged,
-        TrackingChanged,
     };
-    unsigned m_uFlags;
+	unsigned m_uFlags, m_uAccessibleItemIndex;
     DWORD mAttachedThreaDID;
 
     IAccessibleHelper mAccessibleHelper;
@@ -60,7 +59,6 @@ protected:
     DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, KeyUp)
     DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, Tracking)
     DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, ChildItemChanged)
-    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, TrackingChanged)
     // Generated message map functions
 	void ToggleTracking(bool bToggle = true);
     bool UpdateSelfText(WindowInfo& wi);
@@ -69,10 +67,13 @@ protected:
     bool UpdateStyleText(WindowInfo& wi);
     bool UpdateParentText(WindowInfo& wi);
     bool UpdateChildrenText(WindowInfo& wi);
+    bool UpdateAccessibleChildrenText(WindowInfo& wi);
     bool UpdateForegroundText(WindowInfo& wi);
     bool UpdateFocusText(WindowInfo& wi);
     bool UpdateText();
     WindowInfo& GetWindowInfo(UpdateTextProc forProc = NULL);
+    static int ThreadOpExpandChildrenAccessibleItems(void *pData);
+    int ExpandChildrenAccessibleItems(); // this is threaded
 
     void UpdateChildItemLocation();
 
@@ -80,7 +81,7 @@ protected:
     void UpdateLinks();
     void SetCurrentWindow(HWND hWnd);
     void RefreshComboSearchWindows();
-    void RefreshText();
+    void RefreshText(bool bUpdateText = true);
 
     void OnCbnEditchangeComboSearchWindowImp(bool bFromEvent = false);
 
@@ -93,6 +94,7 @@ protected:
     afx_msg void OnEnLinkEditInfo(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg LRESULT OnUpdateLinks(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnWindowIterOp(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnRefreshText(WPARAM wParam, LPARAM lParam);
     afx_msg void OnCbnEditchangeComboSearchWindow();
     afx_msg void OnCbnSelchangeComboSearchWindow();
 	DECLARE_MESSAGE_MAP()

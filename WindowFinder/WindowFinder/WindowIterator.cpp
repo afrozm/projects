@@ -74,8 +74,8 @@ void CWindowEntry::UpdateDesc(LPCTSTR procName /*= NULL*/)
 
 //////////////////////////// CWindowIterator //////////////////////////////
 
-CWindowIterator::CWindowIterator()
-    : mCalllback(NULL), m_uFlags(0), m_hWnd(NULL)
+CWindowIterator::CWindowIterator(Callback callback /* = NULL */)
+    : mCalllback(callback), m_uFlags(0), m_hWnd(NULL)
 {
 }
 

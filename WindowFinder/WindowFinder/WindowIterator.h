@@ -21,9 +21,9 @@ private:
 class CWindowIterator
 {
 public:
-    CWindowIterator();
-    ~CWindowIterator();
     typedef int(*Callback)(const CWindowEntry& we);
+    CWindowIterator(Callback callback = NULL);
+    ~CWindowIterator();
     void SetCallback(Callback callback = NULL);
     int Iterate(HWND hWnd = NULL);
     int Callback_Iterator(HWND hWnd);
