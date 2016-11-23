@@ -17,6 +17,7 @@ public:
 	Path();
 	Path(const lstring &inPath);
 	Path(LPCTSTR inPath);
+    operator LPCTSTR () const {return c_str();}
 	Path Parent() const;
 	Path FileName() const;
 	Path FileNameWithoutExt() const;
@@ -33,6 +34,7 @@ public:
 	Path GetRoot() const;
 	static Path GetSpecialFolderPath(int inFolderID, bool inCreate = false);
     static Path GetModuleFilePath(HMODULE hModule = NULL);
+    static Path GetTempPath();
 	Path MakeFullPath() const;
 	bool IsRelativePath() const;
 	Path Canonicalize() const;
@@ -55,6 +57,7 @@ public:
 	};
 	ULONGLONG GetFileTime(FileTimeType fileType = CreationTime) const;
     bool Move(const Path &inNewLocation) const;
+    bool CopyFile(const Path &newFilePath) const;
 };
 
 bool operator == (const Path& p1, const Path& p2);
@@ -62,7 +65,7 @@ bool operator != (const Path& p1, const Path& p2);
 
 
 struct FindData {
-	const lstring &fullPath;
+	const Path &fullPath;
 	bool fileMatched;
 #ifdef _WIN32
     typedef WIN32_FIND_DATA PLAT_FIND_DATA;
@@ -71,8 +74,8 @@ struct FindData {
     };
 #endif
     PLAT_FIND_DATA *pFindData;
-	FindData(PLAT_FIND_DATA *pFD, const lstring &fp, bool fm)
-		: pFindData(pFD), fullPath(fp), fileMatched(fm)
+	FindData(PLAT_FIND_DATA *pFD, const Path &fp, bool fm)
+		: fullPath(fp), fileMatched(fm), pFindData(pFD)
 	{}
     long long GetFileSize() const;
 };
@@ -83,7 +86,7 @@ struct FindData {
 typedef int(*FindCallBack)(FindData&, void *pUserParam);
 struct Finder {
 	Finder(FindCallBack fcb, void *pUserParam = NULL, LPCTSTR pattern = NULL, LPCTSTR excludePattern = NULL);
-	int StartFind(const lstring &dir);
+    int StartFind(const Path &dir);
     std::basic_regex<TCHAR> mRegExp, mExcludeRegExp;
 	LPCTSTR mExcludePattern;
 	FindCallBack mFindCallBack;

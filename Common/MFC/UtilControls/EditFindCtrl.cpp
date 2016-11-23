@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "Find.h"
 #include "EditFindCtrl.h"
 #include "StdUtils.h"
 

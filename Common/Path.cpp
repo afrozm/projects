@@ -22,8 +22,9 @@ Path::Path(LPCTSTR inPath)
 }
 Path Path::Parent() const
 {
-	TCHAR *path = new TCHAR[length()+1];
-	lstrcpy(path, c_str());
+    const size_t len(length() + 1);
+	TCHAR *path = new TCHAR[len];
+    _tcscpy_s(path, len, c_str());
 	PathRemoveFileSpec(path);
 	Path parent(path);
 	delete []path;
@@ -61,13 +62,14 @@ bool Path::CreateDir() const
 }
 Path Path::Append(const Path &append) const
 {
-	TCHAR *newPath = new TCHAR[length()+append.length()+10];
-	lstrcpy(newPath, c_str());
+    const size_t len(length() + append.length() + 10);
+	TCHAR *newPath = new TCHAR[len];
+	_tcscpy_s(newPath, len, c_str());
 	if (*newPath == '.') {
 		if (newPath[length() - 1] != '\\'
 			&& append.length() > 0 && append[0] != '\\')
-			lstrcat(newPath, _T("\\"));
-		lstrcat(newPath, append.c_str());
+            _tcscat_s(newPath, len, _T("\\"));
+        _tcscat_s(newPath, len, append.c_str());
 	}
 	else
 		PathAppend(newPath, append.c_str());
@@ -95,8 +97,9 @@ bool Path::GetFileTime(LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, L
 }
 Path Path::RenameExtension(LPCTSTR newExtn) const
 {
-	TCHAR *path = new TCHAR[length()+4+lstrlen(newExtn ? newExtn : _T(""))];
-	lstrcpy(path, c_str());
+    const size_t len(length() + 4 + lstrlen(newExtn ? newExtn : _T("")));
+	TCHAR *path = new TCHAR[len];
+	_tcscpy_s(path, len, c_str());
 	PathRemoveExtension(path);
 	if (newExtn != NULL && newExtn[0] != 0) {
 		PathAddExtension(path, newExtn);
@@ -192,6 +195,13 @@ Path Path::GetModuleFilePath(HMODULE hModule /*= NULL*/)
         QueryFullProcessImageName(hModule, 0, modulePath, &nPNSize);
     }
     return modulePath;
+}
+
+Path Path::GetTempPath()
+{
+    TCHAR tempPAth[MAX_PATH] = { 0 };
+    ::GetTempPath(_countof(tempPAth), tempPAth);
+    return Path(tempPAth);
 }
 
 bool Path::IsRelativePath() const
@@ -474,7 +484,12 @@ ULONGLONG Path::GetFileTime(FileTimeType fileType) const
 
 bool Path::Move(const Path & inNewLocation) const
 {
-    return MoveFileEx(c_str(), inNewLocation.c_str(), MOVEFILE_COPY_ALLOWED) == TRUE;
+    return MoveFileEx(c_str(), inNewLocation.c_str(), MOVEFILE_COPY_ALLOWED) != FALSE;
+}
+
+bool Path::CopyFile(const Path & newFilePath) const
+{
+    return ::CopyFile(c_str(), newFilePath.c_str(), FALSE) != FALSE;
 }
 
 lstring WildCardToRegExp(LPCTSTR wildCard)
@@ -514,8 +529,9 @@ lstring WildCardToRegExp(LPCTSTR wildCard)
 
 lstring WildCardExpToRegExp(LPCTSTR wildCardExp)
 {
-	TCHAR *exp = new TCHAR[lstrlen(wildCardExp) + 1];
-	lstrcpy(exp, wildCardExp);
+    const size_t len(lstrlen(wildCardExp) + 1);
+	TCHAR *exp = new TCHAR[len];
+	_tcscpy_s(exp, len, wildCardExp);
 	LPTSTR nexttoken(NULL);
 	LPTSTR token = _tcstok_s(exp, _T(";"), &nexttoken);
 	lstring regExp;
@@ -555,10 +571,10 @@ Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR ex
 	m_pUserParam = pUserParam;
 	mFindCallBack = fcb;
 }
-int Finder::StartFind(const lstring &dir)
+int Finder::StartFind(const Path &dir)
 {
     WIN32_FIND_DATA findFileData = {};
-	HANDLE hFind = FindFirstFile((dir + _T("\\*")).c_str(), &findFileData);
+	HANDLE hFind = FindFirstFile(dir.Append(_T("*")).c_str(), &findFileData);
 	int c = 0;
     Path srcDir(dir);
     bool bSrcIsFile((!srcDir.IsDir() && srcDir.Exists()));

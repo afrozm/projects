@@ -5,7 +5,9 @@
 
 #define STR_IS_VALID_PTR(p) (p&&*p)
 #define STR_INR_PTR(p) if(STR_IS_VALID_PTR(p)) ++p
-#define STR_CHAR_IS_SPACE(c) ((c)==' ' || (c)=='\t' || (c)=='\n' || (c)=='\r')
+#define STR_CHAR_IS_LINE(c) ((c)=='\n' || (c)=='\r')
+#define STR_CHAR_IS_SPACE_OR_TAB(c) ((c)==' ' || (c)=='\t')
+#define STR_CHAR_IS_SPACE(c) (STR_CHAR_IS_SPACE_OR_TAB(c) || STR_CHAR_IS_LINE(c))
 #define STR_SKIP_SPACE(p) while(STR_IS_VALID_PTR(p)&&STR_CHAR_IS_SPACE(*p)) ++p
 
 

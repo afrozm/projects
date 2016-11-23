@@ -17,7 +17,7 @@ Path::Path(const Path& p)
 {
 }
 Path::Path(LPCTSTR inPath)
-: lstring(inPath)
+: lstring(inPath ? inPath : _T(""))
 {
 }
 
@@ -31,6 +31,7 @@ static void PathRemoveTralingSeps(TCHAR *path)
         while (--len > 0)
             if (CH_IS_PATH_SEP(path[len]))
                 path[len]=0;
+            else break;
     }
 }
 static void PathRemoveFileSpec(TCHAR *path)
@@ -41,6 +42,7 @@ static void PathRemoveFileSpec(TCHAR *path)
         while (--len > 0)
             if (!CH_IS_PATH_SEP(path[len]))
                 path[len]=0;
+            else break;
         PathRemoveTralingSeps(path);
     }
 }
@@ -57,10 +59,13 @@ Path Path::Parent() const
 
 static LPCTSTR PathFindFileName(LPCTSTR path)
 {
+    LPCTSTR startPath(path);
     if (path && *path) {
         path += lstrlen(path);
-        while (CH_IS_PATH_SEP(*path)) --path;
-        while (!CH_IS_PATH_SEP(*path)) --path;
+        while (path > startPath && CH_IS_PATH_SEP(*path)) --path;
+        while (path > startPath && !CH_IS_PATH_SEP(*path)) --path;
+        if (CH_IS_PATH_SEP(*path))
+            ++path;
     }
     return path;
 }
@@ -160,7 +165,8 @@ Path Path::RenameExtension(LPCTSTR newExtn) const
     @autoreleasepool {
         NSString *str = [NSString stringWithUTF8String:c_str()];
         str = [str stringByDeletingPathExtension];
-        
+        if (newExtn && newExtn[0]=='.')
+            ++newExtn;
         if (newExtn != NULL && newExtn[0] != 0)
             str = [str stringByAppendingPathExtension:[NSString stringWithUTF8String:newExtn]];
        outPath = [str UTF8String];
@@ -173,7 +179,9 @@ Path Path::GetExtension() const
     @autoreleasepool {
         NSString *str = [NSString stringWithUTF8String:c_str()];
         str = str.pathExtension;
-       outPath = [str UTF8String];
+        outPath = [str UTF8String];
+        if (!outPath.empty()&&outPath[0]!='.')
+            outPath = "."+outPath;
     }
 	return outPath;
 }
@@ -223,8 +231,13 @@ Path Path::GetSpecialFolderPath(int inFolderID, bool inCreate)
 {
     Path outPath;
     @autoreleasepool {
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        if (paths)
+        NSSearchPathDomainMask domainMask(NSUserDomainMask);
+        if (inFolderID & 0xffff0000) {
+            domainMask = inFolderID >> 16;
+            inFolderID &= 0xffff;
+        }
+        NSArray *paths = NSSearchPathForDirectoriesInDomains((NSSearchPathDirectory)inFolderID, domainMask, YES);
+        if (paths && [paths count] > 0)
             outPath = [[paths firstObject] UTF8String];
     }
 
@@ -348,11 +361,12 @@ Path::DeleteFile() const
         bRet = [localFileManager removeItemAtPath:filePath error:nil];
         if (!bRet)
             SetFileAttributes(0777); // set permission
-        bRet = [localFileManager removeItemAtPath:filePath error:nil];
+        if (!bRet)
+            bRet = [localFileManager removeItemAtPath:filePath error:nil];
         if (!bRet)
             SetFileAttributes(0); // remove read-only
-        bRet = [localFileManager removeItemAtPath:filePath error:nil];
-
+        if (!bRet)
+            bRet = [localFileManager removeItemAtPath:filePath error:nil];
     }
     
 	return bRet;
@@ -486,6 +500,26 @@ bool Path::Move(const Path & inNewLocation) const
     }
     return bSuccess;
 }
+bool Path::CopyFile(const Path &newFilePath) const
+{
+    if (IsDir())
+        return false;
+    if (!Exists())
+        return false;
+    Path inNewLocation(newFilePath);
+    if (newFilePath.Exists()) {
+        if (newFilePath.IsDir())
+            inNewLocation =  newFilePath.Append(FileName());
+    }
+    if (inNewLocation.Exists())
+        inNewLocation.DeleteFile();
+    bool bSuccess(false);
+    @autoreleasepool {
+        bSuccess = [[NSFileManager defaultManager] copyItemAtPath:[NSString stringWithUTF8String:c_str()] toPath:[NSString stringWithUTF8String:inNewLocation.c_str()] error:nil];
+    }
+    return bSuccess;
+}
+
 
 lstring WildCardToRegExp(LPCTSTR wildCard)
 {
@@ -560,7 +594,7 @@ Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR ex
 	m_pUserParam = pUserParam;
 	mFindCallBack = fcb;
 }
-int Finder::StartFind(const lstring &dir)
+int Finder::StartFind(const Path &dir)
 {
 	int c = 0;
     @autoreleasepool {
@@ -575,7 +609,7 @@ int Finder::StartFind(const lstring &dir)
         NSDirectoryEnumerator *dirEnum = [localFileManager enumeratorAtURL:[NSURL fileURLWithPath: [NSString stringWithUTF8String:dir.c_str()] isDirectory:!bSrcIsFile] includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsSubdirectoryDescendants errorHandler:nil];
         
         if (!file)
-            file = [dirEnum nextObject];
+            file = ((NSURL*)[dirEnum nextObject]).path.lastPathComponent;
         if (file != nil || bSrcIsFile) {
             do {
                 lstring fileName([file UTF8String]);
@@ -599,12 +633,13 @@ int Finder::StartFind(const lstring &dir)
                         && fcbRetVal != FCBRV_SKIPDIR) {
                         c += StartFind(filePath);
                         fd.pFindData = NULL;
+                        fd.fileMatched = false;
                         mFindCallBack(fd, m_pUserParam);
                     }
                     if (bMatched)
                         c++;
                 }
-            } while ((file = [dirEnum nextObject]));
+            } while ((file = ((NSURL*)[dirEnum nextObject]).path.lastPathComponent));
         }
     }
 	return c;

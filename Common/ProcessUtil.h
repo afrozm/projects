@@ -5,8 +5,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-
 #endif // _WIN32
+#include "Common.h"
 
 namespace ProcessUtil {
 
@@ -29,4 +29,6 @@ namespace ProcessUtil {
 
     void Sleep(unsigned milliSeconds);
     unsigned long long GetTickCount();
+
+    DWORD GetProcessExePath(DWORD pid, LPTSTR outPath, DWORD nSize);
 }

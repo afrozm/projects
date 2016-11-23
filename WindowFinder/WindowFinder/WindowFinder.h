@@ -15,6 +15,9 @@
 // See WindowFinder.cpp for the implementation of this class
 //
 
+#define WM_WINDOW_ITER_OP WM_USER+0x125
+
+
 class CWindowFinderApp : public CWinApp
 {
 public:

@@ -1,5 +1,6 @@
 #pragma once
 #include <time.h>
+#include "Common.h"
 
 lstring GetDateTimeFormat(struct tm &t, LPCTSTR fmt = NULL);
 lstring GetDateTimeFormat(unsigned time, LPCTSTR fmt = NULL);
