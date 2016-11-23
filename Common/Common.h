@@ -47,9 +47,13 @@ typedef wchar_t TCHAR;
 typedef char TCHAR;
 #define lstrcmpi strcasecmp
 #define _stricmp strcasecmp
+#define lstrcpy strcpy
 #define lstrlen strlen
 #define lstrcat strcat
 #define _tprintf printf
+#define _vsctprintf(m,a) vsnprintf(NULL, 0, m, a)
+#define _vstprintf_s vsnprintf
+#define _tcstok_s strtok_r
 #endif
 
 #define _TCHAR TCHAR

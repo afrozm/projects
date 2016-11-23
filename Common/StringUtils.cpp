@@ -2,7 +2,9 @@
 #include "StringUtils.h"
 #include <algorithm>
 #include <regex>
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 lstring StringUtils::ToLower(const lstring &inStr)
 {
@@ -113,12 +115,14 @@ std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
     std::string sRet;
     if (unicodeString != NULL && unicodeString[0])
     {
+#ifdef _WIN32
         int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, 0, 0, NULL, NULL);
         std::vector<char> vecChar(kMultiByteLength);
         if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
         {
             sRet.assign(&vecChar[0]);
         }
+#endif
     }
     return sRet;
 }
@@ -133,6 +137,7 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
     std::wstring		sRet;
     if (utf8String != NULL && utf8String[0])
     {
+#ifdef _WIN32
         int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, NULL, 0);
         if (kAllocate)
         {
@@ -144,6 +149,7 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
                 sRet.assign(&vecWide[0]);
             }
         }
+#endif
     }
     return sRet;
 }
