@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include <vector>
+#include <algorithm>
 
 #define STR_IS_VALID_PTR(p) (p&&*p)
 #define STR_INR_PTR(p) if(STR_IS_VALID_PTR(p)) ++p
@@ -13,13 +14,36 @@
 
 namespace StringUtils
 {
-    lstring ToLower(const lstring &inStr);
+	template<typename T>
+	std::basic_string<T> ToLower(const std::basic_string<T> &inStr)
+	{
+		std::basic_string<T> outStr(inStr);
+		std::transform(outStr.begin(), outStr.end(), outStr.begin(), ::tolower);
+		return outStr;
+
+	}
     typedef std::vector<lstring> VecString;
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);
     long long getLLfromStr(const TCHAR *str);
     lstring Format(const TCHAR *fmt, ...);
-    void Replace(lstring &inOutStr, const lstring &inFindStr, const lstring &inReplaceStr, size_t pos = 0);
+	template<typename T>
+	void Replace(std::basic_string<T> &inOutStr, const std::basic_string<T> &inFindStr, const std::basic_string<T> &inReplaceStr, size_t pos = 0)
+	{
+		if (inFindStr == inReplaceStr)
+			return;
+		if (inFindStr.empty())
+			return;
+		size_t fl(inFindStr.length()), rl(inReplaceStr.length());
+		while (true)
+		{
+			pos = inOutStr.find(inFindStr, pos);
+			if (pos == std::basic_string<T>::npos)
+				break;
+			inOutStr.replace(pos, fl, inReplaceStr);
+			pos += rl;
+		}
+	}
 
     std::string UnicodeToUTF8(const wchar_t *unicodeString);
     std::wstring UTF8ToUnicode(const char *utf8String);
@@ -30,3 +54,11 @@ namespace StringUtils
     bool WildCardMatch(const lstring &inWildCardExp, const lstring &inStr);
     bool RegMatch(const lstring &inRegExp, const lstring &inStr);
 };
+
+#if defined(_UNICODE) || defined(UNICODE)
+#define UNICODE_TO_UTF8(x) StringUtils::UnicodeToUTF8(x)
+#define UTF8_TO_UNICODE(x) StringUtils::UTF8ToUnicode(x)
+#else
+#define UNICODE_TO_UTF8(x) x
+#define UTF8_TO_UNICODE(x) x
+#endif

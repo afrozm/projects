@@ -54,6 +54,7 @@ typedef char TCHAR;
 #define _vsctprintf(m,a) vsnprintf(NULL, 0, m, a)
 #define _vstprintf_s vsnprintf
 #define _tcstok_s strtok_r
+#define sprintf_s snprintf
 #endif
 
 #define _TCHAR TCHAR

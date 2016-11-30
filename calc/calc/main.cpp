@@ -33,16 +33,6 @@ static lstring getExpression(int argc, LPCTSTR *argv)
     else for (int i=1; i<argc; ++i) {
         outStr += argv[i];
     }
-    if (outStr.length() > 0) {
-        // remove white spaces
-        StringUtils::Replace(outStr, _T(" "), _T(""));
-        // remove tab spaces
-        StringUtils::Replace(outStr, _T("\t"), _T(""));
-        // remove carriage return
-        StringUtils::Replace(outStr, _T("\r"), _T(""));
-        // remove new line
-        StringUtils::Replace(outStr, _T("\n"), _T(""));
-    }
     
     return outStr;
 }
@@ -51,6 +41,11 @@ int _tmain(int argc, const TCHAR * argv[]) {
     lstring expr = getExpression(argc, argv);
     if (expr.empty())
         return 1;
-    
+	Calculator calc;
+	Number result(calc.EvaluateExpression(UNICODE_TO_UTF8(expr).c_str()));
+	if (result.GetType() == Number::Invalid)
+		printf("%s\n", calc.GetErrorString().c_str());
+	else
+		printf("%s\n", result.GetAsString().c_str());
     return 0;
 }

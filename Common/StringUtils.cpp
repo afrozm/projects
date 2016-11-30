@@ -1,19 +1,9 @@
 #include "stdafx.h"
 #include "StringUtils.h"
-#include <algorithm>
 #include <regex>
 #ifdef _WIN32
 #include <windows.h>
 #endif
-
-lstring StringUtils::ToLower(const lstring &inStr)
-{
-    lstring outStr(inStr);
-
-    std::transform(outStr.begin(), outStr.end(), outStr.begin(), ::tolower);
-
-    return outStr;
-}
 
 int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars /* = _T(",") */, bool bIncludeEmpty /* = false */, int maxCount /* = -1 */)
 {
@@ -91,23 +81,6 @@ lstring StringUtils::Format(const TCHAR *msg, ...)
     lstring outStr(buf);
     delete[] buf;
     return outStr;
-}
-
-void StringUtils::Replace(lstring &inOutStr, const lstring &inFindStr, const lstring &inReplaceStr, size_t pos /* = 0 */)
-{
-    if (inFindStr == inReplaceStr)
-        return;
-    if (inFindStr.empty())
-        return;
-    size_t fl(inFindStr.length()), rl(inReplaceStr.length());
-    while (true)
-    {
-        pos = inOutStr.find(inFindStr, pos);
-        if (pos == lstring::npos)
-            break;
-        inOutStr.replace(pos, fl, inReplaceStr);
-        pos += rl;
-    }
 }
 
 std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
