@@ -404,7 +404,7 @@ static Number pow(const VecNumbers &numbers)
 	else if (numbers.size() > 1) {
 		if (numbers[0].GetType() == Number::Double
 			|| numbers[1].GetType() == Number::Double)
-			out = std::pow(numbers[0], numbers[1]);
+			out = std::pow(numbers[0].GetDouble(), numbers[1].GetDouble());
 		else
 		{
 			out = 1LL;
