@@ -464,6 +464,23 @@ static Number sqrt(const VecNumbers &numbers)
 	return out;
 }
 DEFINE_FUNCTION_OP_CLASS(sqrt, 1)
+static Number d2r(const VecNumbers &numbers)
+{
+	Number out(0LL);
+	if (numbers.size() > 0)
+		out = numbers[0].GetDouble() * PI / 180;
+	return out;
+}
+DEFINE_FUNCTION_OPERATOR_CLASS_EX(d2r, 1, "d2r", "Degrees to radians")
+static Number r2d(const VecNumbers &numbers)
+{
+	Number out(0LL);
+	if (numbers.size() > 0)
+		out = numbers[0].GetDouble() * 180 / PI;
+	return out;
+}
+DEFINE_FUNCTION_OPERATOR_CLASS_EX(r2d, 1, "r2d", "Radians to degrees")
+
 
 #define DEFINE_MATH_FUNCTION_OP1_CLASS(fn)\
 static Number fn(const VecNumbers &numbers)\
@@ -488,6 +505,10 @@ DEFINE_MATH_FUNCTION_OP1_CLASS(tanh)
 DEFINE_MATH_FUNCTION_OP1_CLASS(asinh)
 DEFINE_MATH_FUNCTION_OP1_CLASS(acosh)
 DEFINE_MATH_FUNCTION_OP1_CLASS(atanh)
+
+DEFINE_MATH_FUNCTION_OP1_CLASS(log)
+DEFINE_MATH_FUNCTION_OP1_CLASS(log10)
+DEFINE_MATH_FUNCTION_OP1_CLASS(log2)
 
 
 static Number maxNumber(const VecNumbers &numbers)
@@ -577,6 +598,9 @@ void OperatorManager::Init()
 		OPM_ADD_OPERATOR(exp);
 		OPM_ADD_OPERATOR(sqrt);
 		OPM_ADD_OPERATOR(cbrt);
+		OPM_ADD_OPERATOR(log);
+		OPM_ADD_OPERATOR(log10);
+		OPM_ADD_OPERATOR(log2);
 		OPM_ADD_OPERATOR(maxNumber);
 		OPM_ADD_OPERATOR(minNumber);
 
@@ -593,6 +617,8 @@ void OperatorManager::Init()
 		OPM_ADD_OPERATOR(asinh);
 		OPM_ADD_OPERATOR(acosh);
 		OPM_ADD_OPERATOR(atanh);
+		OPM_ADD_OPERATOR(d2r);
+		OPM_ADD_OPERATOR(r2d);
 
 		// Sort as per longest names
 		std::sort(mOperators.begin(), mOperators.end(), [](Operator *op1, Operator *op2) -> bool
