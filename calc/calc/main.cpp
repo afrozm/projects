@@ -11,23 +11,17 @@
 
 static void printHelp()
 {
-    _tprintf(_T("calc: <expression>\n"));
-    _tprintf(_T("e.g. calc (5+2)*3.4/1.5-2^3\n"));
-    _tprintf(_T("operation: all arithmetic\n"));
-    _tprintf(_T("operation: * or x : multiply\n"));
-    _tprintf(_T("operation: ! : factorial\n"));
-    _tprintf(_T("operation: %% : remainder\n"));
-    _tprintf(_T("operation: ^ : power\n"));
-    _tprintf(_T("operation: sin,cos,tan,sinh,cosh,tanh\n"));
-    _tprintf(_T("operation:  log, e\n"));
-    _tprintf(_T("more to come\n"));
+    printf("calc: <expression>\n");
+    printf("e.g. calc (5+2)*pi/1.5*e-pow(2,3)\n");
+	printf("Operations:\n");
+	printf("%s", OperatorManager::GetInstance().GetDescription().c_str());
 }
 
 static lstring getExpression(int argc, LPCTSTR *argv)
 {
     lstring outStr;
     
-    if (argc < 2 || argv[1] == _T("/?") || argv[1]==_T("-h")) {
+    if (argc < 2 || !lstrcmpi(argv[1], _T("/?")) || !lstrcmpi(argv[1], _T("-h"))) {
         printHelp();
     }
     else for (int i=1; i<argc; ++i) {
@@ -41,11 +35,14 @@ int _tmain(int argc, const TCHAR * argv[]) {
     lstring expr = getExpression(argc, argv);
     if (expr.empty())
         return 1;
+	int ret(0);
 	Calculator calc;
 	Number result(calc.EvaluateExpression(UNICODE_TO_UTF8(expr).c_str()));
-	if (result.GetType() == Number::Invalid)
+	if (result.GetType() == Number::Invalid) {
 		printf("%s\n", calc.GetErrorString().c_str());
+		ret = 2;
+	}
 	else
 		printf("%s\n", result.GetAsString().c_str());
-    return 0;
+    return ret;
 }

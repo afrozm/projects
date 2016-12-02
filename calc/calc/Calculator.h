@@ -56,7 +56,7 @@ Number operator op (const Number & n1, const Number & n2);
 DECLARE_NUMBER_OPERATOR(+)
 DECLARE_NUMBER_OPERATOR(-)
 DECLARE_NUMBER_OPERATOR(*)
-DECLARE_NUMBER_OPERATOR(/ )
+DECLARE_NUMBER_OPERATOR(/)
 DECLARE_NUMBER_OPERATOR(%)
 
 // Logical operators
@@ -82,18 +82,32 @@ typedef std::vector<Number> VecNumbers;
 class Operator
 {
 public:
-	Operator(int nOp = 0, int preced = 0, const char *name = "")
-		: m_nNumberOfOperands(nOp), m_iPrecedence(preced), mName(name) {}
+	Operator(int nOp = 0, int preced = 0, const char *name = "", const char *desc = "")
+		: m_nNumberOfOperands(nOp), m_iPrecedence(preced), mName(name), mDesc(desc) {}
 	int GetNumberOfOperands() const { return m_nNumberOfOperands; }
-	virtual Number Operate(const VecNumbers &numbers) const { return Number(""); };
-	virtual const char *Name() const { return mName; };
+	virtual Number Operate(const VecNumbers &numbers) const { return Number(""); }
+	virtual const char *Name() const { return mName; }
+	virtual const char *Desc() const { return mDesc && *mDesc ? mDesc : mName; }
 	// http://en.cppreference.com/w/cpp/language/operator_precedence
 	virtual unsigned Precendence() const { return m_iPrecedence; }
 private:
 	int m_nNumberOfOperands, m_iPrecedence;
-	const char *mName;
+	const char *mName, *mDesc;
 };
-
+class OperatorManager
+{
+public:
+	static OperatorManager& GetInstance();
+	const Operator* GetOperator(const char *str, bool bUnary = false);
+	const Operator* GetNoOperator() const { return &mNoOp; }
+	std::string GetDescription();
+	~OperatorManager();
+private:
+	OperatorManager() {}
+	void Init();
+	std::vector<Operator*> mOperators;
+	Operator mNoOp;
+};
 
 
 class Calculator {
