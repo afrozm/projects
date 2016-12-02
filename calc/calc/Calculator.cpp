@@ -700,8 +700,10 @@ bool Calculator::InfixToPostFix(const std::string & inExpStr, VecExpressionEntit
 		const Operator *op = opManager.GetOperator(pExpr);
 		if (op) {
 			incrL = strlen(op->Name());
-			if (op->GetNumberOfOperands() == 0) // Constants - push
+			if (op->GetNumberOfOperands() == 0) {// Constants - push
 				outPostFixExpression.push_back(op->Operate(VecNumbers()));
+				bPrebIsOp = false;
+			}
 			else {
 				// Unary minus
 				if (op->Name()[0] == '-') {
@@ -716,8 +718,8 @@ bool Calculator::InfixToPostFix(const std::string & inExpStr, VecExpressionEntit
 				}
 				if (op->Name() != std::string(","))
 					opStack.push_back(op);
+				bPrebIsOp = true;
 			}
-			bPrebIsOp = true;
 		}
 		else if (*pExpr == '(') {
 			opStack.push_back(oplp);
