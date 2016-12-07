@@ -99,6 +99,8 @@ typedef std::string lstring;
 
 #include <Strsafe.h>
 
+#define lstrcpyS(d,s) StringCchCopy(d, _countof(d), s)
+
 #ifdef _DEBUG
 //#include <vld.h>
 #endif

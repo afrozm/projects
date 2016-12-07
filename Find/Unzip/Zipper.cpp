@@ -151,7 +151,7 @@ bool CZipper::AddFileToZip(LPCTSTR szFilePath, bool bIgnoreFilePath)
 	// if the file is relative then we need to append the root before opening
 	wchar_t szFullFilePath[MAX_PATH];
 	
-	lstrcpy(szFullFilePath, szFilePath);
+	lstrcpyS(szFullFilePath, szFilePath);
 	PrepareSourcePath(szFullFilePath);
 
 	// if the file is a fullpath then remove the root path bit
@@ -171,15 +171,15 @@ bool CZipper::AddFileToZip(LPCTSTR szFilePath, bool bIgnoreFilePath)
 			return false;
 
 		// else
-		lstrcpy(szFileName, szFilePath + lstrlen(m_szRootFolder));
+		lstrcpyS(szFileName, szFilePath + lstrlen(m_szRootFolder));
 	}
 	else // relative path
 	{
 		// if the path begins with '.\' then remove it
 		if (wcsstr(szFilePath, L".\\") == szFilePath)
-			lstrcpy(szFileName, szFilePath + 2);
+			lstrcpyS(szFileName, szFilePath + 2);
 		else
-			lstrcpy(szFileName, szFilePath);
+			lstrcpyS(szFileName, szFilePath);
 	}
 
 	// save file attributes
@@ -272,7 +272,7 @@ bool CZipper::AddFileToZip(LPCTSTR szFilePath, LPCTSTR szRelFolderPath)
 	// if the file is relative then we need to append the root before opening
 	wchar_t szFullFilePath[MAX_PATH];
 	
-	lstrcpy(szFullFilePath, szFilePath);
+	lstrcpyS(szFullFilePath, szFilePath);
 	PrepareSourcePath(szFullFilePath);
 
 	// save file attributes and time
@@ -361,7 +361,7 @@ bool CZipper::AddFolderContentsToZip(LPCTSTR szFolderPath, bool bIgnoreFilePath)
 	// if the path is relative then we need to append the root before opening
 	wchar_t szFullPath[MAX_PATH];
 	
-	lstrcpy(szFullPath, szFolderPath);
+	lstrcpyS(szFullPath, szFolderPath);
 	PrepareSourcePath(szFullPath);
 
 	// if the folder is a fullpath then remove the root path bit
@@ -378,7 +378,7 @@ bool CZipper::AddFolderContentsToZip(LPCTSTR szFolderPath, bool bIgnoreFilePath)
 			return false;
 		
 		// else
-		lstrcpy(szFolderName, szFullPath + lstrlen(m_szRootFolder));
+		lstrcpyS(szFolderName, szFullPath + lstrlen(m_szRootFolder));
 	}
 
 	// build searchspec
@@ -427,7 +427,7 @@ bool CZipper::AddFolderToZip(LPCTSTR szFolderPath, bool bIgnoreFilePath)
 	// if the path is relative then we need to append the root before opening
 	wchar_t szFullPath[MAX_PATH];
 	
-	lstrcpy(szFullPath, szFolderPath);
+	lstrcpyS(szFullPath, szFolderPath);
 	PrepareSourcePath(szFullPath);
 
 	// always add folder first
@@ -463,7 +463,7 @@ bool CZipper::AddFolderToZip(LPCTSTR szFolderPath, bool bIgnoreFilePath)
 			return false;
 		
 		// else
-		lstrcpy(szFolderName, szFullPath + lstrlen(m_szRootFolder));
+		lstrcpyS(szFolderName, szFullPath + lstrlen(m_szRootFolder));
 	}
 	
 	// folders are denoted by a trailing '\\'
@@ -615,7 +615,7 @@ void CZipper::PrepareSourcePath(LPTSTR szPath)
 	if (!bFullPath)
 	{
 		wchar_t szTemp[MAX_PATH];
-		lstrcpy(szTemp, szPath);
+		lstrcpyS(szTemp, szPath);
 
 		_wmakepath_s(szPath, MAX_PATH, NULL, m_szRootFolder, szTemp, NULL);
 	}

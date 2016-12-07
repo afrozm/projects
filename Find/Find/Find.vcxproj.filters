@@ -285,9 +285,6 @@
     <ClInclude Include="Percentage.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="STLUtils.h">
-      <Filter>Header Files\Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="StringMatcher.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>

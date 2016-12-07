@@ -52,7 +52,7 @@ void CExplorerPreviewManager::LoadSupportedExts()
 				}
 				else {
 					if( ERROR_SUCCESS == RegQueryValue(HKEY_CLASSES_ROOT,csExt,wcData, &cbData ) ) {
-						lstrcpy(wcName, wcData);
+						lstrcpyS(wcName, wcData);
 					}
 				}
 			}

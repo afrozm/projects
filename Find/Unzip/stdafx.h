@@ -16,8 +16,9 @@
 
 #include <afx.h>
 #include <afxwin.h>         // MFC core and standard components
-
+#include <Strsafe.h>
 
 
 typedef CArray<CString, CString&> CArrayCString;
 
+#define lstrcpyS(d,s) StringCchCopy(d, _countof(d), s)
