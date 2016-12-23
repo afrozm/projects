@@ -27,7 +27,7 @@ int Database::Close()
 int Database::Open(const char *dbFile)
 {
 	int retVal = 0;
-	if (mbReadOnly)
+	if (IsReadOnly())
 		sqlite3_open_v2(dbFile, &db, SQLITE_OPEN_READONLY, NULL);
 	else
 		sqlite3_open(dbFile, &db);

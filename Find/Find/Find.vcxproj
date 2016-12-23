@@ -113,6 +113,8 @@
     <None Include="res\fullscreen.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\BinaryFind.h" />
+    <ClInclude Include="..\..\Common\DataReader.h" />
     <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.h" />
     <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.h" />
     <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedHeaderCtlrl.h" />
@@ -123,7 +125,10 @@
     <ClInclude Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.h" />
     <ClInclude Include="..\..\Common\MFC\UtilControls\LogEditCtrl.h" />
     <ClInclude Include="..\..\Common\MFC\UtilControls\ResizeBar.h" />
+    <ClInclude Include="..\..\Common\Property.h" />
     <ClInclude Include="..\..\Common\StdUtils.h" />
+    <ClInclude Include="..\..\Common\StringUtils.h" />
+    <ClInclude Include="..\..\Common\TextReader.h" />
     <ClInclude Include="..\Utilites\AutoLock.h" />
     <ClInclude Include="..\Utilites\CountTimer.h" />
     <ClInclude Include="..\Utilites\FileIconMgr.h" />
@@ -134,11 +139,13 @@
     <ClInclude Include="..\Utilites\RefCountObj.h" />
     <ClInclude Include="..\Utilites\SocketUitl.h" />
     <ClInclude Include="..\Utilites\SystemUtils.h" />
-    <ClInclude Include="..\Utilites\TextReader.h" />
+    <ClInclude Include="..\Utilites\WordParser.h" />
     <ClInclude Include="CmdEditCtrl.h" />
     <ClInclude Include="CombinedButton.h" />
     <ClInclude Include="ComboBoxDragDrop.h" />
     <ClInclude Include="CommitResultTimer.h" />
+    <ClInclude Include="ContentSearchManager.h" />
+    <ClInclude Include="DBCommiter.h" />
     <ClInclude Include="DupFileFilter.h" />
     <ClInclude Include="FileContentFinder.h" />
     <ClInclude Include="FileDialogFind.h" />
@@ -201,6 +208,8 @@
     <ClInclude Include="TreeCtrlIterator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\BinaryFind.cpp" />
+    <ClCompile Include="..\..\Common\DataReader.cpp" />
     <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.cpp" />
     <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.cpp" />
     <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedHeaderCtlrl.cpp" />
@@ -211,7 +220,10 @@
     <ClCompile Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.cpp" />
     <ClCompile Include="..\..\Common\MFC\UtilControls\LogEditCtrl.cpp" />
     <ClCompile Include="..\..\Common\MFC\UtilControls\ResizeBar.cpp" />
+    <ClCompile Include="..\..\Common\Property.cpp" />
     <ClCompile Include="..\..\Common\StdUtils.cpp" />
+    <ClCompile Include="..\..\Common\StringUtils.cpp" />
+    <ClCompile Include="..\..\Common\TextReader.cpp" />
     <ClCompile Include="..\Utilites\AutoLock.cpp" />
     <ClCompile Include="..\Utilites\CountTimer.cpp" />
     <ClCompile Include="..\Utilites\FileIconMgr.cpp" />
@@ -222,11 +234,13 @@
     <ClCompile Include="..\Utilites\RefCountObj.cpp" />
     <ClCompile Include="..\Utilites\SocketUtil.cpp" />
     <ClCompile Include="..\Utilites\SystemUtils.cpp" />
-    <ClCompile Include="..\Utilites\TextReader.cpp" />
+    <ClCompile Include="..\Utilites\WordParser.cpp" />
     <ClCompile Include="CmdEditCtrl.cpp" />
     <ClCompile Include="CombinedButton.cpp" />
     <ClCompile Include="ComboBoxDragDrop.cpp" />
     <ClCompile Include="CommitResultTimer.cpp" />
+    <ClCompile Include="ContentSearchManager.cpp" />
+    <ClCompile Include="DBCommiter.cpp" />
     <ClCompile Include="DupFileFilter.cpp" />
     <ClCompile Include="FileContentFinder.cpp" />
     <ClCompile Include="FileDialogFind.cpp" />

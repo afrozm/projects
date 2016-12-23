@@ -53,7 +53,7 @@ private:
 class PropertySetStreamer
 {
 public:
-    PropertySetStreamer();
+    PropertySetStreamer(LPCTSTR sep=_T("\r\n"));
     ~PropertySetStreamer();
     bool ReadFromFile(const lstring &inFile);
     bool ReadFromString(const lstring &inString);
@@ -63,6 +63,6 @@ public:
     bool WrtieToString(lstring &outString);
 private:
     PropertySet *m_pPropertySet;
-    lstring mCurrentSection;
+    lstring mCurrentSection, mPropSep;
 };
 

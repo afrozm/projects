@@ -22,7 +22,7 @@ int CFileContentFinder::Find(LPCTSTR fileName, LPCTSTR matchString)
 	CFileContentFinderCallback::MatchData md;
 	CTextLineReader textReader(fileName);
 	while (true) {
-		md.strLine = textReader.ReadLine();
+		md.strLine = textReader.ReadLine().c_str();
 		if (md.strLine.IsEmpty())
 			break;
 		md.bMatched = m_pStringMatcher->Match(md.strLine);

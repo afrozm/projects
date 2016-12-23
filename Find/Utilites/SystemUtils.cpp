@@ -71,31 +71,31 @@ bool SystemUtils::FileReadLine(FILE *inFile, CString &line)
 	return bRet;
 }
 
-std::string SystemUtils::UnicodeToUTF8(const wchar_t *unicodeString)
+std::string SystemUtils::UnicodeToUTF8(const wchar_t *unicodeString, int len /* = -1 */)
 {
 	std::string sRet;
 	if (unicodeString != NULL && unicodeString[0])
 	{
-		int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, 0, 0, NULL, NULL);
+		int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, len, 0, 0, NULL, NULL);
 		std::vector<char> vecChar(kMultiByteLength);
-		if( WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
+		if( WideCharToMultiByte(CP_UTF8, 0, unicodeString, len, &vecChar[0], (int)vecChar.size(), NULL, NULL))
 		{
 			sRet.assign(&vecChar[0], vecChar.size());
 		}
 	}
 	return sRet;	
 }
-std::wstring SystemUtils::UTF8ToUnicode(const char *utf8String)
+std::wstring SystemUtils::UTF8ToUnicode(const char *utf8String, int len/* =-1 */)
 {
 	std::wstring		sRet;
 	if (utf8String != NULL && utf8String[0])
 	{
-		int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, NULL, 0);
+		int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, len, NULL, 0);
 		if (kAllocate)
 		{
 			std::vector<wchar_t> vecWide(kAllocate);
 			
-			int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], (int)vecWide.size());
+			int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, len, &vecWide[0], (int)vecWide.size());
 			if (kCopied)
 			{
 				sRet.assign(&vecWide[0], vecWide.size());
@@ -123,6 +123,7 @@ CString SystemUtils::UTF8ToUnicodeCString(const char *utf8String)
 	}
 	return sRet;
 }
+
 void SystemUtils::FindAndReplace(CString &inStr, const CString &findStr, const CString &replaceStr)
 {
 	int start = 0;
@@ -279,6 +280,18 @@ CString SystemUtils::CombineString(const CArrayCString &inStringArray, LPCTSTR s
 		outStr.Delete(outStr.GetLength()-sepLen, sepLen);
 	}
 	return outStr;
+}
+
+CString SystemUtils::StringFindOneOf(const CString &inStr, const CString &inFindStr)
+{
+    CString outString;
+
+    INT_PTR idx = inStr.FindOneOf(inFindStr);
+
+    if (idx >= 0)
+        outString = ((LPCTSTR)inStr) + idx;
+
+    return outString;
 }
 
 bool SystemUtils::IsCompleteWord(const CString& inString, int pos, int len)

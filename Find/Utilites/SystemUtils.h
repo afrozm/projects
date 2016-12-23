@@ -10,8 +10,8 @@ namespace SystemUtils
 {
 	bool GetSpecialFolderPath(int inFolderID, bool inCreate, std::wstring &outPath);
 	bool FileReadLine(FILE *inFile, CString &line);
-	std::string UnicodeToUTF8(const wchar_t *unicodeString);
-	std::wstring UTF8ToUnicode(const char *utf8String);
+	std::string UnicodeToUTF8(const wchar_t *unicodeString, int len = -1);
+	std::wstring UTF8ToUnicode(const char *utf8String, int len=-1);
 	CString UTF8ToUnicodeCString(const char *utf8String);
 	void FindAndReplace(CString &inStr, const CString &findStr, const CString &replaceStr);
 	CString GetReadableSize(LONGLONG size);
@@ -28,6 +28,7 @@ namespace SystemUtils
 	INT_PTR TimeToInt(const CTime &time);
 	INT_PTR SplitString(const CString& inString, CArrayCString &outStrings, LPCTSTR sep = _T(","));
 	CString CombineString(const CArrayCString &inStringArray, LPCTSTR sep = _T(","), INT_PTR startIndex = 0, INT_PTR endIndex = -1);
+    CString StringFindOneOf(const CString &inStr, const CString &inFindStr);
 	BOOL GetFileVersion(LPCTSTR filePath, DWORD &outFileVersionMS, DWORD &outFileVersionLS);
 	void LogMessage(const wchar_t *msg, ...);
 	void LogMessage(const char *msg, ...);

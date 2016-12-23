@@ -70,6 +70,12 @@
     <Filter Include="Header Files\UtilControls">
       <UniqueIdentifier>{3d7ff006-67d9-4dd4-9aa2-1ec08b6e5aea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{73e2ca77-29ab-4b92-a4be-628adef131b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common">
+      <UniqueIdentifier>{33e5ca3d-05ad-4f0d-aeea-93bc67f5984b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -188,9 +194,6 @@
     </ClInclude>
     <ClInclude Include="Preview\ExplorerPreviewManager.h">
       <Filter>Header Files\Preview</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Utilites\TextReader.h">
-      <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Preview\DialogPreviewText.h">
       <Filter>Header Files\Preview</Filter>
@@ -342,6 +345,30 @@
     <ClInclude Include="..\..\Common\StdUtils.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ContentSearchManager.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="DBCommiter.h">
+      <Filter>Header Files\Find\Sever</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utilites\WordParser.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\DataReader.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\BinaryFind.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Property.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\StringUtils.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\TextReader.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Preview\CAcroAXDocShim.cpp">
@@ -403,9 +430,6 @@
     </ClCompile>
     <ClCompile Include="Preview\ExplorerPreviewManager.cpp">
       <Filter>Source Files\Preview</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Utilites\TextReader.cpp">
-      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="Preview\DialogPreviewText.cpp">
       <Filter>Source Files\Preview</Filter>
@@ -556,6 +580,30 @@
     </ClCompile>
     <ClCompile Include="..\..\Common\StdUtils.cpp">
       <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentSearchManager.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="DBCommiter.cpp">
+      <Filter>Source Files\Find\Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utilites\WordParser.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\BinaryFind.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\DataReader.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\Property.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\StringUtils.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\TextReader.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -3,6 +3,13 @@
 
 ///////////////////////////// DataReader /////////////////////////////////////////////
 
+size_t DataReader::ReadData(BinaryData &outData, size_t bytesToRead /*= -1*/)
+{
+    bytesToRead = Read(outData, outData.Size(), bytesToRead);
+    outData.SetDataSize(bytesToRead);
+    return bytesToRead;
+}
+
 ///////////////////////////// BinaryDataReader /////////////////////////////////////////////
 
 BinaryDataReader::BinaryDataReader()

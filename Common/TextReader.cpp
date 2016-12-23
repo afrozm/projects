@@ -54,7 +54,7 @@ BOOL CTextReader::SetInput(LPCTSTR fileName /* = NULL */, const BinaryData *pDat
             mFileEncoding = FileEncoding_UNICODE_BIG;
         SetFilePos(0);
     }
-    return TRUE;
+    return IsValidTextFile();
 }
 
 LONGLONG CTextReader::SetFilePos(LONGLONG filePos, DWORD dwMoveMethod)
@@ -163,6 +163,7 @@ lstring CTextReader::ReadLineUTF8()
 	}
 	line[c] = 0;
 	if (c > 0) {
+        str += StringUtils::UTF8ToUnicode(line, c);
 		TCHAR *convString = (TCHAR *)line;
 		len = MultiByteToWideChar(CP_UTF8, 0, line, c, NULL, 0);
 		if (len > 0) {
@@ -178,6 +179,23 @@ lstring CTextReader::ReadLineUTF8()
 	return str;
 }
 
+BOOL CTextReader::IsValidTextFile()
+{
+    if (mFileEncoding == FileEncoding_ANSI) {
+        CAutoFilePos afp(this);
+        BinaryData data(NULL, 256);
+        m_pDataReader->ReadData(data);
+        for (size_t i = 0; i < data.DataSize(); ++i) {
+            char ch(data[i]);
+            if (ch < 20 && ch != '\r' && ch != '\n' && ch != '\t') {
+                mFileEncoding = FileEncoding_Invalid;
+                break;
+            }
+        }
+    }
+    return mFileEncoding != FileEncoding_Invalid;
+}
+
 int CTextReader::LineCount()
 {
 	CAutoFilePos autoFilePos(this);
@@ -187,4 +205,85 @@ int CTextReader::LineCount()
 		lineCount++;
 
 	return lineCount;
+}
+
+lstring CTextReader::Read(DWORD nBytes)
+{
+    lstring outStr;
+    BinaryData buffer(NULL, nBytes + 2 * sizeof(TCHAR));
+    char *pBuffer = (char *)(void *)buffer;
+    nBytes = (DWORD)m_pDataReader->Read(pBuffer, nBytes, nBytes);
+    if (nBytes > 0) {
+        TCHAR *convString = (TCHAR *)pBuffer;
+        {
+            TCHAR *lastChar = (TCHAR*)(pBuffer + nBytes);
+            lastChar[0] = 0;
+            lastChar[1] = 0;
+        }
+        switch (mFileEncoding) {
+        case FileEncoding_ANSI:
+        case FileEncoding_UTF8:
+        {
+            outStr = StringUtils::UTF8ToUnicode(pBuffer);
+            break;
+        }
+        case FileEncoding_UNICODE_BIG:
+            while (*convString) {
+                *convString = *convString << 8 | *convString >> 8;
+                ++convString;
+            }
+        case FileEncoding_UNICODE:
+        default:
+            outStr = convString;
+            break;
+        }
+    }
+    delete[]pBuffer;
+    return outStr;
+}
+
+
+CTextLineReader::CTextLineReader(LPCTSTR fileName /*= NULL*/)
+    : CTextReader(fileName), m_iStartPos(0), m_iLineCount(0)
+{
+
+}
+
+lstring CTextLineReader::ReadLine()
+{
+    lstring outStr;
+    while (true) {
+        LPCTSTR pBuffer(mReadBuffer.c_str());
+        pBuffer += m_iStartPos;
+        TCHAR pCH(0);
+        while (IS_LINE_CHAR(*pBuffer)) {
+            if (!(*pBuffer == '\n' && pCH == '\r'))
+                m_iLineCount++;
+            pCH = *pBuffer;
+            ++pBuffer;
+        }
+        LPCTSTR startBuf(pBuffer);
+        STR_SKIP_TILL_LINE(pBuffer);
+        int iLen((int)(pBuffer - startBuf));
+        if (iLen > 0) {
+            outStr += lstring(startBuf, iLen);
+            m_iStartPos = (int)(pBuffer - (LPCTSTR)mReadBuffer.c_str());
+            break;
+        }
+        else {
+            m_iStartPos = 0;
+            mReadBuffer = Read();
+            if (mReadBuffer.empty()) {
+                break;
+            }
+        }
+    }
+    return outStr;
+}
+
+BOOL CTextLineReader::SetFile(LPCTSTR fileName /*= NULL*/)
+{
+    m_iStartPos = m_iLineCount = 0;
+    mReadBuffer.clear();
+    return __super::SetFile(fileName);
 }

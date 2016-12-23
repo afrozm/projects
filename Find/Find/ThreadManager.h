@@ -24,7 +24,7 @@ class ThreadManager
 {
 public:
 	static ThreadManager& GetInstance();
-	bool CreateThread(ThreadProcFn proc, LPVOID pUserData = NULL, int iThreadClass = 0, LPDWORD outThreadID = NULL);
+	bool CreateThread(ThreadProcFn proc, LPVOID pUserData = NULL, int iThreadClass = 0, LPDWORD outThreadID = NULL, LPCTSTR threadName = NULL);
 	bool RemoveThread(DWORD threadID);
 	bool IsValidThread(DWORD threadID);
 	void TerminateThreads(int iThreadClass = -1, DWORD dwMilliSeconds = 0);
@@ -41,6 +41,9 @@ public:
 	ULONGLONG GetThreadTime(DWORD threadID);
 	int IterateThread(ThreadIteratorFn iterFn, LPVOID pUserData = NULL);
 	bool TerminateThread(DWORD threadID);
+    void SetThreadName(LPCTSTR threadName, DWORD threadID = -1);
+    LPCTSTR GetThreadName(DWORD threadID = -1);
+    const bool& GetIsTerminatedFlag();
 private:
 	CReadWriteLock& GetLock() { return mArrayLocker;}
 	ThreadManager(void);

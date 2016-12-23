@@ -165,8 +165,8 @@ Property* PropertySet::GetPropertyInt(const lstring & inSection)
 
 ////////////////////////////// PropertySetStreamer //////////////////////////////
 
-PropertySetStreamer::PropertySetStreamer()
-    : m_pPropertySet(NULL)
+PropertySetStreamer::PropertySetStreamer(LPCTSTR sep/* =_T("") */)
+    : m_pPropertySet(NULL), mPropSep(sep ? sep : _T("\r\n"))
 {
 }
 
@@ -214,7 +214,7 @@ bool PropertySetStreamer::ReadFromString(const lstring & inString)
     bool bRead(false);
     if (m_pPropertySet != NULL) {
         StringUtils::VecString lines;
-        StringUtils::SplitString(lines, inString, _T("\r\n"));
+        StringUtils::SplitString(lines, inString, mPropSep);
         for (auto line : lines) {
             StringUtils::TrimString(line);
             RemoveComment(line);

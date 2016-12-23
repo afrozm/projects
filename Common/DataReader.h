@@ -7,6 +7,7 @@ class DataReader
 public:
     // return number of bytes read or -1 for no more data
     virtual size_t Read(void *pBuffer, size_t bufferSize, size_t bytesToRead = -1) = 0;
+    size_t ReadData(BinaryData &outData, size_t bytesToRead = -1);
     virtual long long SetPointer(long long offset = 0, int seekType = SEEK_SET) = 0;
     virtual long long GetPointer() const = 0;
     virtual long long GetSize() = 0;

@@ -189,10 +189,6 @@ BOOL CFindApp::InitInstance()
 		mbIsServer = true;
 		CNamedLock namedLock(_T("Global\\FindServer"));
 		if (namedLock.IsLocked()) {
-			{
-				FindDataBase fdbServer(FDB_CacheDatabase);
-				fdbServer.LoadSchema();
-			}
 			// Set ServerPath to current exe
 			{
 				TCHAR moduleName[1024];

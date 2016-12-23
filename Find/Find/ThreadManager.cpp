@@ -3,20 +3,24 @@
 #include "AutoLock.h"
 #include "LoggerFactory.h"
 #include "CountTimer.h"
+#include "StringUtils.h"
 
 class TMThreadData {
 public:
-	TMThreadData(ThreadProcFn threadFn, LPVOID pUserData = NULL, int iThreadClass = 0);
-	LPVOID GetUserData() {return m_pUserData;}
-	bool IsTerminated() {return mbIsTerminated;}
+	TMThreadData(ThreadProcFn threadFn, LPVOID pUserData = NULL, int iThreadClass = 0, LPCTSTR threadName = NULL);
+	LPVOID GetUserData() const {return m_pUserData;}
+	bool IsTerminated() const {return mbIsTerminated;}
 	void Terminate() {mbIsTerminated=true;}
+    const bool& GetIsTerminated() const { return mbIsTerminated; }
 	ThreadProcFn GetThreadProcFn() const {return mThreadProcFn;}
 	int GetThreadClass() const {return miThreadClass;}
 	void SetNativeThreadPtr(NativeThreadPtr nativeThreadPtr) { mThreadPtr=nativeThreadPtr;}
 	NativeThreadPtr GetNativeThreadPtr() const {return mThreadPtr;}
 	ULONGLONG GetThreadTime() const;
 	CString GetStr() const;
-	DWORD GetThreadId() const {return GetNativeThreadPtr()->m_nThreadID;}
+	DWORD GetThreadId() const {return GetNativeThreadPtr() ? GetNativeThreadPtr()->m_nThreadID : 0;}
+    void SetThreadName(LPCTSTR threadName);
+    LPCTSTR GetThreadName() const;
 private:
 	ThreadProcFn mThreadProcFn;
 	LPVOID m_pUserData;
@@ -24,11 +28,13 @@ private:
 	int miThreadClass;
 	NativeThreadPtr mThreadPtr;
 	ULONGLONG mStartTime;
+    CString mThreadName;
 };
 
-TMThreadData::TMThreadData(ThreadProcFn threadFn, LPVOID pUserData, int iThreadClass)
+TMThreadData::TMThreadData(ThreadProcFn threadFn, LPVOID pUserData /* = NULL */, int iThreadClass /* = 0 */, LPCTSTR threadName /* = NULL */)
 : mThreadProcFn(threadFn), m_pUserData(pUserData), mbIsTerminated(false),
-miThreadClass(iThreadClass), mThreadPtr(NULL), mStartTime(GetTickCount64())
+miThreadClass(iThreadClass), mThreadPtr(NULL), mStartTime(GetTickCount64()),
+mThreadName(threadName ? threadName : _T(""))
 {
 }
 ULONGLONG TMThreadData::GetThreadTime() const
@@ -41,10 +47,53 @@ CString TMThreadData::GetStr() const
 	if (this != NULL) {
 		CountTimer timeTaken;
 		timeTaken.SetTimeDuration(GetThreadTime());
-		retval.Format(_T("ThreadClass: %d Time: %s"), miThreadClass, timeTaken.GetString());
+		retval.Format(_T("ThreadName:%s ThreadClass: %d Time: %s"), mThreadName, miThreadClass, timeTaken.GetString());
 	}
 	else retval = _T("{null}");
 	return retval;
+}
+
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+#pragma pack(push,8)  
+typedef struct tagTHREADNAME_INFO
+{
+    DWORD dwType; // Must be 0x1000.  
+    LPCSTR szName; // Pointer to name (in user addr space).  
+    DWORD dwThreadID; // Thread ID (-1=caller thread).  
+    DWORD dwFlags; // Reserved for future use, must be zero.  
+} THREADNAME_INFO;
+#pragma pack(pop)  
+static void SetThreadName(DWORD dwThreadID, const char* threadName) {
+    if (dwThreadID) {
+        THREADNAME_INFO info;
+        info.dwType = 0x1000;
+        info.szName = threadName;
+        info.dwThreadID = dwThreadID;
+        info.dwFlags = 0;
+#pragma warning(push)  
+#pragma warning(disable: 6320 6322)  
+        __try {
+            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+        }
+#pragma warning(pop)
+    }
+}
+
+void TMThreadData::SetThreadName(LPCTSTR threadName)
+{
+    if (threadName == NULL)
+        threadName = _T("");
+    mThreadName = threadName;
+    DWORD threadID(GetThreadId());
+    if (threadID)
+        ::SetThreadName(threadID, StringUtils::UnicodeToUTF8(threadName).c_str());
+}
+
+LPCTSTR TMThreadData::GetThreadName() const
+{
+    return mThreadName;
 }
 
 ThreadManager::ThreadManager(void)
@@ -78,17 +127,19 @@ static DWORD WINAPI ThreadManagerThreadProc(LPVOID lpParameter)
 	ThreadManager::GetInstance().RemoveThread(pThread->GetThreadId());
 	return 0;
 }
-bool ThreadManager::CreateThread(ThreadProcFn threadProcFn, LPVOID pUserData /* = NULL */, int iThreadClass /* = 0 */, LPDWORD outThreadID /* = NULL */)
+bool ThreadManager::CreateThread(ThreadProcFn threadProcFn, LPVOID pUserData /* = NULL */, int iThreadClass /* = 0 */, LPDWORD outThreadID /* = NULL */, LPCTSTR threadName /* = NULL */)
 {
 	if (iThreadClass < 0)
 		iThreadClass = 0;
 	if (outThreadID != NULL)
 		*outThreadID = 0;
-	TMThreadData *pThread = new TMThreadData(threadProcFn, pUserData, iThreadClass);
+	TMThreadData *pThread = new TMThreadData(threadProcFn, pUserData, iThreadClass, threadName);
 	NativeThreadPtr nativeThreadPtr = AfxBeginThread((AFX_THREADPROC)ThreadManagerThreadProc, pThread, 0, 0, CREATE_SUSPENDED);
 	bool bSuccess(false);
 	if (nativeThreadPtr != NULL) {
 		pThread->SetNativeThreadPtr(nativeThreadPtr);
+        if (threadName && *threadName)
+            pThread->SetThreadName(threadName);
 		{
 			//CAutoLock autoLock(mArrayLocker.GetWriteLock());
 			mArrayLocker.LockWrite();
@@ -283,9 +334,47 @@ ULONGLONG ThreadManager::GetThreadTime( DWORD threadID )
 bool ThreadManager::TerminateThread( DWORD threadID )
 {
 	TMThreadData *pThread(NULL);
-	CAutoReadLock autoLock(mArrayLocker);
-	mThreads.Lookup(threadID, pThread);
-	if (pThread)
-		pThread->Terminate();
+    if (threadID) {
+        CAutoReadLock autoLock(mArrayLocker);
+        mThreads.Lookup(threadID, pThread);
+        if (pThread)
+            pThread->Terminate();
+    }
 	return pThread != NULL;
+}
+
+void ThreadManager::SetThreadName(LPCTSTR threadName, DWORD threadID)
+{
+    if ((int)threadID < 0)
+        threadID = GetCurrentThreadId();
+    TMThreadData *pThread(NULL);
+    CAutoReadLock autoLock(mArrayLocker);
+    mThreads.Lookup(threadID, pThread);
+    if (pThread)
+        pThread->SetThreadName(threadName);
+}
+
+LPCTSTR ThreadManager::GetThreadName(DWORD threadID)
+{
+    if ((int)threadID < 0)
+        threadID = GetCurrentThreadId();
+    TMThreadData *pThread(NULL);
+    CAutoReadLock autoLock(mArrayLocker);
+    mThreads.Lookup(threadID, pThread);
+    if (pThread)
+        return pThread->GetThreadName();
+    return NULL;
+}
+
+const bool& ThreadManager::GetIsTerminatedFlag()
+{
+    static const bool sbIsTerminatedFlag(true);
+
+    TMThreadData *pThread(NULL);
+    CAutoReadLock autoLock(mArrayLocker);
+    mThreads.Lookup(GetCurrentThread(), pThread);
+    if (pThread)
+        return pThread->GetIsTerminated();
+
+    return sbIsTerminatedFlag;
 }
