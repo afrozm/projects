@@ -14,6 +14,7 @@ struct FileTableEntry
     const CString& GetFileID(bool bComputeIfEmpty = false);
     unsigned GetMissedCount() const;
     unsigned IncrementMissedCount();
+    bool UpdateFileModTime();
 };
 
 
@@ -23,13 +24,13 @@ public:
     ContentSearchManager();
     ~ContentSearchManager();
     bool StartContentSearch(bool bCheckIfContentSearchRequired = false);
-    void StopContentSearch();
-    void WaitForFinish();
+    void StopContentSearch(bool bCancel = false, bool bWaitForFinish = true);
     void AddFileEntry(const FileTableEntry &fte);
     void UpdateFileEntriesFromSourceDB(FindDataBase &inDB);
     void RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped = false);
     DEFINE_FUNCTION_IS_FLAGBIT_SET(uFlags, SearchStarted);
 private:
+    void WaitForFinish();
     FindDataBase& GetDatabase();
     bool StartLimitedThreadOperation(int op, LPVOID threadData, int nTries = -1);
     int StartThreadOperation(int op, LPVOID threadData);

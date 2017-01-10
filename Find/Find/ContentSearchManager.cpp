@@ -57,10 +57,12 @@ bool ContentSearchManager::StartContentSearch(bool bCheckIfContentSearchRequired
     return IsSearchStarted();
 }
 
-void ContentSearchManager::StopContentSearch()
+void ContentSearchManager::StopContentSearch(bool bCancel /* = false */, bool bWaitForFinish /* = true */)
 {
-    SetSearchStarted(false);
-    WaitForFinish();
+    if (bCancel)
+        SetSearchStarted(false);
+    if (bWaitForFinish)
+        WaitForFinish();
 }
 
 void ContentSearchManager::WaitForFinish()
@@ -75,15 +77,18 @@ void ContentSearchManager::AddFileEntry(const FileTableEntry &fte)
 {
     // Add entry to content db
     CString query;
-    if (fte.fileID.IsEmpty()) // TODO: fte.fileModTime is coming wrong
+    bool bNewEntry(fte.fileID.IsEmpty());
+    if (bNewEntry)
         query.Format(_T("INSERT OR IGNORE INTO File VALUES ('%s', '-', %I64d, 0, 0)"),
             fte.path, SystemUtils::TimeToInt(fte.fileModTime));
-    else // TODO: fte.fileModTime is coming wrong
+    else
         query.Format(_T("INSERT OR REPLACE INTO File VALUES ('%s', '%s', %I64d, %I64d, 0)"),
             fte.path, fte.fileID, SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
     GetDBCommitter()->AddDBQueryString(query);
-    StartContentSearch();
-    SetSearchScheduleImmediate();
+    if (bNewEntry) {
+        StartContentSearch();
+        SetSearchScheduleImmediate();
+    }
 }
 
 void ContentSearchManager::UpdateFileEntriesFromSourceDB(FindDataBase &inDB)
@@ -244,19 +249,14 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
         RemoveFileEntry(fte->path);
     }
     else {
-        SystemUtils::LogMessage(_T("Indexing file: %s"), fte->path);
         bool bCompute(fte->fileID.IsEmpty() || fte->fileID == _T("-"));
+        bool bUpdateFileTime(true);
         if (!bCompute) {
-            // Get file time
-            FILETIME modTime = { 0 };
-            filePath.GetFileTime(NULL, NULL, &modTime);
-            CTime cModTime(modTime);
-            if (cModTime != fte->fileModTime) {
-                fte->fileModTime = cModTime;
-                bCompute = true;
-            }
+            bCompute = fte->UpdateFileModTime();
+            bUpdateFileTime = false;
         }
         if (bCompute) {
+            SystemUtils::LogMessage(_T("Indexing file: %s"), fte->path);
             const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
             // MD5 of path
             fte->GetFileID(true);
@@ -289,6 +289,8 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
                     CDBCommiter *pDBComitter(GetDBCommitter());
                     pDBComitter->AddDBQueryStrings(queryList);
                     fte->lastUpdatedTime = CTime::GetCurrentTime();
+                    if (bUpdateFileTime)
+                        fte->UpdateFileModTime();
                     AddFileEntry(*fte);
                 }
             }
@@ -334,6 +336,20 @@ unsigned FileTableEntry::IncrementMissedCount()
     flags ^= 0xf;
     flags |= mc;
     return GetMissedCount();
+}
+
+bool FileTableEntry::UpdateFileModTime()
+{
+    bool bUpdated(false);
+    // Get file time
+    FILETIME modTime = { 0 };
+    Path(path).GetFileTime(NULL, NULL, &modTime);
+    CTime cModTime(modTime);
+    if (cModTime != fileModTime) {
+        fileModTime = cModTime;
+        bUpdated = true;
+    }
+    return bUpdated;
 }
 
 int ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent(sqlite3_stmt *statement, void * pUserData)
@@ -395,7 +411,7 @@ CDBCommiter* ContentSearchManager::GetDBCommitter()
 bool ContentSearchManager::StartLimitedThreadOperation(int op, LPVOID threadData, int nTries /* = -1 */)
 {
     // Wait till one on the thread is freed.
-    while (ThreadManager::GetInstance().GetThreadCount(op+ CM_THREAD_CLASS) > 0 /*GetAllThreadCount() > 20*/ && IsSearchStarted()) {
+    while (ThreadManager::GetInstance().GetThreadCount(op+ CM_THREAD_CLASS) > 10 && IsSearchStarted()) {
         if (nTries == 0)
             return false;
         else if (nTries > 0)

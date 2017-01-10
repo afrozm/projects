@@ -71,7 +71,7 @@ void CDBCommiter::DoCommit()
     }
     if (queryCount > 0) {
         // Commit to db
-        ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit %sdb %d queries: Start"), (LPCTSTR)mDBName, queryCount);
+        ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit %s db %d queries: Start"), (LPCTSTR)mDBName, queryCount);
         for (INT_PTR i = 0; i < queryCount; ++i) {
             const CString &queryString(queryStrings[i]);
             if (queryString.Find(_T("DELETE FROM")) == 0)
@@ -116,7 +116,7 @@ void CDBCommiter::DoCommit()
                 ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: performing vacuum: End"));
             }
         }
-        ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit %sdb %d queries: End"), (LPCTSTR)mDBName, queryCount);
+        ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit %s db %d queries: End"), (LPCTSTR)mDBName, queryCount);
     }
 }
 

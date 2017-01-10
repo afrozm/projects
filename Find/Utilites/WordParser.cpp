@@ -17,7 +17,7 @@ static bool IsWordSep(wchar_t ch)
         return true;
     static char sSeps[256] = { 0 };
     if (sSeps[' '] == 0) {
-        const char *pSep = " ~`!@#$%^&*()_+|}{\\][';\":/.,?><\r\n\b\t";
+        const char *pSep = " ~`!@#$%^&*()_-+=|}{\\][';\":/.,?><\r\n\b\t";
         for (const char *p = pSep; *p; ++p)
             sSeps[*p] = *p;
     }
@@ -92,7 +92,7 @@ void WordParser::SplitWords(const wchar_t *pStr, std::vector<std::wstring> &outW
         const wchar_t *pWordStart(pStr);
         STR_SKIP_TILL_WORD_END(pStr);
         std::wstring word(pWordStart, pStr-pWordStart);
-        if (!word.empty())
+        if (!word.empty()&& word.length()<32)
             outWords.push_back(word);
     }
 }

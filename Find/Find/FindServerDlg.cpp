@@ -1229,24 +1229,15 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	Sleep(5000);
 	// Wait for other worker threads to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for other worker threads to finish up"));
-	CArrayEx<int> mExcludeClass;
-	mExcludeClass.Add(SERVER_THREAD_OP_START_DBCOMMITER);
-	mExcludeClass.AddUnique(ThreadManager::GetInstance().GetThreadClass());
-	while (ThreadManager::GetInstance().GetThreadCount(mExcludeClass, false) > 1) {
-		Sleep(1000);
-	}
 	bool bSearchCancelled(IsSearchCancelled());
-	InitCatagotyList(false);
     // Wait for content search to finish up
     SystemUtils::LogMessage(_T("Server: Wait for content search finish up"));
-    if (bSearchCancelled)
-        mContentSearchManager.StopContentSearch();
-    else
-        mContentSearchManager.WaitForFinish();
+    mContentSearchManager.StopContentSearch(bSearchCancelled);
     // Wait for db commiter thread to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for db finish up"));
     DBCommiterManager::GetInstance().RemoveDBCommitter((FindDataBase*)-1); // Remove all and wait
-	// toggle search type 
+    InitCatagotyList(false);
+    // toggle search type 
 	// Restart search again 
 	if (!bSearchCancelled) {
 		mServerSearchStatus = (ServerSearchStatus)((mServerSearchStatus + 1) % SST_Total);
@@ -1381,6 +1372,7 @@ void CFindServerDlg::OnCancel()
 		return;
 	if (IsSearching()) {
 		SetFlag(SF_SEARCH_CANCELLED);
+        mContentSearchManager.StopContentSearch(true, false);
 		SetFlag(SF_DIALOG_CLOSED);
 		ShowWindow(SW_HIDE);
 	}
