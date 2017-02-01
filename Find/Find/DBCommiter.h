@@ -38,5 +38,6 @@ private:
     int DoCommitterThreadFn();
     CArray<CDBCommiter*> mDBCommiters;
     CMutex mLockerDBCommitters;
-    bool mbThreadStarted;
+    DWORD m_iDBComitterThreadID;
+    bool mbFinished;
 };

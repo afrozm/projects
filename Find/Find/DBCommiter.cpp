@@ -137,9 +137,9 @@ CDBCommiter * DBCommiterManager::AddDbCommiter(FindDataBase * pDB)
             return mDBCommiters[i];
     INT_PTR dbIndex(mDBCommiters.Add(new CDBCommiter(pDB)));
     // Start DB commiter thread
-    if (!mbThreadStarted) {
-        mbThreadStarted = true;
-        ThreadManager::GetInstance().CreateThread(ThreadProcFn_Commiter, this, SERVER_THREAD_OP_START_DBCOMMITER, NULL, _T("DBCommiter"));
+    if (m_iDBComitterThreadID == 0) {
+        mbFinished = false;
+        ThreadManager::GetInstance().CreateThread(ThreadProcFn_Commiter, this, SERVER_THREAD_OP_START_DBCOMMITER, &m_iDBComitterThreadID, _T("DBCommiter"));
     }
     return mDBCommiters[dbIndex];
 }
@@ -165,15 +165,14 @@ void DBCommiterManager::RemoveDBCommitter(FindDataBase *pDB)
     }
     if (bRemoveAll) {
         // Wait for finish
-        while (ThreadManager::GetInstance().GetThreadCount(SERVER_THREAD_OP_START_DBCOMMITER) == 1) {
-            mbThreadStarted = false; // make it close thread
-            Sleep(1000);
-        }
+        mbFinished = true;
+        ThreadManager::GetInstance().WaitForThread(m_iDBComitterThreadID);
+        m_iDBComitterThreadID = 0; // make it close thread
     }
 }
 
 DBCommiterManager::DBCommiterManager()
-    : mbThreadStarted(false)
+    : m_iDBComitterThreadID(0), mbFinished(false)
 {
 }
 
@@ -194,7 +193,7 @@ int DBCommiterManager::DoCommitterThreadFn()
     while (mDBCommiters.GetCount() > 0)
     {
         Sleep(1000);
-        bool bFinished(!mbThreadStarted);
+        bool bFinished(!mbFinished);
         if (lastCommitTime.UpdateTimeDuration(bFinished))
         {
             CAutoLock autoLock(mLockerDBCommitters);
@@ -211,7 +210,8 @@ int DBCommiterManager::DoCommitterThreadFn()
             }
         }
     }
-    mbThreadStarted = false;
+    m_iDBComitterThreadID = 0;
+    mbFinished = false;
     SystemUtils::LogMessage(_T("DBCommit: End"));
     return 0;
 }
