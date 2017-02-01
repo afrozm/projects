@@ -596,10 +596,6 @@ int Finder::StartFind(const Path &dir)
 				if (mExcludePattern)
                     bMatched = bMatched && std::regex_match(findFileData.cFileName, mExcludeRegExp);
 				int fcbRetVal(mFindCallBack(FindData(&findFileData, file, bMatched), m_pUserParam));
-				while (fcbRetVal == FCBRV_PAUSE) {
-					fcbRetVal = mFindCallBack(FindData(&findFileData, file, false), m_pUserParam);
-					Sleep(10);
-				}
 				if (fcbRetVal == FCBRV_ABORT)
 					break;
 				if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)

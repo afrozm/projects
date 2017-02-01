@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "cMD5.h"
 #include "Path.h"
 

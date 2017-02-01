@@ -152,6 +152,7 @@ int CopyA2T(const char *src, LPTSTR dst)
         *dst++ = *src++;
 		len++;
     }
+    *dst = 0;
 	return len;
 }
 int CopyT2A(LPCTSTR src, char *dst)
