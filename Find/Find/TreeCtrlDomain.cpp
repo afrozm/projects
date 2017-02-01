@@ -14,6 +14,7 @@
 
 #define LPNETRES_LOCALDISK_NOT_EXPANDED 1
 #define LPNETRES_NETWORK_NOT_EXPANDED 2
+#define TREE_CTRL_EXPAND_THREAD_CLASS 0x1ebad
 
 IMPLEMENT_DYNAMIC(CTreeCtrlDomain, CTreeCtrl)
 
@@ -422,7 +423,7 @@ static int FreeTreeNodeIteratorCallBack(TreeIteratorCallBackData *pData, void *p
 void CTreeCtrlDomain::DeleteAllTreeItem(void)
 {
     if (IsUseThread())
-        ThreadManager::GetInstance().TerminateThreads(1);
+        ThreadManager::GetInstance().TerminateThreads(TREE_CTRL_EXPAND_THREAD_CLASS);
     if (GetSafeHwnd()) {
         CTreeCtrlIterator cti(this, FreeTreeNodeIteratorCallBack);
         cti.StartIteration();
@@ -522,6 +523,7 @@ static int ExpandTreeThreadProcFn(LPVOID pThread)
 		}
 	}
 	delete fcbData;
+    
 	return 0;
 }
 void CTreeCtrlDomain::OnTvnItemexpanding(NMHDR *pNMHDR, LRESULT *pResult)
@@ -536,7 +538,7 @@ void CTreeCtrlDomain::OnTvnItemexpanding(NMHDR *pNMHDR, LRESULT *pResult)
 		return;
 	LPVOID pThreaData(new TVExpandData(fcbData));
 	if (IsUseThread())
-		ThreadManager::GetInstance().CreateThread(ExpandTreeThreadProcFn, pThreaData, 1);
+		ThreadManager::GetInstance().CreateThread(ExpandTreeThreadProcFn, pThreaData, TREE_CTRL_EXPAND_THREAD_CLASS, NULL, _T("TreeExpand"));
 	else
 		ExpandTreeThreadProcFn(pThreaData);
 }

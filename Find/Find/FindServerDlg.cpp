@@ -12,6 +12,8 @@
 #include "LoggerFactory.h"
 #include "IPEnumerator.h"
 #include "SocketUitl.h"
+#include "DBCommiter.h"
+#include "Property.h"
 
 FinderClass(CFindServerDlg)
 
@@ -39,7 +41,8 @@ CFindServerDlg::CFindServerDlg(CWnd* pParent /*=NULL*/)
 	mCmdEditCtrl(NULL), m_uSearchFlags(SF_DIALOG_SHOW_MINIMIZED),
 	mServerSearchStatus(SST_NewSearch),
 	mDataBase(FDB_CacheDatabase), m_pStatusDlg(NULL),
-	mSearchHistory(this), mCombinedBotton(this, IDC_BUTTON_LEFT, IDC_BUTTON_RIGHT), mFindServerDlgContext(this), m_iMaxThreadCount(FIND_MAX_THREAD_COUNT)
+	mSearchHistory(this), mCombinedBotton(this, IDC_BUTTON_LEFT, IDC_BUTTON_RIGHT), mFindServerDlgContext(this), m_iMaxThreadCount(FIND_MAX_THREAD_COUNT),
+    m_pDBCommitter(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -79,17 +82,30 @@ BEGIN_MESSAGE_MAP(CFindServerDlg, CDialog)
 	ON_MESSAGE(WM_SERVER_ADDTSPANEL, &CFindServerDlg::OnAddThreadStatusPanel)
 END_MESSAGE_MAP()
 
-static LPCTSTR scondition[] = {
-	_T(""),
-	_T("<"),
-	_T("<="),
-	_T("="),
-	_T(">"),
-	_T(">="),
-	_T("in")
+static struct Condtion
+{
+    enum CondtionType {
+        NoCondition,
+        LessThan,
+        LessThanOrEqual,
+        Equal,
+        GreaterThan,
+        GreaterThanOrEqual,
+        Between
+    } conditionType;
+    LPCTSTR name;
+    static CondtionType ConditionFromString(const CString &cond);
+} scondition[] = {
+    Condtion::NoCondition, _T(""),
+    Condtion::LessThan,_T("<"),
+    Condtion::LessThanOrEqual,_T("<="),
+    Condtion::Equal,_T("="),
+    Condtion::GreaterThan,_T(">"),
+    Condtion::GreaterThanOrEqual,_T(">="),
+    Condtion::Between,_T("in")
 };
 
-static int ListEmbedControlCallBackFn(CEmbedListCtrl *pList, int message, WPARAM wParam, LPARAM lParam, LPVOID pUserData)
+static int ListEmbedControlCallBackFn(CEmbedListCtrl *pList, int message, WPARAM /*wParam*/, LPARAM lParam, LPVOID pUserData)
 {
     UNREFERENCED_PARAMETER(pList);
     UNREFERENCED_PARAMETER(pUserData);
@@ -98,33 +114,8 @@ static int ListEmbedControlCallBackFn(CEmbedListCtrl *pList, int message, WPARAM
 	case EMT_AddControl:
 		if (lParam < 3) // Col 0-2
 			retVal = ECT_Edit;
-		else if (lParam == 3 || lParam == 4) // col 3,4
-			retVal = ECT_ComboBox;
-		else if (lParam == 5) // Col 5
-			retVal = ECT_DropDownComboBox;
 		else
 			retVal = ECT_NO_Control;
-		break;
-	case EMT_InitControl:
-		{
-			EmbedControlInfo *pECInf((EmbedControlInfo*)wParam);
-			if (pECInf->col == 3 || pECInf->col == 4) {
-				CComboBox *pComboBox((CComboBox*)pECInf->mControl);
-				pComboBox->AddString(_T("1Kb"));
-				pComboBox->AddString(_T("10Kb"));
-				pComboBox->AddString(_T("100Kb"));
-				pComboBox->AddString(_T("500Kb"));
-				pComboBox->AddString(_T("1Mb"));
-				pComboBox->AddString(_T("50Mb"));
-				pComboBox->AddString(_T("300Mb"));
-				pComboBox->AddString(_T("1Gb"));
-			}
-			else if (pECInf->col == 5) {
-				CComboBox *pComboBox((CComboBox*)pECInf->mControl);
-				for (int i = 0; i < sizeof(scondition)/sizeof(LPCTSTR); ++i)
-					pComboBox->AddString(scondition[i]);
-			}
-		}
 		break;
 	}
 	return retVal;
@@ -188,24 +179,23 @@ BOOL CFindServerDlg::OnInitDialog()
 	LPCTSTR columns[] = {
 		_T("Name"),
 		_T("Search Keys"),
-		_T("Except Keys"),
-		_T("Minimum Size"),
-		_T("Maximum Size"),
-		_T("Condition")
+		_T("Options"),
 	};
+    int colWidths[] = { 100, 200, 180 };
 	for (int i = 0; i < sizeof(columns)/sizeof(LPCTSTR); ++i) {
 		pEmbedListCtrl->InsertColumn(i, columns[i]);
-		pEmbedListCtrl->SetColumnWidth(i, LVSCW_AUTOSIZE_USEHEADER);
+        pEmbedListCtrl->SetColumnWidth(i, SystemUtils::GetTranslatedDPIPixelX(colWidths[i]));
 	}
 	int colWidth(0);
-	for (int i = 1; i < pEmbedListCtrl->GetColumnCount(); ++i) {
-		colWidth += pEmbedListCtrl->GetColumnWidth(i);
+	for (int i = 0; i < pEmbedListCtrl->GetColumnCount(); ++i) {
+        if (i!=1)
+		    colWidth += pEmbedListCtrl->GetColumnWidth(i);
 	}
 	RECT rc;
 	pEmbedListCtrl->GetClientRect(&rc);
 	colWidth = rc.right-rc.left-colWidth;
 	if (colWidth > 0)
-		pEmbedListCtrl->SetColumnWidth(0, colWidth);
+		pEmbedListCtrl->SetColumnWidth(1, colWidth);
 	pEmbedListCtrl->CheckRowColCheckBox(0);
 	pEmbedListCtrl->SetEmbedControlCallBackFn(ListEmbedControlCallBackFn, (LPVOID)this);
 	mCmdEditCtrl = new CCmdEditCtrl();
@@ -237,44 +227,37 @@ bool CFindServerDlg::IsSearchCancelled(bool bCheckThread)
 struct Catagory {
 	LPCTSTR name;
 	LPCTSTR searchKeys;
-	LPCTSTR exceptKeys;
-	LPCTSTR sizeMin;
-	LPCTSTR sizeMax;
-	LPCTSTR cond;
+	LPCTSTR options;
 	bool bEnabled;
 };
-static int ConditionFromString(const CString &cond)
+
+Condtion::CondtionType Condtion::ConditionFromString(const CString &cond)
 {
-	int icond(0);
 	for (int i = 0; i < sizeof(scondition)/sizeof(LPCTSTR); ++i)
-		if (cond == scondition[i]) {
-			icond = i;
-			break;
+		if (cond == scondition[i].name) {
+			return scondition[i].conditionType;
 		}
-	return icond;
+	return NoCondition;
 }
 //#define DISTRIBUTE_BUILD
 void CFindServerDlg::LoadDefault()
 {
 	Catagory catagories[] = {
 #ifdef DISTRIBUTE_BUILD
-		_T("Documents"), _T("*.doc;*.xsl;*.pdf;*.txt"), _T(""), _T(""), _T(""), _T(""), true,
-		_T("Code"), _T("*.c;*.h;*.vcproj;*.sln;*.xcode"), _T(""), _T(""), _T(""), _T(""), true,
-		_T("Images"), _T("*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.png;*.dib"), _T(""), _T(""), _T(""), _T(""), true,
+		_T("Documents"), _T(".doc;.xsl;.pdf;.txt"), _T(""), true,
+		_T("Code"), _T(".c;.h;.vcproj;.sln;.xcode"), _T(""), true,
+		_T("Images"), _T(".jpg;.jpeg;.bmp;.gif;.tif;.png;.dib"), true,
 #else
-        _T("Movies"), _T("*.mp4;.mov;*.mpg;*.mpeg;*.div;*.avi;*.vlc;*.vob;*.wmv;*.flv"), _T(""), _T("300M"), _T(""), _T(">="), true,
-		_T("Music"), _T("*.mp3"), _T(""), _T("2M"), _T(""), _T(">="), true,
+        _T("Movies"), _T(".mp4;.mov;.mpg;.mpeg;.div;.avi;.vlc;.vob;.wmv;.flv"), _T("Condition.Size=Size>=300M"), true,
+		_T("Music"), _T(".mp3"), _T("Condition.Size=Size>=2M"), true,
 #endif
-		_T("Softwares"), _T("*.msi;*.dmg;*.exe;*.zip;*.rar"), _T(""), _T(""), _T(""), _T(""), false,
+		_T("Softwares"), _T(".msi;.dmg;.exe;.zip;.rar"), _T(""), false,
 	};
 	mCatagoryEmbedListCtrl->DeleteAllItems();
 	for (int i = 0 ; i < sizeof(catagories) / sizeof(Catagory); ++i) {
 		int iTem = mCatagoryEmbedListCtrl->InsertItem(i, catagories[i].name);
 		mCatagoryEmbedListCtrl->SetItemText(iTem, 1, catagories[i].searchKeys);
-		mCatagoryEmbedListCtrl->SetItemText(iTem, 2, catagories[i].exceptKeys);
-		mCatagoryEmbedListCtrl->SetItemText(iTem, 3, catagories[i].sizeMin);
-		mCatagoryEmbedListCtrl->SetItemText(iTem, 4, catagories[i].sizeMax);
-		mCatagoryEmbedListCtrl->SetItemText(iTem, 5, catagories[i].cond);
+		mCatagoryEmbedListCtrl->SetItemText(iTem, 2, catagories[i].options);
 		mCatagoryEmbedListCtrl->CheckRowColCheckBox(0, iTem, catagories[i].bEnabled);
 	}
 	mCmdEditCtrl->Clear();
@@ -286,7 +269,7 @@ void CFindServerDlg::LoadDefault()
 	mCmdEditCtrl->SetWindowText(_T("check:[domain]"));
 	mCmdEditCtrl->AddCommand(_T("ip:"), true);
 #endif
-	Execute();
+	//Execute();
 }
 TableItertatorClass(CFindServerDlg);
 
@@ -681,52 +664,77 @@ void CFindServerDlg::SetSearchStarted(bool bSearchStarted)
 CFindServerDlg::FindCatagory::~FindCatagory()
 {
 }
+
 void CFindServerDlg::FindCatagory::Init(int num, CEmbedListCtrl *pList)
 {
 	catagoryNum = num;
 	CString text(pList->GetItemText(num, 1));
-	CString extext = pList->GetItemText(num, 2);
-	if (!extext.IsEmpty()) {
-		text += _T(":")+extext;
-	}
 	mStringMatcher.SetExpression(text);
-	text = pList->GetItemText(num, 5);
-	if (text.IsEmpty()) {
-		mSizeMin = mSizeMax = 0;
-		sizeCond = 0;
+	text = pList->GetItemText(num, 2);
+    text.MakeLower();
+    CSortedArrayCString arrOptions;
+    Property prop;
+    {
+        PropertySet ps;
+        PropertySetStreamer pss;
+        pss.SetPropertySetStream(ps);
+        pss.ReadFromString((LPCTSTR)text);
+        prop = ps.GetProperty(_T(""));
+    }
+    text = prop.GetValue(_T("condition")).c_str();
+    mSizeMin = mSizeMax = 0;
+    sizeCond = 0;
+    if (!text.IsEmpty()) {
+        text.Replace(_T(" "), _T(""));
+        text.Replace(_T("and"), _T("&"));
+        text.Replace(_T("&&"), _T("&"));
+        text.Trim();
+        CArrayCString arrCond;
+        SystemUtils::SplitString(text, arrCond, _T("&"));
+        if (arrCond.GetCount() > 0) {
+            sizeCond = Condtion::ConditionFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("<>=")));
+            if (arrCond.GetCount() > 1) {
+                sizeCond = Condtion::Between; // in
+                mSizeMax = SystemUtils::GetSizeFromString(SystemUtils::StringFindOneOf(arrCond[1], _T("0123456789")));
+            }
+            else
+                mSizeMax = -1;
+            mSizeMin = SystemUtils::GetSizeFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("0123456789")));
+            
+            if (sizeCond == Condtion::Between // in
+                && mSizeMin > mSizeMax)
+                std::swap(mSizeMin, mSizeMax);
+        }
 	}
-	else {
-		sizeCond = ConditionFromString(text);
-		mSizeMin = SystemUtils::GetSizeFromString(pList->GetItemText(num, 3));
-		mSizeMax = SystemUtils::GetSizeFromString(pList->GetItemText(num, 4));
-		if (sizeCond == 6 // in
-			&& mSizeMin > mSizeMax)
-			std::swap(mSizeMin, mSizeMax);
-	}
+    text = prop.GetValue(_T("content")).c_str();
+    if (!text.IsEmpty()) {
+        SetFindContent(text==_T("true") || text==_T("1"));
+    }
 }
 bool CFindServerDlg::FindCatagory::Match(const CFileFindEx *pFileFile)
 {
 	CString fileName(pFileFile->GetFileName());
 	bool bMatched = mStringMatcher.Match(fileName);
 	if (bMatched && sizeCond) {
+        Condtion::CondtionType sizeCondType((Condtion::CondtionType)sizeCond);
 		LONGLONG fileSize(pFileFile->GetFileSize());
-		switch (sizeCond) {
-		case 1: // <
+		switch (sizeCondType) {
+		case Condtion::LessThan: // <
 			bMatched = fileSize < mSizeMin;
 			break;
-		case 2: // <=
+		case Condtion::LessThanOrEqual: // <=
 			bMatched = fileSize <= mSizeMin;
 			break;
-		case 3: // =
+		case Condtion::Equal: // =
 			bMatched = fileSize == mSizeMin;
 			break;
-		case 4: // >
+		case Condtion::GreaterThan: // >
 			bMatched = fileSize > mSizeMin;
 			break;
-		case 5: // >=
+		case Condtion::GreaterThanOrEqual: // >=
 			bMatched = fileSize >= mSizeMin;
 			break;
-		case 6: // in (range) >= && <=
+		case Condtion::Between: // in (range) >= && <=
 			bMatched = fileSize >= mSizeMin && fileSize <= mSizeMax;
 			break;
 		}
@@ -968,6 +976,17 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 				path);
 			query = _T("|")+query2+_T("|CachedData|")+condition+_T("|")+query;
 			pFFCD->dbQueryString.Add(query);
+            if (!bIsDir) {
+                if (pCatagotyMatched->IsFindContent()) {
+                    FileTableEntry fte;
+                    fte.path = path;
+                    fte.fileModTime = mt;
+                    // Add entry to content db
+                    mContentSearchManager.AddFileEntry(fte);
+                }
+                else
+                    mContentSearchManager.RemoveFileEntry(path, true);
+            }
 		}
 	}
 	if (pFFCD->dbQueryString.GetCount() > 99) {
@@ -1027,8 +1046,9 @@ int CFindServerDlg::ItrVerifyCacheDataTableRowsCallbackFn(sqlite3_stmt *statemen
 	}
 	else {
 		UINT missCount(sqlite3_column_int(statement, CachedData_MissCount)+1);
-		if (missCount > 3 || nDays > 9) {
+		if (!path.IsUNC() || missCount > 3 || nDays > 9) {
 			query = _T("DELETE FROM CachedData");
+            mContentSearchManager.RemoveFileEntry(path);
 		}
 		else {
 			query.Format(_T("UPDATE CachedData SET LastUpdated=%I64d, MissCount=%d"),
@@ -1144,8 +1164,8 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	SystemUtils::LogMessage(_T("Server: Start"));
 	SetSearchStarted();
 	// Start db commiter thread
-	SetFlag(SF_STOP_DB, false);
-	StartThreadOperation(SERVER_THREAD_OP_START_DBCOMMITER);
+    m_pDBCommitter = DBCommiterManager::GetInstance().AddDbCommiter(&mDataBase);
+    mContentSearchManager.StartContentSearch(true);
 	if (mServerSearchStatus != SST_Verify) { // Search mode
 		SystemUtils::LogMessage(_T("Server: Search started"));
 		{
@@ -1180,7 +1200,8 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 		SystemUtils::LogMessage(_T("Server: Verify started"));
 		SetTitle(_T("Verifying"));
 		Execute(_T("mirror,skip"));
-	}
+        mContentSearchManager.UpdateFileEntriesFromSourceDB(mDataBase);
+    }
 	// Also search in history machines
 	INT_PTR searchHistoryCount(mSearchHistory.GetCount());
 	for (INT_PTR i=0 ; i < searchHistoryCount
@@ -1208,21 +1229,15 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	Sleep(5000);
 	// Wait for other worker threads to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for other worker threads to finish up"));
-	CArrayEx<int> mExcludeClass;
-	mExcludeClass.Add(SERVER_THREAD_OP_START_DBCOMMITER);
-	mExcludeClass.AddUnique(ThreadManager::GetInstance().GetThreadClass());
-	while (ThreadManager::GetInstance().GetThreadCount(mExcludeClass, false) > 1) {
-		Sleep(1000);
-	}
 	bool bSearchCancelled(IsSearchCancelled());
-	InitCatagotyList(false);
-	SetFlag(SF_STOP_DB);
-	// Wait for db commiter thread to finish up
+    // Wait for content search to finish up
+    SystemUtils::LogMessage(_T("Server: Wait for content search finish up"));
+    mContentSearchManager.StopContentSearch(bSearchCancelled);
+    // Wait for db commiter thread to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for db finish up"));
-	while (ThreadManager::GetInstance().GetThreadCount(SERVER_THREAD_OP_START_DBCOMMITER) == 1) {
-		Sleep(1000);
-	}
-	// toggle search type 
+    DBCommiterManager::GetInstance().RemoveDBCommitter((FindDataBase*)-1); // Remove all and wait
+    InitCatagotyList(false);
+    // toggle search type 
 	// Restart search again 
 	if (!bSearchCancelled) {
 		mServerSearchStatus = (ServerSearchStatus)((mServerSearchStatus + 1) % SST_Total);
@@ -1263,9 +1278,10 @@ static int TMFindServerDlgThreadProcFn(LPVOID pInThreadData)
 
 int CFindServerDlg::StartThreadOperation(ServerThreadOperation op, LPVOID threadData)
 {
+    DWORD threadID(0);
 	ThreadData *td = new ThreadData(this, op, threadData);
-	ThreadManager::GetInstance().CreateThread(TMFindServerDlgThreadProcFn, td, op);
-	return 0;
+	ThreadManager::GetInstance().CreateThread(TMFindServerDlgThreadProcFn, td, op, &threadID, ServerThreadOperationGetThreadName(op));
+	return threadID;
 }
 int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
 {
@@ -1282,9 +1298,6 @@ int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
         if (IsFlagSet(SF_DIALOG_CLOSED))
             SetTimer(TIMER_QUIT_APP, 100, NULL);
         SetTimer(TIMER_NEXT_SEARCH, 1000 * 60 * 60 * 3, NULL); // Wait for other 3 hours
-		break;
-	case SERVER_THREAD_OP_START_DBCOMMITER:
-		DoDBCommitment();
 		break;
 	case SERVER_THREAD_OP_SEARCH_IN_NETWORK:
 		StartSearchInNetworkFoder((LPNETRESOURCE)pThreadData->pThreadData);
@@ -1303,65 +1316,18 @@ void CFindServerDlg::OnBnClickedButtonLoaddefault()
 {
     StartThreadOperation(SERVER_THREAD_OP_LOAD_DEFAULT);
 }
-void CFindServerDlg::DoDBCommitment()
+
+static bool StrRemoveLastCharFromString(CString &inOutStr, TCHAR lastChar)
 {
-	CountTimer lastCommitTime(1000*60); // 1 min
-	CountTimer lastVacuumTime(1000*60*60); // 1 hr
-	bool bDeleteFound(false);
-	SystemUtils::LogMessage(_T("DBCommit: Start"));
-	while (1) {
-		Sleep(1000);
-		bool bFinish(IsFlagSet(SF_STOP_DB));
-		if (lastCommitTime.UpdateTimeDuration(bFinish)) {
-			CArrayCString queryStrings;
-			INT_PTR queryCount(0);
-			// save and empty current query
-			{
-				CAutoLock autoLock(mLockerDBQueryString);
-				queryCount = mDBQueryString.GetCount();
-				if (queryCount > 0) {
-					queryStrings.Append(mDBQueryString);
-					mDBQueryString.RemoveAll();
-				}
-			}
-			if (queryCount > 0) {
-				// Commit to db
-				ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit db %d queries: Start"), queryCount);
-				for (INT_PTR i = 0; i < queryCount; ++i) {
-					const CString &queryString(queryStrings[i]);
-					if (queryString.Find(_T("DELETE FROM")) == 0)
-						bDeleteFound = true;
-					CArrayCString arrQueryStr;
-					LPCTSTR pStrQuery(queryString);
-					if (queryString[0] == '|') {
-						SystemUtils::SplitString(queryString, arrQueryStr, _T("|"));
-						pStrQuery = arrQueryStr[1];
-						if (mDataBase.GetTableRowCount(arrQueryStr[2], arrQueryStr[3]) == 0)
-							pStrQuery = arrQueryStr[4];
-					}
-					int retVal = mDataBase.QueryNonRows2(SystemUtils::UnicodeToUTF8(pStrQuery).c_str());
-					if (retVal != SQLITE_OK) {
-						CString errMesg(SystemUtils::UTF8ToUnicodeCString(mDataBase.GetErrorMessage()));
-						GetLogger().Log(Logger::kLogLevelError, _T("DBCommit: ErrorCode:%d-%s    %s"), retVal, (LPCTSTR)errMesg,pStrQuery);
-					}
-				}
-				mDataBase.Commit();
-				if (bDeleteFound) {
-					if (lastVacuumTime.UpdateTimeDuration(bFinish)) { // 1 hrs have been passed
-						ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: performing vacuum: Start"));
-						mDataBase.Vacuum();
-						bDeleteFound = false;
-						ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: performing vacuum: End"));
-					}
-				}
-				ThreadManager::GetInstance().SetThreadStatusStr(_T("DBCommit: commit db %d queries: End"), queryCount);
-			}
-		}
-		if (bFinish) // Search has been stopped - exit
-			break;
-	}
-	SystemUtils::LogMessage(_T("DBCommit: End"));
+    bool bHas(false);
+    if (inOutStr.GetLength() > 0 && inOutStr[inOutStr.GetLength() - 1] == lastChar) {
+        inOutStr = inOutStr.Left(inOutStr.GetLength() - 1);
+        bHas = true;
+    }
+    return bHas;
 }
+
+
 void CFindServerDlg::AddDBQueryString(LPCTSTR inStr, ...)
 {
 	va_list args;
@@ -1374,16 +1340,13 @@ void CFindServerDlg::AddDBQueryString(LPCTSTR inStr, ...)
 }
 void CFindServerDlg::AddDBQueryString(const CString &queryString)
 {
-	CAutoLock autoLock(mLockerDBQueryString);
-	mDBQueryString.Add(queryString);
+    m_pDBCommitter->AddDBQueryString(queryString);
 }
 void CFindServerDlg::AddDBQueryStrings(const CArrayCString &queryStrings)
 {
 	if (queryStrings.GetCount() <= 0)
 		return;
-	CAutoLock autoLock(mLockerDBQueryString);
-	for (int i = 0; i < queryStrings.GetCount(); ++i)
-		mDBQueryString.Add(queryStrings.GetAt(i));
+    m_pDBCommitter->AddDBQueryStrings(queryStrings);
 }
 void CFindServerDlg::StartFind(bool bForce)
 {
@@ -1409,6 +1372,7 @@ void CFindServerDlg::OnCancel()
 		return;
 	if (IsSearching()) {
 		SetFlag(SF_SEARCH_CANCELLED);
+        mContentSearchManager.StopContentSearch(true, false);
 		SetFlag(SF_DIALOG_CLOSED);
 		ShowWindow(SW_HIDE);
 	}

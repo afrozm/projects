@@ -3,11 +3,6 @@
 #include "ListCtrlUtil.h"
 
 // CEmbedListCtrl
-#ifndef FLAGBIT
-#define FLAGBIT(n) (1<<(n))
-#define MASKBIT(u) (FLAGBIT(u)-1)
-#define MASKBITS(u,l) (MASKBIT(u) ^ MASKBIT(l))
-#endif
 // CEmbedListCtrl::EnableControl - uEnable flags
 #define ECF_ENABLE FLAGBIT(0)
 #define ECF_DONOT_COMMIT FLAGBIT(1)

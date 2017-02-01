@@ -186,7 +186,6 @@ BEGIN_MESSAGE_MAP(CFindDlg, CDialog)
 //	ON_NOTIFY(LVN_DELETEALLITEMS, IDC_LIST_RESULT, &CFindDlg::OnLvnDeleteallitemsListResult)
 	ON_COMMAND(ID_FILE_PREFERENCES, &CFindDlg::OnFilePreferences)
 	ON_WM_DEVICECHANGE()
-    ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 // CFindDlg message handlers
@@ -389,7 +388,6 @@ void CFindDlg::OnCancel()
 BOOL CFindDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-    DragAcceptFiles();
 	// Add "About..." menu item to system menu.
 
 	// IDM_ABOUTBOX must be in the system command range.
@@ -454,10 +452,6 @@ BOOL CFindDlg::OnInitDialog()
 	dragControlResizer.AddControl(IDC_STATIC_VERT_SEP, RSZF_BOTTOM_FIXED|RSZF_SIZEX_FIXED);
 	dragControlResizer.AddControl(IDC_STATIC_FIND, RSZF_SIZEX_FIXED);
 	SystemUtils::SetWindowPos(GetSafeHwnd(), NULL, 0, 0, 800, 600, SWP_DRAWFRAME|SWP_FRAMECHANGED|SWP_NOMOVE|SWP_NOZORDER);
-	{
-		FindDataBase fdb;
-		fdb.LoadSchema();
-	}
 	LoadSearchKeyWords();
 	CComboBox *pComboBox = (CComboBox *)GetDlgItem(IDC_COMBO_FIND);
 	COMBOBOXINFO cbInfo = {sizeof(COMBOBOXINFO)};
@@ -611,11 +605,6 @@ void CFindDlg::OnPaint()
 HCURSOR CFindDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
-}
-
-void CFindDlg::OnDropFiles(HDROP hDropInfo)
-{
-    mTreeCtrlDomain->OnDropFiles(hDropInfo);
 }
 
 void CFindDlg::OnTvnItemexpandingTreeDomain(NMHDR *pNMHDR, LRESULT *pResult)

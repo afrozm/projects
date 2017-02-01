@@ -29,6 +29,9 @@ public:
 	int Rollback();
 	int Vacuum();
 	const char* GetErrorMessage() const;
+    bool IsReadOnly() const { return mbReadOnly; }
+    // Effective only when db is closed. For already open db no effect.
+    bool SetReadOnly(bool bReadOnly = true) { mbReadOnly = bReadOnly; }
 private:
 	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery);
 	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_list args);

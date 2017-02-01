@@ -51,7 +51,7 @@ class CMD5
 public:
 	CMD5(void);
 	~CMD5(void);
-	CString GetMD5(LPCTSTR fileOrText);
+	CString GetMD5(LPCTSTR fileOrText, bool bString = false);
 	void SetMD5CBFn(MD5CBFn cbFn, void *pUserData = NULL);
 private:
 	MD5_CTX md5Ctx;

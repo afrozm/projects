@@ -12,6 +12,7 @@
 #include "CountTimer.h"
 #include "CombinedButton.h"
 #include "ServerStatusDlg.h"
+#include "ContentSearchManager.h"
 
 // CFindServerDlg dialog
 
@@ -28,7 +29,6 @@ typedef enum {
 #define SF_DIALOG_CLOSED FLAGBIT(2)
 #define SF_DIALOG_SHOW_MINIMIZED FLAGBIT(3)
 #define SF_ENUM_IPs FLAGBIT(4)
-#define SF_STOP_DB FLAGBIT(5)
 
 class CFindServerDlg;
 
@@ -98,7 +98,6 @@ protected:
 	int StartThreadOperation(ServerThreadOperation op, LPVOID threadData = NULL);
 	void DisableControls(bool bDisable = true);
 	void InitCatagotyList(bool bFill = true);
-	void DoDBCommitment();
 	int SearchInNetwork(HTREEITEM hItem);
 	int SearchInNetwork(const CString &networkPath);
 	bool RemoveObsoleteSearchHistory(const CSearchHistory &searchHistory);
@@ -126,7 +125,7 @@ protected:
 	ServerSearchStatus mServerSearchStatus;
 	struct FindCatagory {
 		FindCatagory()
-			: catagoryNum(0), sizeCond(0)
+			: catagoryNum(0), sizeCond(0), uFlags(0)
 		{
 		}
 		~FindCatagory();
@@ -135,14 +134,17 @@ protected:
 		LONGLONG mSizeMin;
 		LONGLONG mSizeMax;
 		int sizeCond;
+        enum {
+            FindContent
+        };
+        DEFINE_FUNCTION_SET_GET_FLAGBIT(uFlags, FindContent);
+        unsigned uFlags;
 		void Init(int num, CEmbedListCtrl *pList);
 		bool Match(const CFileFindEx *pFileFile);
 	};
 	typedef CArray<FindCatagory*> CArrayFindCatagory;
 	CArrayFindCatagory mArrayFindCatagory;
 	CSearchHistoryArray mSearchHistory;
-	CArrayCString mDBQueryString;
-	CMutex mLockerDBQueryString;
 	CArrayCString mIPEnumHostNames;
 	CMutex mLockerIPEnumHostNames;
 	CountTimer mIPEnumTime;
@@ -159,6 +161,8 @@ protected:
 	CArrayMirrorInfo mArrMirrorInfo;
 	CArrayCString mHostIPsToEnumerate; // ip:[hostname] list of hostname
 	int m_iMaxThreadCount;
+    ContentSearchManager mContentSearchManager;
+    CDBCommiter *m_pDBCommitter;
 
 	int SearchInFolder(const CString &pathToSearch, SearchInFolderData *pExtraData = NULL);
 	int QuickSearch(const Path& remoteHostPath);

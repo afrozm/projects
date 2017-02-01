@@ -95,7 +95,6 @@ protected:
 	afx_msg void OnSizing(UINT nSize, LPRECT lpRect);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg HCURSOR OnQueryDragIcon();
-    afx_msg void OnDropFiles(HDROP hDropInfo);
 	DECLARE_MESSAGE_MAP()
 	void GetFindList();
 	HTREEITEM SearchForNetWorkPC(const CString &networkPath);

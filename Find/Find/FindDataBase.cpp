@@ -14,12 +14,19 @@ const char *kFindDatabaseSchema[] = {
 };
 
 const char *kCacheDatabaseSchema[] = {
-	"CREATE TABLE Category ( CatagoryNumber INT NOT NULL,Name TEXT NOT NULL, SearchKeys TEXT, ExceptKeys TEXT, SizeMin TEXT,SizeMax TEXT, SizeCondition TEXT,Flags INT,PRIMARY KEY (CatagoryNumber) );",
+	"CREATE TABLE Category ( CatagoryNumber INT NOT NULL,Name TEXT NOT NULL, SearchKeys TEXT, Options TEXT, Flags INT,PRIMARY KEY (CatagoryNumber) );",
 	"CREATE TABLE CachedData (Path TEXT NOT NULL,Size TEXT NOT NULL , LastUpdated INT NOT NULL, MissCount INT, CatagoryNumber INT NOT NULL, Root TEXT NOT NULL COLLATE NOCASE, CreatedTime INT, ModifiedTime INT, AccessedTime INT, AddeddTime INT, PRIMARY KEY (Path) );",
 	"CREATE TABLE Property ( Name TEXT NOT NULL,Value TEXT NOT NULL ,PRIMARY KEY (Name) );",
 	"CREATE TABLE SearchHistory ( SearchKeys TEXT NOT NULL COLLATE NOCASE, LastUpdated INT NOT NULL, MissCount INT, LastSearchPath TEXT, flags INT NOT NULL, PRIMARY KEY (SearchKeys) );",
 	"CREATE TRIGGER ctd_SearchHistory BEFORE DELETE ON SearchHistory FOR EACH ROW BEGIN DELETE FROM CachedData WHERE Root = OLD.SearchKeys; END;"
 };
+
+const char *kContentSearchDatabaseSchema[] = {
+    "CREATE TABLE File ( Path TEXT NOT NULL UNIQUE, FileID TEXT, FileModifiedTime INT NOT NULL, LastSearched INT NOT NULL ,Flags INT, PRIMARY KEY (Path) );",
+    "CREATE TABLE Word (Word TEXT NOT NULL, FileID TEXT NOT NULL , Count INT NOT NULL, PRIMARY KEY (Word, FileID), FOREIGN KEY(FileID) REFERENCES File(FileID) );",
+    "CREATE TABLE Property ( Name TEXT NOT NULL,Value TEXT NOT NULL ,PRIMARY KEY (Name) );"
+};
+
 
 FindDataBase::FindDataBase(FDB_Database dataBaseType, bool bReadOnly)
 						   : mFDB_DatabaseType(dataBaseType), Database(bReadOnly)
@@ -64,6 +71,10 @@ CString FindDataBase::GetDBPath()
 			else
 				prefDatabasePath = sCacheDBPath;
 			break;
+        case FDB_Words:
+            prefDatabasePath = prefDatabasePath.Parent();
+            prefDatabasePath = prefDatabasePath.Append(CString(_T("FindWords.db")));
+            break;
 	}
 	return prefDatabasePath;
 }
@@ -73,22 +84,23 @@ int FindDataBase::Open()
 	if (IsOpen())
 		return 0;
 	Path dbPath(GetDBPath());
-	return Database::Open(SystemUtils::UnicodeToUTF8(dbPath).c_str());
+    bool bExits(dbPath.Exists());
+	int retVal(Database::Open(SystemUtils::UnicodeToUTF8(dbPath).c_str()));
+    if (IsOpen() && !bExits)
+        LoadSchemaInt();
+    return retVal;
 }
-void FindDataBase::LoadSchema()
+void FindDataBase::LoadSchemaInt()
 {
-	Path prefDatabasePath(GetDBPath());
-	if (prefDatabasePath.Exists())
-		return;
-	if (Open() == 0) {
-		const char **kDataBaseSchemas[] = {kFindDatabaseSchema, kCacheDatabaseSchema};
-		const int kSize[] = {sizeof(kFindDatabaseSchema)/sizeof(const char *), 
-			sizeof(kCacheDatabaseSchema)/sizeof(const char *)};
-		for (int i = 0 ; i < kSize[mFDB_DatabaseType]; ++i) {
-			QueryNonRows(kDataBaseSchemas[mFDB_DatabaseType][i]);
-		}
-		Commit();
-	}
+    const char **kDataBaseSchemas[] = { kFindDatabaseSchema, kCacheDatabaseSchema, kContentSearchDatabaseSchema };
+    const int kSize[] = { sizeof(kFindDatabaseSchema) / sizeof(const char *),
+        sizeof(kCacheDatabaseSchema) / sizeof(const char *),
+        sizeof(kContentSearchDatabaseSchema) / sizeof(const char *)
+    };
+    for (int i = 0; i < kSize[mFDB_DatabaseType]; ++i) {
+        QueryNonRows(kDataBaseSchemas[mFDB_DatabaseType][i]);
+    }
+    Commit();
 }
 
 CString FindDataBase::GetPreferencesFolderPahth()

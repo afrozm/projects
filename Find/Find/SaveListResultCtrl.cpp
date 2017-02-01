@@ -137,9 +137,8 @@ HMENU CSaveListResultCtrl::GetExplorerContextMenu(IContextMenu **pInExplorerCont
 		if (psf) {
 			TCHAR pathChild[MAX_PATH];
 			ULONG cch;
-			lstrcpy(pathChild, path);
-			LPTSTR file = (LPTSTR)FileNameFromPath(path);
-			if (SUCCEEDED(hr = psf->ParseDisplayName(NULL, NULL, file, &cch, pidl+i, NULL)))
+			lstrcpyS(pathChild, FileNameFromPath(path));
+			if (SUCCEEDED(hr = psf->ParseDisplayName(NULL, NULL, pathChild, &cch, pidl+i, NULL)))
 				i++;
 			cch = 0;
 		}

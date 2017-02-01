@@ -59,20 +59,20 @@ bool CDialogPreviewText::UpdateText()
 int CDialogPreviewText::LoadFile()
 {
 	DWORD tc = GetTickCount();
-	DWORD threadID(GetCurrentThreadId());
-	while (!ThreadManager::GetInstance().IsThreadTerminated(threadID)) {
+    const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
+	while (!bIsTerminated) {
 		CAutoLock ca(mLock);
-		CString line = mTextReader.Read();
+		CString line = mTextReader.Read().c_str();
 		if (line.IsEmpty())
 			break;
 		mText += line;
 		DWORD nowTc = GetTickCount();
-		if (!ThreadManager::GetInstance().IsThreadTerminated(threadID) && ((nowTc - tc) > 250)) {
+		if (!bIsTerminated && ((nowTc - tc) > 250)) {
 			tc = nowTc;
 			UpdateText();
 		}
 	}
-	if (!ThreadManager::GetInstance().IsThreadTerminated(threadID)) {
+	if (!bIsTerminated) {
 		UpdateText();
 		OnDataChanged(0, 0);
 	}

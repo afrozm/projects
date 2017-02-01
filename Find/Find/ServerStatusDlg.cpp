@@ -9,17 +9,35 @@
 #include "AutoLock.h"
 #include "ListCtrlUtil.h"
 
-static lstring GetThreadName(int iThreadClass) {
-	static LPCTSTR thNames[] = {
-		_T("Main Search"),
-		_T("DBComitter"),
-		_T("Worker: Search"),
-		_T("Verify"),
-		_T("IPE")
-	};
-	if (iThreadClass >= 0 && iThreadClass < ARRAYSIZE(thNames))
-		return thNames[iThreadClass];
-	return lstring(_T("Unknown: ")) + (LPCTSTR)SystemUtils::IntToString(iThreadClass);
+LPCTSTR ServerThreadOperationGetThreadName(ServerThreadOperation threadOp)
+{
+    switch (threadOp)
+    {
+    case SERVER_THREAD_OP_START_SEARCH:
+        return _T("MainSearch");
+    case SERVER_THREAD_OP_START_DBCOMMITER:
+        return _T("DBComitter");
+    case SERVER_THREAD_OP_SEARCH_IN_NETWORK:
+        return _T("WorkerSearch");
+    case SERVER_THREAD_OP_VERIFY:
+        return _T("Verify");
+    case SERVER_THREAD_OP_IPENUM:
+        return _T("IPEnum");
+    case SERVER_THREAD_OP_LOAD_DEFAULT:
+        return _T("LoadDefault");
+    case SERVER_THREAD_OP_EXECUTE:
+        return _T("Execute");
+    case SERVER_THREAD_OP_STATUS:
+        return _T("Status");
+    }
+    return NULL;
+}
+
+static lstring GetThreadName(int iThreadId) {
+    LPCTSTR threadName(ThreadManager::GetInstance().GetThreadName(iThreadId));
+    if (threadName == NULL)
+        threadName = _T("Unknown: ");
+	return threadName;
 }
 
 CServerStatusThreadNotifier::CServerStatusThreadNotifier(CServerStatusDlg *pDlg)
@@ -102,7 +120,7 @@ void CServerStatusDlg::Notify(ThreadNotifier::ThreadNotification notifiation, DW
 	case ThreadNotifier::ThreadCreated:
 		{
 			CAutoLock autoLock(mLock);
-			index = pListStatus->InsertItem(index, GetThreadName(ThreadManager::GetInstance().GetThreadClass(threadID)).c_str());
+			index = pListStatus->InsertItem(index, GetThreadName(threadID).c_str());
 			pListStatus->SetItemData(index, (DWORD_PTR)threadID);
 			SetStatusMessage(_T("Thread: Number of threads %d"), pListStatus->GetItemCount());
 		}
@@ -153,7 +171,7 @@ DWORD CServerStatusDlg::StartThreadOperation(ServerThreadOperation op, LPVOID th
 {
 	ThreadData *td = new ThreadData(this, op, threadData);
 	DWORD threadID((DWORD)-1);
-	ThreadManager::GetInstance().CreateThread(TMServerStatusThreadProcFn, td, op, &threadID);
+	ThreadManager::GetInstance().CreateThread(TMServerStatusThreadProcFn, td, op, &threadID, ServerThreadOperationGetThreadName(op));
 	return threadID;
 }
 int CServerStatusDlg::DoThreadOperation(LPVOID pInThreadData)

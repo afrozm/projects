@@ -83,15 +83,15 @@ lstring StringUtils::Format(const TCHAR *msg, ...)
     return outStr;
 }
 
-std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
+std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString, int len /*= -1*/)
 {
     std::string sRet;
     if (unicodeString != NULL && unicodeString[0])
     {
 #ifdef _WIN32
-        int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, 0, 0, NULL, NULL);
+        int kMultiByteLength = WideCharToMultiByte(CP_UTF8, 0, unicodeString, len, 0, 0, NULL, NULL);
         std::vector<char> vecChar(kMultiByteLength);
-        if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, -1, &vecChar[0], (int)vecChar.size(), NULL, NULL))
+        if (WideCharToMultiByte(CP_UTF8, 0, unicodeString, len, &vecChar[0], (int)vecChar.size(), NULL, NULL))
         {
             sRet.assign(&vecChar[0]);
         }
@@ -100,23 +100,23 @@ std::string StringUtils::UnicodeToUTF8(const wchar_t *unicodeString)
     return sRet;
 }
 
-std::wstring StringUtils::UTF8ToUnicode(const std::string &utf8String)
+std::wstring StringUtils::UTF8ToUnicode(const std::string &utf8String, int len /*= -1*/)
 {
-    return UTF8ToUnicode(utf8String.c_str());
+    return UTF8ToUnicode(utf8String.c_str(), len);
 }
 
-std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
+std::wstring StringUtils::UTF8ToUnicode(const char *utf8String, int len /*= -1*/)
 {
     std::wstring		sRet;
     if (utf8String != NULL && utf8String[0])
     {
 #ifdef _WIN32
-        int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, NULL, 0);
+        int	kAllocate = MultiByteToWideChar(CP_UTF8, 0, utf8String, len, NULL, 0);
         if (kAllocate)
         {
             std::vector<wchar_t> vecWide(kAllocate);
 
-            int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, -1, &vecWide[0], (int)vecWide.size());
+            int kCopied = MultiByteToWideChar(CP_UTF8, 0, utf8String, len, &vecWide[0], (int)vecWide.size());
             if (kCopied)
             {
                 sRet.assign(&vecWide[0]);
@@ -127,9 +127,9 @@ std::wstring StringUtils::UTF8ToUnicode(const char *utf8String)
     return sRet;
 }
 
-std::string StringUtils::UnicodeToUTF8(const std::wstring & unicodeString)
+std::string StringUtils::UnicodeToUTF8(const std::wstring & unicodeString, int len /*= -1*/)
 {
-    return UnicodeToUTF8(unicodeString.c_str());
+    return UnicodeToUTF8(unicodeString.c_str(), len);
 }
 
 static lstring WildCardToRegExp(LPCTSTR wildCard)

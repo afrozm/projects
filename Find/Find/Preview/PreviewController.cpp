@@ -38,7 +38,8 @@ CDialogPreview* CPreviewController::GetPreviewDialog(CDialog *pParentDialog)
 int CPreviewController::PreviewControlHandler()
 {
 	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-	while (!ThreadManager::GetInstance().IsThreadTerminated(m_dwThreadControlID)) {
+    const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
+	while (!bIsTerminated) {
 		ControllerAction ca(GetAction());
 		switch (ca) {
 		case CA_ShowPreview:

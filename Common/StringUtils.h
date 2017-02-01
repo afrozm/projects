@@ -45,10 +45,10 @@ namespace StringUtils
 		}
 	}
 
-    std::string UnicodeToUTF8(const wchar_t *unicodeString);
-    std::wstring UTF8ToUnicode(const char *utf8String);
-    std::string UnicodeToUTF8(const std::wstring &unicodeString);
-    std::wstring UTF8ToUnicode(const std::string &utf8String);
+    std::string UnicodeToUTF8(const wchar_t *unicodeString, int len=-1);
+    std::wstring UTF8ToUnicode(const char *utf8String, int len = -1);
+    std::string UnicodeToUTF8(const std::wstring &unicodeString, int len = -1);
+    std::wstring UTF8ToUnicode(const std::string &utf8String, int len = -1);
 
     lstring WildCardExpToRegExp(const TCHAR *wildCardExp);
     bool WildCardMatch(const lstring &inWildCardExp, const lstring &inStr);

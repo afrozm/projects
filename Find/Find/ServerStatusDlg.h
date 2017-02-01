@@ -21,7 +21,7 @@ typedef enum {
     SERVER_THREAD_OP_EXECUTE,
     SERVER_THREAD_OP_STATUS // status of all thread in status window
 } ServerThreadOperation;
-
+LPCTSTR ServerThreadOperationGetThreadName(ServerThreadOperation threadOp);
 // CServerStatusDlg dialog
 class CServerStatusDlg;
 

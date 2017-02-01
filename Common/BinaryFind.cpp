@@ -390,11 +390,11 @@ void BinaryFind::ComputeKMPTable()
 static char getHexByte(wchar_t ch)
 {
     if (ch >= '0' && ch <= '9')
-        return ch - '0';
+        return (char)ch - '0';
     if (ch >= 'A' && ch <= 'F')
-        return 0xA + ch - 'A';
+        return 0xA + (char)ch - 'A';
     if (ch >= 'a' && ch <= 'f')
-        return 0xA + ch - 'a';
+        return 0xA + (char)ch - 'a';
     return (char)ch;
 }
 

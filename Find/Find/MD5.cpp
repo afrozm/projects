@@ -59,14 +59,14 @@ int ToChar(LPCTSTR str, unsigned char *out, int inLen)
 	return len;
 }
 
-CString CMD5::GetMD5(LPCTSTR fileOrText)
+CString CMD5::GetMD5(LPCTSTR fileOrText, bool bString /* = false */)
 {
 	CString md5;
 	const CMD5Init &md5Init(CMD5Init::GetInstance());
 	if (!md5Init.IsValid())
 		return md5;
 	md5Init.MD5Init(&md5Ctx);
-	HANDLE hFile = CreateFile(fileOrText, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hFile = bString ? INVALID_HANDLE_VALUE : CreateFile(fileOrText, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	CArray<unsigned char> bufA;
 	bufA.SetSize(4096*1024); // 4 MB
 	unsigned char *buf = bufA.GetData();
