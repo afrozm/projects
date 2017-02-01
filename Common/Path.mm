@@ -484,7 +484,7 @@ bool Path::CreateShortCut(const Path &shortCutPath, LPCTSTR pszTargetargs /*= NU
 
 ULONGLONG Path::GetFileTime(FileTimeType fileType) const
 {
-	FILETIME fileTime[3] = { 0 };
+	FILETIME fileTime[3] = { {0} };
 	GetFileTime(fileTime, fileTime + 1, fileTime + 2);
 	if (fileType < CreationTime || fileType > ModifiedTime)
 		fileType = CreationTime;
@@ -622,11 +622,6 @@ int Finder::StartFind(const Path &dir)
                     FindData::PLAT_FIND_DATA pd = {};
                     FindData fd(&pd, filePath, bMatched);
                     int fcbRetVal(mFindCallBack(fd, m_pUserParam));
-                    while (fcbRetVal == FCBRV_PAUSE) {
-                        fd.fileMatched = false;
-                        fcbRetVal = mFindCallBack(fd, m_pUserParam);
-                        ProcessUtil::Sleep(10);
-                    }
                     if (fcbRetVal == FCBRV_ABORT)
                         break;
                     if (filePath.IsDir()

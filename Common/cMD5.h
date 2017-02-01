@@ -1,6 +1,6 @@
 #pragma once
+#include "Common.h"
 
-#define _ReadBufSize 0x1000000
 
 typedef unsigned long long MD5ULL;
 
@@ -22,8 +22,8 @@ private:
 class cMD5
 {
 public:
-    char* CalcMD5FromString(const char *s8_Input);
-    char* CalcMD5FromFile  (LPCTSTR s8_Path, bool bReset = true);
+    std::string CalcMD5FromString(const char *s8_Input);
+    std::string CalcMD5FromFile  (LPCTSTR s8_Path, bool bReset = true);
 
     void FreeBuffer();
     cMD5(MD5Callback *pMD5Callback = NULL);
@@ -32,12 +32,12 @@ public:
 	{
 		m_pMD5Callback = pMD5Callback;
 	}
-    char* MD5FinalToString();
+    std::string MD5FinalToString();
 private:
     struct MD5Context
     {
-        unsigned long buf[4];
-        unsigned long bits[2];
+        unsigned int buf[4];
+        unsigned int bits[2];
         unsigned char in[64];
     };
 
@@ -45,13 +45,13 @@ private:
     void MD5Update(unsigned char *buf, unsigned len);
     void MD5Final (unsigned char digest[16]);
 
-    void MD5Transform(unsigned long buf[4], unsigned long in[16]);
+    void MD5Transform(unsigned int buf[4], unsigned int in[16]);
 
-    void byteReverse (unsigned char *buf, unsigned longs);
+    void byteReverse (unsigned char *buf, unsigned ints);
 
     char *mp_s8ReadBuffer;
     MD5Context ctx;
-    char   ms8_MD5[40]; // Output buffer
+
 	MD5Callback *m_pMD5Callback;
 };
 

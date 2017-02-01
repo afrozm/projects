@@ -82,7 +82,7 @@ struct FindData {
 #define FCBRV_CONTINUE 0
 #define FCBRV_ABORT 1
 #define FCBRV_SKIPDIR 2
-#define FCBRV_PAUSE 3
+
 typedef int(*FindCallBack)(FindData&, void *pUserParam);
 struct Finder {
 	Finder(FindCallBack fcb, void *pUserParam = NULL, LPCTSTR pattern = NULL, LPCTSTR excludePattern = NULL);

@@ -3,20 +3,37 @@
 
 #include "stdafx.h"
 #include "cMD5.h"
-#include <conio.h>
 #include "Path.h"
 #include "Progress.h"
+
+#ifndef _WIN32
+struct COORD {
+    short X, Y;
+};
+typedef COORD* PCOORD;
+#endif
+
 COORD GetConsolePos(void)
 {
+#ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
 		&csbiInfo);
 	return csbiInfo.dwCursorPosition;
+#else
+    COORD curPos = {0, 0};
+    getsyx(curPos.Y, curPos.X);
+    return curPos;
+#endif
 }
 
 void SetConsolePos(COORD newPos)
 {
+#ifdef _WIN32
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), newPos);
+#else
+    setsyx(newPos.Y, newPos.X);
+#endif
 }
 void MoveConsoleCursor(int x, int y)
 {
@@ -77,12 +94,12 @@ public:
 			Erase();
 			CopyStr(str);
 			AutoConsolePos acp(&printPos);
-			lprintf(mStr);
+			lprintf(_T("%s"), mStr);
 		}
 	}
 	void Erase()
 	{
-		int len = lstrlen(mStr);
+		int len = (int)lstrlen(mStr);
 		AutoConsolePos acp(&printPos);
 		while (len-- > 0) {
 			lprintf(_T(" "));
@@ -131,13 +148,15 @@ struct ConsoleProgress {
 int CopyA2T(const char *src, LPTSTR dst)
 {
 	int len = 0;
-	while (*dst++ = *src++)
+    while (*src) {
+        *dst++ = *src++;
 		len++;
+    }
 	return len;
 }
 int CopyT2A(LPCTSTR src, char *dst)
 {
-	int len = lstrlen(src);
+	int len = (int)lstrlen(src);
 #if defined(UNICODE) || (_UNICODE)
 	len = WideCharToMultiByte(CP_ACP, 0, src, -1, dst, len+1, NULL, NULL);
 #else
@@ -201,10 +220,8 @@ public:
 
 static int FindCallBack_Files(FindData &fd, void *pUserParam)
 {
-	if (fd.fileMatched && !(fd.pFindData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-		MD5ULL size = fd.pFindData->nFileSizeHigh;
-		size <<= sizeof(MD5ULL)<<3;
-		size |= fd.pFindData->nFileSizeLow;
+	if (fd.fileMatched && !fd.fullPath.IsDir()) {
+		MD5ULL size = fd.fullPath.GetSize();
 		FileList *pFiles((FileList*)pUserParam);
 		pFiles->files.push_back(FileInfo(fd.fullPath, size));
 		pFiles->totalSize += size;
@@ -220,7 +237,7 @@ static int GetFiles(const lstring &folderPath, FileList &outFiles, LPCTSTR patte
 int _tmain(int argc, _TCHAR* argv[])
 {
 	if (argc < 2) {
-		_ftprintf(stderr, _T("Usage: md5 <file/directory path> or <string>\n")
+		_tprintf(_T("Usage: md5 <file/directory path> or <string>\n")
 			_T("If direcotry is given: optional parmaters:\n")
 			_T("md5 <directory> [match string] [except string]\n")
 			_T("eg md5 <directory> * desktop.ini;.DS_Store\n")
@@ -231,9 +248,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		cMD5 cmd5;
 		TCHAR tmd5[128];
 		lstring postString;
-		char *c_md5 = "";
-		if (PathFileExists(argv[1]) && (argc <3 || lstrcmpi(argv[2], _T("-s")))) {
-			if (!PathIsDirectory(argv[1])) {
+        std::string c_md5;
+		if (Path(argv[1]).Exists() && (argc <3 || lstrcmpi(argv[2], _T("-s")))) {
+			if (!Path(argv[1]).IsDir()) {
 				MD5CallbackProgress md5Progress;
 				cmd5.SetMD5Callback(&md5Progress);
 				c_md5 = cmd5.CalcMD5FromFile(argv[1]);
@@ -252,10 +269,10 @@ int _tmain(int argc, _TCHAR* argv[])
 				int nFiles((int)files.files.size());
 				if (nFiles)
 					c_md5 = cmd5.MD5FinalToString();
-				TCHAR buf[128] = {0};
+                lstring strnFiles;
 				postString += _T("Number of Files: ");
-				_itot_s(nFiles, buf, 128, 10);
-				postString += buf;
+                STLUtils::ChangeType(nFiles, strnFiles);
+				postString += strnFiles;
 				postString += _T("\n");
 			}
 		}
@@ -267,7 +284,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			c_md5 = cmd5.CalcMD5FromString(src);
 			free(src);
 		}
-		CopyA2T(c_md5, tmd5);
+		CopyA2T(c_md5.c_str(), tmd5);
 		{
 			AutoConsolePos acp;
 			_tprintf(_T("\r                                                                                \r"));

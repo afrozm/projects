@@ -5,14 +5,21 @@
 
 #pragma once
 
+#include "Common.h"
+#include "STLUtils.h"
 
+#ifdef _WIN32
 #include <windows.h>
 #include <shlwapi.h>
-#include <stdio.h>
+#include <atlrx.h>
 #include <tchar.h>
+#include <conio.h>
+#else
+#include <curses.h>
+#endif
+#include <stdio.h>
 #include <vector>
 #include <string>
-#include <atlrx.h>
 
 // TODO: reference additional headers your program requires here
 #if defined(_UNICODE) || defined(UNICODE)
@@ -22,7 +29,7 @@ typedef std::wstring lstring;
 //#define lputs _putws
 #define lstrncmp wcsncmp
 #define lstrncmpi wcsnicmp
-#define lfopen _wfopen
+
 #else
 typedef std::string lstring;
 #define lprintf printf
@@ -30,5 +37,5 @@ typedef std::string lstring;
 //#define lputs puts
 #define lstrncmp strncmp
 #define lstrncmpi strnicmp
-#define lfopen fopen
+
 #endif

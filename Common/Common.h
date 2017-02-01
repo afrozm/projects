@@ -13,7 +13,7 @@
 #define lstrncmp wcsncmp
 #define lstrncmpi wcsnicmp
 typedef std::wstring lstring;
-#define lfopen _wfopen
+#define lfopen(f,p,m) _wfopen_s(&f,p,m)
 
 #ifndef _WIN32
 #if !defined(__T)
@@ -29,7 +29,9 @@ typedef std::wstring lstring;
 //#define lputs puts
 #define lstrncmp strncmp
 #define lstrncmpi strnicmp
-#define lfopen fopen
+#define lfopen(f,p,m) f=fopen(p,m)
+#define sprintf_s snprintf
+#define strcat_s(d,n,s) strlcat(d,s,n)
 typedef std::string lstring;
 
 #ifndef _WIN32
@@ -55,6 +57,7 @@ typedef char TCHAR;
 #define _vstprintf_s vsnprintf
 #define _tcstok_s strtok_r
 #define sprintf_s snprintf
+#define lstrcmp strcmp
 #endif
 
 #define _TCHAR TCHAR

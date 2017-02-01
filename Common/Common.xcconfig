@@ -7,3 +7,11 @@
 //
 
 HEADER_SEARCH_PATHS=$(inherited) $(SRCROOT)/$(PROJECT_NAME) $(SRCROOT) $(SRCROOT)/../Common
+
+// hide the symbols
+GCC_SYMBOLS_PRIVATE_EXTERN = YES
+GCC_INLINES_ARE_PRIVATE_EXTERN = YES
+
+// Enable warnings
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+WARNING_CFLAGS = -Wall -Wno-unknown-pragmas -Wno-reorder

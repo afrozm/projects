@@ -1,5 +1,9 @@
-#include "StdAfx.h"
 #include "cMD5.h"
+#include "Path.h"
+
+
+#define _ReadBufSize 0x1000000
+
 
 void MD5Callback::SetTotal(MD5ULL total)
 {
@@ -38,9 +42,9 @@ void cMD5::FreeBuffer()
 //         calculate MD5 from a file of any size (also size = 0)
 //         returns "" on file error
 //
-/********************************************************************/
+********************************************************************/
 
-char* cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
+std::string cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
 {
     if (!mp_s8ReadBuffer) mp_s8ReadBuffer = new char[_ReadBufSize];
 
@@ -49,20 +53,19 @@ char* cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
 
     // ++++++++++++ Read file block by block +++++++++++
 
-    HANDLE h_File = CreateFile(s8_Path, GENERIC_READ, FILE_SHARE_READ, 0, 
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    FILE *h_File = NULL;
+    lfopen(h_File, s8_Path, _T("rb"));
         
-    if (h_File == INVALID_HANDLE_VALUE)
+    if (h_File == NULL)
         return "";
 	if (m_pMD5Callback != NULL) {
-		LARGE_INTEGER li = {0};
-		GetFileSizeEx(h_File, &li);
-		m_pMD5Callback->SetTotal((MD5ULL)li.QuadPart);
+		m_pMD5Callback->SetTotal(Path(s8_Path).GetSize());
 	}
-    unsigned long u32_Read = 0;
+    unsigned u32_Read = 0;
     while (1)
     {
-		if (!ReadFile(h_File, mp_s8ReadBuffer, _ReadBufSize, &u32_Read, 0) || u32_Read == 0)
+        u32_Read = (unsigned)fread(mp_s8ReadBuffer, _ReadBufSize, 1, h_File);
+		if (u32_Read == 0)
         {
             break;
         }
@@ -74,7 +77,7 @@ char* cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
 		}
     };
 
-    CloseHandle(h_File);
+    fclose(h_File);
 	if (m_pMD5Callback != NULL) {
 		m_pMD5Callback->UpdateCurrent(u32_Read);
 	}
@@ -91,10 +94,10 @@ char* cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
 //
 //                calculate MD5 from a string
 //
-/********************************************************************/
+********************************************************************/
 
 
-char* cMD5::CalcMD5FromString(const char *s8_Input)
+std::string cMD5::CalcMD5FromString(const char *s8_Input)
 {
     MD5Init();
     MD5Update((unsigned char*)s8_Input, (int)strlen(s8_Input));
@@ -107,8 +110,8 @@ char* cMD5::CalcMD5FromString(const char *s8_Input)
 //
 //                           Calculation functions
 //
-/*********************************************************************
-/*
+*********************************************************************
+ *
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
@@ -129,12 +132,10 @@ void cMD5::MD5Init()
  */
 void cMD5::MD5Update(unsigned char *buf, unsigned len)
 {
-    unsigned long t;
-
     /* Update bitcount */
 
-    t = ctx.bits[0];
-    if ((ctx.bits[0] = t + ((unsigned long) len << 3)) < t)
+    unsigned int t = ctx.bits[0];
+    if ((ctx.bits[0] = t + ((unsigned int) len << 3)) < t)
     ctx.bits[1]++;  /* Carry from low to high */
     ctx.bits[1] += len >> 29;
 
@@ -152,7 +153,7 @@ void cMD5::MD5Update(unsigned char *buf, unsigned len)
     }
     memcpy(p, buf, t);
     cMD5::byteReverse(ctx.in, 16);
-    MD5Transform(ctx.buf, (unsigned long *) ctx.in);
+    MD5Transform(ctx.buf, (unsigned int *) ctx.in);
     buf += t;
     len -= t;
     }
@@ -161,7 +162,7 @@ void cMD5::MD5Update(unsigned char *buf, unsigned len)
     while (len >= 64) {
     memcpy(ctx.in, buf, 64);
     cMD5::byteReverse(ctx.in, 16);
-    MD5Transform(ctx.buf, (unsigned long *) ctx.in);
+    MD5Transform(ctx.buf, (unsigned int *) ctx.in);
     buf += 64;
     len -= 64;
     }
@@ -175,17 +176,18 @@ void cMD5::MD5Update(unsigned char *buf, unsigned len)
 /*
  * Convert signature to CString
  */
-char* cMD5::MD5FinalToString()
+std::string cMD5::MD5FinalToString()
 {
     unsigned char signature[16];
     MD5Final(signature);
 
-    ms8_MD5[0] = 0;
+    std::string ms8_MD5;
     char s8_Temp[5];
     for (int i=0; i<16; i++) 
     {
         sprintf_s(s8_Temp, sizeof(s8_Temp)/sizeof(s8_Temp[0]), "%02x", signature[i]);
-        strcat_s(ms8_MD5, sizeof(ms8_MD5)/sizeof(ms8_MD5[0]), s8_Temp);
+        s8_Temp[3] = 0;
+        ms8_MD5 += s8_Temp;
     }
 
     return ms8_MD5;
@@ -217,7 +219,7 @@ void cMD5::MD5Final(unsigned char digest[16])
     /* Two lots of padding:  Pad the first block to 64 bytes */
     memset(p, 0, count);
     cMD5::byteReverse(ctx.in, 16);
-    MD5Transform(ctx.buf, (unsigned long *) ctx.in);
+    MD5Transform(ctx.buf, (unsigned int *) ctx.in);
 
     /* Now fill the next block with 56 bytes */
     memset(ctx.in, 0, 56);
@@ -228,10 +230,10 @@ void cMD5::MD5Final(unsigned char digest[16])
     cMD5::byteReverse(ctx.in, 14);
 
     /* Append length in bits and transform */
-    ((unsigned long *) ctx.in)[14] = ctx.bits[0];
-    ((unsigned long *) ctx.in)[15] = ctx.bits[1];
+    ((unsigned int *) ctx.in)[14] = ctx.bits[0];
+    ((unsigned int *) ctx.in)[15] = ctx.bits[1];
 
-    MD5Transform(ctx.buf, (unsigned long *) ctx.in);
+    MD5Transform(ctx.buf, (unsigned int *) ctx.in);
     cMD5::byteReverse((unsigned char *) ctx.buf, 4);
     memcpy(digest, ctx.buf, 16);
     memset(&ctx, 0, sizeof(MD5Context));        /* In case it's sensitive */
@@ -252,12 +254,12 @@ void cMD5::MD5Final(unsigned char digest[16])
 
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to
- * reflect the addition of 16 longwords of new data.  MD5Update blocks
- * the data and converts bytes into longwords for this routine.
+ * reflect the addition of 16 intwords of new data.  MD5Update blocks
+ * the data and converts bytes into intwords for this routine.
  */
-void cMD5::MD5Transform(unsigned long buf[4], unsigned long in[16])
+void cMD5::MD5Transform(unsigned int buf[4], unsigned int in[16])
 {
-    register unsigned long a, b, c, d;
+    unsigned int a, b, c, d;
 
     a = buf[0];
     b = buf[1];
@@ -348,20 +350,20 @@ void cMD5::MD5Transform(unsigned long buf[4], unsigned long in[16])
 
 
 #ifndef HIGHFIRST
-    void cMD5::byteReverse(unsigned char *buf, unsigned longs)  
+    void cMD5::byteReverse(unsigned char *buf, unsigned ints)  
     {
         // Nothing
     }
 #else
     // Note: this code is harmless on little-endian machines.
-    void cMD5::byteReverse(unsigned char *buf, unsigned longs)
+    void cMD5::byteReverse(unsigned char *buf, unsigned ints)
     {
-        unsigned long t;
+        unsigned int t;
         do {
-        t = (unsigned long) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
+        t = (unsigned int) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
             ((unsigned) buf[1] << 8 | buf[0]);
-        *(unsigned long *) buf = t;
+        *(unsigned int *) buf = t;
         buf += 4;
-        } while (--longs);
+        } while (--ints);
     }
 #endif
