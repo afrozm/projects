@@ -84,6 +84,7 @@ class Operator
 public:
 	Operator(int nOp = 0, int preced = 0, const char *name = "", const char *desc = "")
 		: m_nNumberOfOperands(nOp), m_iPrecedence(preced), mName(name), mDesc(desc) {}
+    virtual ~Operator() {}
 	int GetNumberOfOperands() const { return m_nNumberOfOperands; }
 	virtual Number Operate(const VecNumbers &numbers) const { return Number(""); }
 	virtual const char *Name() const { return mName; }
