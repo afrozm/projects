@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "Calculator.h"
 #include <cmath>
-
+#include "stlutils.h"
 
 #define PI 3.14159265358979323846
 #define E 2.71828182845904523536
@@ -50,9 +50,32 @@ std::string Number::GetAsString(StringType type /* = Normal */, int decimalPreci
 			outStr = std::to_string(GetLong());
 			break;
 		case Number::Binary:
+        {
+            long long number(GetLong());
+            unsigned long long msb(0);
+            msb = MS_FLAGBIT(msb);
+            bool bPrint(false);
+            outStr = "0b";
+            while (msb)
+            {
+                const char *chn(msb & number ? "1" : "0");
+                if (!bPrint && chn[0] == '1')
+                    bPrint = true;
+                if (bPrint)
+                    outStr += chn;
+                msb >>= 1;
+            }
+            if (!bPrint)
+                outStr += "0";
+        }
 			break;
 		case Number::Octal:
-			break;
+        {
+            char str[128] = { 0 };
+            sprintf_s(str, sizeof(str) / sizeof(str[0]), "0%llo", GetLong());
+            outStr = str;
+        }
+        break;
 		case Number::Hex:
 		{
 			char str[128] = { 0 };
@@ -71,10 +94,10 @@ std::string Number::GetAsString(StringType type /* = Normal */, int decimalPreci
 			sprintf_s(str, sizeof(str) / sizeof(str[0]), "%%.%df", decimalPrecision);
 			outStr = str;
 			sprintf_s(str, sizeof(str) / sizeof(str[0]), outStr.c_str(), GetDouble());
-			outStr = str;
 		}
 		else
-			outStr = std::to_string(GetDouble());
+            sprintf_s(str, sizeof(str) / sizeof(str[0]), "%f", GetDouble());
+		outStr = str;
 	}
 		
 		break;

@@ -3,7 +3,7 @@
 
 #ifndef FLAGBIT
 
-#define FLAGBIT(n) (1<<(n))
+#define FLAGBIT(n) (1ULL<<(n))
 #define MASKBIT(u) (FLAGBIT(u)-1)
 #define MASKBITS(u,l) (MASKBIT(u) ^ MASKBIT(l))
 #define SET_FLAG(f,fb) (f)|=(fb)
@@ -30,28 +30,60 @@
 #include <map>
 #include <sstream>
 #include <codecvt>
-
-template<class KEY, class VALUE>
-class KeyValueMap : public std::map<KEY, VALUE> {
-public:
-	const VALUE* GetValue(const KEY& inKey) const
-	{
-		auto cit(this->find(inKey));
-		if (cit != this->end())
-			return &cit->second;
-		return NULL;
-	}
-	VALUE* GetValue(const KEY& inKey)
-	{
-		auto cit(this->find(inKey));
-		if (cit != this->end())
-			return &cit->second;
-		return NULL;
-	}
-};
+#include <vector>
 
 namespace STLUtils {
-	template <class T>
+    template<class KEY, class VALUE>
+    class KeyValueMap : public std::map<KEY, VALUE> {
+    public:
+        const VALUE* GetValue(const KEY& inKey) const
+        {
+            auto cit(this->find(inKey));
+            if (cit != this->end())
+                return &cit->second;
+            return NULL;
+        }
+        VALUE* GetValue(const KEY& inKey)
+        {
+            auto cit(this->find(inKey));
+            if (cit != this->end())
+                return &cit->second;
+            return NULL;
+        }
+    };
+    template<class T>
+    class UniqueVector : public std::vector<T>
+    {
+    public:
+        long long Find(const T& t) const {
+            long long index(0);
+            for (const auto &c : *this) {
+                if (c == t)
+                    return index;
+                ++index;
+            }
+            return -1;
+        }
+        long long AddUnique(const T& t) {
+            long long index(Find(t));
+            if (index >= 0)
+                (*this)[(size_type)index] = t;
+            else {
+                index = size();
+                push_back(t);
+            }
+            return index;
+        }
+        bool Remove(const T& t) {
+            long long index(Find(t));
+            if (index >= 0) {
+                erase(begin() + index);
+                return true;
+            }
+            return false;
+        }
+    };
+    template <class T>
 	void Swap(T &a, T &b)
 	{
 		T t = a;
