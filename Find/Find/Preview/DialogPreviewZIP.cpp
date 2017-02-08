@@ -51,7 +51,7 @@ BOOL CDialogPreviewZIP::ShowPreview(const CString &path)
     }
     if (bSuccess) {
         Path zipFilePath(path);
-        mTreeCtrl.SetRootPath(zipFilePath.Parent());
+        mTreeCtrl.SetRootPath(CString(zipFilePath.Parent()));
         mTreeCtrl.Expand(mTreeCtrl.InsertNewItem(NULL, zipFilePath.FileName(), 1), TVE_EXPAND, false);
     }
 	return bSuccess;

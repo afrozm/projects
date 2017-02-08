@@ -2,7 +2,7 @@
 #include "ContentSearchManager.h"
 #include "ThreadManager.h"
 #include "FindServerDlg.h"
-#include "MD5.h"
+#include "cMD5.h"
 #include "WordParser.h"
 #include "DataReader.h"
 
@@ -10,7 +10,7 @@ TableItertatorClass(ContentSearchManager);
 
 ContentSearchManager::ContentSearchManager()
     : mContentDatabase(FDB_Words), m_dwContentSearchThreadIDManager(0), m_pDBCommitter(NULL),
-    uFlags(0)
+    m_uFlags(0)
 {
 }
 
@@ -32,11 +32,11 @@ enum ContentSearchThreadOperation {
 };
 #define CM_THREAD_CLASS 0x389
 
-bool ContentSearchManager::StartContentSearch(bool bCheckIfContentSearchRequired /* = false */)
+bool ContentSearchManager::StartContentSearch(unsigned uFlags /* = 0 */)
 {
     if (!IsSearchStarted()) {
         bool bStart(true);
-        if (bCheckIfContentSearchRequired) {
+        if (IS_FLAG_SET(uFlags, CheckIfContentSearchRequired)) {
             int hasFileEntries(0);
             ItrTableRowsCallbackData_ContentSearchManager iterFile(this, &ContentSearchManager::ItrFileTableRowsCallbackFn_CheckEntries, &hasFileEntries);
             bool bDBIsOpen(mContentDatabase.IsOpen());
@@ -51,6 +51,7 @@ bool ContentSearchManager::StartContentSearch(bool bCheckIfContentSearchRequired
             GetDBCommitter();
             SetSearchStarted();
             SetSearchFinished(false);
+            SetSearchForce(IS_FLAG_SET(uFlags, ForceSearch));
             m_dwContentSearchThreadIDManager = StartThreadOperation(ManagerThread, NULL);
         }
     }
@@ -68,6 +69,7 @@ void ContentSearchManager::StopContentSearch(bool bCancel /* = false */, bool bW
 void ContentSearchManager::WaitForFinish()
 {
     SetSearchFinished();
+    SetSearchForce(false);
     ThreadManager::GetInstance().WaitForThread(m_dwContentSearchThreadIDManager);
     DBCommiterManager::GetInstance().RemoveDBCommitter(&mContentDatabase);
     m_pDBCommitter = NULL;
@@ -77,18 +79,16 @@ void ContentSearchManager::AddFileEntry(const FileTableEntry &fte)
 {
     // Add entry to content db
     CString query;
-    bool bNewEntry(fte.fileID.IsEmpty());
+    bool bNewEntry(fte.IsFileIDEmpty());
     if (bNewEntry)
         query.Format(_T("INSERT OR IGNORE INTO File VALUES ('%s', '-', %I64d, 0, 0)"),
             fte.path, SystemUtils::TimeToInt(fte.fileModTime));
     else
         query.Format(_T("INSERT OR REPLACE INTO File VALUES ('%s', '%s', %I64d, %I64d, 0)"),
-            fte.path, fte.fileID, SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
+            fte.path, UTF8_TO_UNICODE(fte.GetFileID()).c_str(), SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
     GetDBCommitter()->AddDBQueryString(query);
-    if (bNewEntry) {
+    if (bNewEntry)
         StartContentSearch();
-        SetSearchScheduleImmediate();
-    }
 }
 
 void ContentSearchManager::UpdateFileEntriesFromSourceDB(FindDataBase &inDB)
@@ -99,7 +99,12 @@ void ContentSearchManager::UpdateFileEntriesFromSourceDB(FindDataBase &inDB)
     }
 }
 
-void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /* = false */)
+void ContentSearchManager::RemoveFileEntry(const FileTableEntry & fte)
+{
+    RemoveFileEntry(fte.path, false, fte.GetFileID().c_str());
+}
+
+void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /* = false */, const char *fileID /* = nullptr */)
 {
     CString path(filePath);
     CString query, condition;
@@ -110,12 +115,26 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         condition.Format(_T(" WHERE Path='%s'"), qpath);
     }
     FileTableEntry fte(filePath);
-    fte.GetFileID(true);
-    query.Format(_T("DELETE FROM File%s"), condition);
-    GetDBCommitter()->AddDBQueryString(query);
-    // Delete word entries if md5 file count is zero
-    query.Format(_T("||File| WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), fte.fileID, fte.fileID);
-    GetDBCommitter()->AddDBQueryString(query);
+    fte.SetFileID(fileID ? fileID : "");
+    if (fileID == NULL) {
+        CArrayCString queries;
+        // save file id and delete file entry
+        query.Format(_T("|DELETE FROM File%s|File.|%s"), condition, condition);
+        queries.Add(query);
+        // delete word entries for saved file id.
+        query.Format(_T("||File?| WHERE FileID='[1]'|DELETE FROM Word WHERE FileID='[1]'"));
+        queries.Add(query);
+        GetDBCommitter()->AddDBQueryStrings(queries);
+    }
+    else {
+        query.Format(_T("DELETE FROM File%s"), condition);
+        GetDBCommitter()->AddDBQueryString(query);
+        if (!fte.IsFileIDEmpty()) {// Delete word entries if md5 file count is zero
+            CString csFileID(StringUtils::UTF8ToUnicode(fte.GetFileID()).c_str());
+            query.Format(_T("||File| WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), csFileID, csFileID);
+            GetDBCommitter()->AddDBQueryString(query);
+        }
+    }
 }
 
 struct ThreadData {
@@ -161,7 +180,7 @@ struct ItrFileTableCallbackData
     const bool& bIsTerminated;
     unsigned long long ullLastFileIndex, ullCurIndex;
 };
-#define IsSearchContinue() (IsSearchStarted() || bIsTerminated)
+#define IsSearchContinue() (IsSearchStarted() && !bIsTerminated)
 int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
 {
     CountTimer ct;
@@ -202,6 +221,7 @@ int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
                     SetSearchScheduleImmediate(false);
                 }
                 else { // Finished one cycle search
+                    cbData.ullCurIndex = cbData.ullLastFileIndex = 0;
                     SystemUtils::LogMessage(_T("Content Search Manager: finished one state"));
                     ct.SetTimeUpdateDuration(1000 * 60 * 60); // reschedule after 1 hr
                     m_DBSearchState = GetNextDBState(m_DBSearchState);
@@ -229,6 +249,24 @@ int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
     return 0;
 }
 
+class ContentMD5Callback : public MD5Callback
+{
+public:
+    ContentMD5Callback(ContentSearchManager *pCSM, const bool &bInIsTerminated)
+        : m_pCSM(pCSM), bIsTerminated(bInIsTerminated) {}
+
+    virtual int Status() override
+    {
+        return IsSearchContinue() ? 0 : 1;
+    }
+
+private:
+    bool IsSearchStarted() const { return m_pCSM->IsSearchStarted(); }
+    ContentSearchManager *m_pCSM;
+    const bool& bIsTerminated;
+};
+
+
 int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
 {
     FileTableEntry *fte = (FileTableEntry *)pInThreadData;
@@ -236,30 +274,28 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
     if (!filePath.Exists()) { // not valid - remove or update missed count entry
         if (filePath.IsUNC()) {
             if (fte->IncrementMissedCount() > 3)
-                RemoveFileEntry(fte->path);
-            else {
-                fte->GetFileID(true);
+                RemoveFileEntry(*fte);
+            else
                 AddFileEntry(*fte); // update count
-            }
         }
         else
-            RemoveFileEntry(fte->path);
+            RemoveFileEntry(*fte);
     }
-    if (filePath.IsDir() || !CTextReader(fte->path).IsValidTextFile()) { // not valid - remove its entry
-        RemoveFileEntry(fte->path);
+    else if (filePath.IsDir() || !CTextReader(fte->path).IsValidTextFile()) { // not valid - remove its entry
+        RemoveFileEntry(*fte);
     }
     else {
-        bool bCompute(fte->fileID.IsEmpty() || fte->fileID == _T("-"));
-        bool bUpdateFileTime(true);
-        if (!bCompute) {
-            bCompute = fte->UpdateFileModTime();
-            bUpdateFileTime = false;
+        const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
+        bool bCompute(false);
+        if (fte->IsFileIDEmpty() || fte->UpdateFileModTime())
+        { // compute MD5 first
+            ContentMD5Callback callback(this, bIsTerminated);
+            cMD5 md5(&callback);
+            std::string fileID =  md5.CalcMD5FromFile(fte->path);
+            bCompute = fte->SetFileID(fileID);
         }
         if (bCompute) {
             SystemUtils::LogMessage(_T("Indexing file: %s"), fte->path);
-            const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
-            // MD5 of path
-            fte->GetFileID(true);
             FileDataReader fdr;
             BinaryData fileData(NULL, 64 * 1024 * 1024); // 64k buffer
             WordParser wp;
@@ -276,11 +312,12 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
                 // Save
                 const auto &wordList(wc.GetCount());
                 CStringArray queryList;
+                CString fileID(UTF8_TO_UNICODE(fte->GetFileID()).c_str());
                 for (const auto &words : wordList) {
                     CString query, word(words.first.c_str());
                     FindDataBase::MakeSQLString(word);
                     int count(words.second);
-                    query.Format(_T("INSERT OR REPLACE INTO Word VALUES ('%s', '%s', '%d')"), word, fte->fileID, count);
+                    query.Format(_T("INSERT OR REPLACE INTO Word VALUES ('%s', '%s', '%d')"), word, fileID, count);
                     queryList.Add(query);
                     if (!IsSearchContinue())
                         break;
@@ -289,10 +326,13 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
                     CDBCommiter *pDBComitter(GetDBCommitter());
                     pDBComitter->AddDBQueryStrings(queryList);
                     fte->lastUpdatedTime = CTime::GetCurrentTime();
-                    if (bUpdateFileTime)
-                        fte->UpdateFileModTime();
-                    AddFileEntry(*fte);
                 }
+            }
+        }
+        if (IsSearchContinue()) {
+            if (bCompute || fte->IsUpdated()) {
+                fte->UpdateFileModTime();
+                AddFileEntry(*fte);
             }
         }
     }
@@ -303,24 +343,28 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
 void FileTableEntry::UpdateFromSQliteEntry(sqlite3_stmt * statement)
 {
     path = SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_Path));
-    fileID = SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_FileID));
+    fileID = (const char *)sqlite3_column_text(statement, File_FileID);
     fileModTime = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_FileModifiedTime));
     lastUpdatedTime = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
     flags = sqlite3_column_int(statement, File_Flags);
 }
 
 FileTableEntry::FileTableEntry(LPCTSTR inpath /* = NULL */)
-    : flags(0)
+    : flags(0), bUpdated(false)
 {
     if (inpath)
         path = inpath;
 }
 
-const CString& FileTableEntry::GetFileID(bool bComputeIfEmpty /*= false*/)
+bool FileTableEntry::SetFileID(const std::string &infileID)
 {
-    if (bComputeIfEmpty && (fileID.IsEmpty() || fileID == _T("-")))
-        fileID = CMD5().GetMD5(path, true);
-    return fileID;
+    bool bFileIDUpdated(false);
+    if (infileID != fileID) {
+        bUpdated = true;
+        fileID = infileID;
+        bFileIDUpdated = true;
+    }
+    return bFileIDUpdated;
 }
 
 unsigned FileTableEntry::GetMissedCount() const
@@ -335,45 +379,49 @@ unsigned FileTableEntry::IncrementMissedCount()
     mc &= 0xf;
     flags ^= 0xf;
     flags |= mc;
+    bUpdated = true;
     return GetMissedCount();
 }
 
 bool FileTableEntry::UpdateFileModTime()
 {
-    bool bUpdated(false);
+    bool bModTimeUpdated(false);
     // Get file time
     FILETIME modTime = { 0 };
     Path(path).GetFileTime(NULL, NULL, &modTime);
     CTime cModTime(modTime);
     if (cModTime != fileModTime) {
         fileModTime = cModTime;
+        bModTimeUpdated = true;
         bUpdated = true;
     }
-    return bUpdated;
+    return bModTimeUpdated;
 }
 
 int ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent(sqlite3_stmt *statement, void * pUserData)
 {
     ItrFileTableCallbackData *cbData((ItrFileTableCallbackData*)pUserData);
     const bool& bIsTerminated(cbData->bIsTerminated);
-    bool bSearchContent(false);
+    bool bSearchContent(IsSearchForce());
     cbData->ullCurIndex++;
     if (cbData->ullCurIndex < cbData->ullLastFileIndex) {
         // Skip till last index
         return IsSearchContinue() ? 0 : 1;
     }
-    if (m_DBSearchState.CompareNoCase(_T("fresh")) == 0)
-    {
-        CString line(
-            SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_FileID)));
-        if (line.IsEmpty() || line == _T("-"))
-            bSearchContent = true;
-    }
-    else // Search content
-    {
-        CTime time = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
-        CTimeSpan timeDiff = CTime::GetCurrentTime() - time;
-        bSearchContent = timeDiff.GetDays() > 1;
+    if (!bSearchContent) {
+        if (m_DBSearchState.CompareNoCase(_T("fresh")) == 0)
+        {
+            CString line(
+                SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_FileID)));
+            if (line.IsEmpty() || line == _T("-"))
+                bSearchContent = true;
+        }
+        else // Search content
+        {
+            CTime time = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
+            CTimeSpan timeDiff = CTime::GetCurrentTime() - time;
+            bSearchContent = timeDiff.GetDays() >= 1;
+        }
     }
     if (bSearchContent) {
         FileTableEntry *fte = new FileTableEntry;

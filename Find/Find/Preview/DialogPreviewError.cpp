@@ -33,7 +33,9 @@ END_MESSAGE_MAP()
 // CDialogPreviewError message handlers
 BOOL CDialogPreviewError::ShowPreview(const CString &path)
 {
-	SetDlgItemText(IDC_STATIC_MESSAGE, _T("Preview not available for file ") + Path(path).FileName());
+    CString msg(_T("Preview not available for file "));
+    msg += Path(path).FileName();
+	SetDlgItemText(IDC_STATIC_MESSAGE, msg);
 	return TRUE;
 }
 

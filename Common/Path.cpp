@@ -2,6 +2,7 @@
 #include "Path.h"
 #include <shlwapi.h>
 #include <shlobj.h>
+#include "StringUtils.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -17,9 +18,30 @@ Path::Path(const Path& p)
 {
 }
 Path::Path(LPCTSTR inPath)
-: lstring(inPath)
+: lstring(inPath ? inPath : _T(""))
 {
 }
+
+Path::Path(const otherstring &inPath)
+{
+    lstring &thisString(*this);
+    STLUtils::ChangeType(inPath, thisString);
+}
+Path::Path(const otherchar *inPath)
+{
+    otherstring inPathStr(inPath ? inPath : OTHER_T(""));
+    lstring &thisString(*this);
+    STLUtils::ChangeType(inPathStr, thisString);
+}
+
+Path::operator otherstring() const
+{
+    otherstring outStr;
+    const lstring &thisString(*this);
+    STLUtils::ChangeType(thisString, outStr);
+    return outStr;
+}
+
 Path Path::Parent() const
 {
     const size_t len(length() + 1);
@@ -30,6 +52,12 @@ Path Path::Parent() const
 	delete []path;
 	return parent;
 }
+
+bool Path::IsParentOf(const Path &childPath) const
+{
+    return !IsEmpty() && !childPath.IsEmpty() && PathCommonPrefix((LPCTSTR)*this, (LPCTSTR)childPath.Parent(), NULL) == length();
+}
+
 Path Path::FileName() const
 {
 	return Path(PathFindFileName(c_str()));
@@ -49,6 +77,65 @@ bool Path::IsDir() const
 	DWORD fa = GetFileAttributes(c_str());
 	return fa != INVALID_FILE_ATTRIBUTES && (fa & FILE_ATTRIBUTE_DIRECTORY);
 }
+
+bool Path::IsUNC() const
+{
+    return ::PathIsUNC(c_str()) == TRUE;
+}
+
+bool Path::IsURL() const
+{
+    return PathIsURL((LPCTSTR)*this) == TRUE;
+}
+
+Path Path::GetURL() const
+{
+    if (IsURL())
+        return *this;
+    DWORD len = (DWORD)length() + MAX_PATH;
+    TCHAR *newPath = new TCHAR[len];
+    lstrcpy(newPath, (LPCTSTR)*this);
+    UrlCreateFromPath((LPCTSTR)*this, newPath, &len, 0);
+    Path outPath(newPath);
+    delete[]newPath;
+    return outPath;
+}
+
+Path Path::MakeUNCPath() const
+{
+    Path outPath(*this);
+    while (!outPath.empty() && (outPath[0] == '\\' || outPath[0] == '/'))
+        outPath.erase(0, 1);
+    outPath = _T("\\\\") + outPath;
+    return outPath;
+}
+
+Path Path::GetMachineNameFromUNCPath() const
+{
+    Path outPath(GetRoot());
+    while (!outPath.empty() && (outPath[0] == '\\' || outPath[0] == '/'))
+        outPath.erase(0, 1);
+    return outPath;
+}
+
+Path Path::RemoveRoot() const
+{
+    Path retVal(*this);
+    
+    size_t start = retVal.find_first_not_of(_T("\\/"));
+    if (start != npos && start > 0)
+        retVal.erase(0, start);
+    start = retVal.find_first_of(_T("\\/"));
+    if (start != npos)
+        retVal.erase(0, start + 1);
+    else
+        retVal.clear();
+    start = retVal.find_first_not_of(_T("\\/"));
+    if (start != npos && start > 0)
+        retVal.erase(0, start);
+    return retVal;
+}
+
 bool Path::CreateDir() const
 {
 	bool bSuccess(false);
@@ -84,6 +171,30 @@ Path Path::CurrentDir()
 	GetCurrentDirectory(4*MAX_PATH, curDir);
 	return Path(curDir);
 }
+
+Path Path::TempPath()
+{
+    TCHAR tempDir[4 * MAX_PATH];
+    tempDir[0] = 0;
+    ::GetTempPath(4 * MAX_PATH, tempDir);
+    return Path(tempDir);
+}
+
+Path Path::TempFile(const Path & inPath, LPCTSTR preFix, LPCTSTR ext, unsigned long startNum)
+{
+    Path path;
+
+    do {
+        path = inPath.Append(preFix);
+        CString num;
+        num.Format(_T("%u"), startNum++);
+        path += num;
+        path = path.RenameExtension(ext);
+    } while (path.Exists());
+
+    return path;
+}
+
 bool Path::GetFileTime(LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, LPFILETIME lpLastWriteTime) const
 {
 	bool bSuccess(false);
@@ -132,10 +243,65 @@ int Path::CompareExtension(LPCTSTR extn) const
 }
 Path Path::GetRoot() const
 {
-	TCHAR root[MAX_PATH];
-	PathCanonicalize(root, c_str());
-	PathStripToRoot(root);
-	return Path(root);
+    TCHAR *path = new TCHAR[length() + 1];
+    TCHAR *root(path);
+    lstrcpy(path, (LPCTSTR)*this);
+    while (*path == '\\' || *path == '/') // Skip leading slashes
+        ++path;
+    while (*path && *path != '\\' && *path != '/') // Skip till slashes
+        ++path;
+    *path = 0;
+    Path newpath(root);
+    delete[]root;
+    return newpath;
+}
+
+Path Path::NextComponent(unsigned *inoutpos /*= nullptr*/) const
+{
+    unsigned tempPos(0);
+    unsigned &pos(inoutpos ? *inoutpos : tempPos);
+    Path component;
+    if (pos >= (unsigned)length())
+        return component;
+    LPCTSTR curPath(*this);
+    curPath += pos;
+    // Reverse back to separator
+    while (pos && *curPath != '\\' && *curPath != '/') {
+        --pos;
+        --curPath;
+    }
+    // Skip separators
+    while (*curPath && (*curPath == '\\' || *curPath == '/')) {
+        ++curPath;
+        ++pos;
+    }
+    unsigned startPos(0);
+    // Skip till separators
+    while (*curPath && curPath[startPos] != '\\' && curPath[startPos] != '/') {
+        ++pos;
+        ++startPos;
+    }
+    component = lstring(curPath, startPos);
+    return component;
+}
+
+int ComparePath(LPCTSTR path1, LPCTSTR path2, bool checkPath1IsSubPath /*= false */)
+{
+    StringUtils::VecString resToken1, resToken2;
+    StringUtils::SplitString(resToken1, path1, _T("\\/"));
+    StringUtils::SplitString(resToken2, path2, _T("\\/"));
+    int res = 0;
+    while (!resToken1.empty() && !resToken2.empty())
+    {
+        res = lstrcmpi(resToken1.front().c_str(), resToken2.front().c_str());
+        if (res)
+            break;
+        resToken1.erase(resToken1.begin());
+        resToken2.erase(resToken2.begin());
+    };
+    if (checkPath1IsSubPath && resToken1.empty())
+        res = 0;
+    return res;
 }
 
 bool operator == (const Path& p1, const Path& p2)
@@ -492,6 +658,35 @@ bool Path::CopyFile(const Path & newFilePath) const
     return ::CopyFile(c_str(), newFilePath.c_str(), FALSE) != FALSE;
 }
 
+bool Path::OpenInExplorer() const
+{
+    Path path(*this);
+    std::wstring cParams;
+    SHELLEXECUTEINFO shExInfo = { sizeof(SHELLEXECUTEINFO) };
+    BOOL isDir(IsDir() || GetExtension().IsEmpty() || PathIsNetworkPath(*this));
+    if (!isDir) {
+        cParams = _T("/select,") + path;
+        path = Path(_T("explorer.exe"));
+        shExInfo.lpParameters = cParams.c_str();
+    }
+    else
+        shExInfo.lpVerb = _T("open");
+    shExInfo.nShow = SW_SHOWDEFAULT;
+    shExInfo.lpFile = path;
+    BOOL l = ShellExecuteEx(&shExInfo);
+    return l == TRUE;
+}
+
+HICON Path::GetIcon(bool bSmallIcon) const
+{
+    SHFILEINFO si = { 0 };
+    UINT uFlags(SHGFI_ICON);
+    if (bSmallIcon)
+        uFlags |= SHGFI_SMALLICON;
+    SHGetFileInfo((LPCTSTR)*this, 0, &si, sizeof(si), uFlags);
+    return si.hIcon;
+}
+
 lstring WildCardToRegExp(LPCTSTR wildCard)
 {
 	LPTSTR regExp = new TCHAR[6 * lstrlen(wildCard) + 1];
@@ -557,7 +752,7 @@ long long FindData::GetFileSize() const
     return Path(fullPath).GetSize();
 }
 
-Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR excludePattern)
+Finder::Finder(PathFindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR excludePattern)
 	: mExcludePattern(excludePattern)
 {
 	lstring pat;
@@ -595,13 +790,16 @@ int Finder::StartFind(const Path &dir)
                 bool bMatched = std::regex_match(findFileData.cFileName, mRegExp);
 				if (mExcludePattern)
                     bMatched = bMatched && std::regex_match(findFileData.cFileName, mExcludeRegExp);
-				int fcbRetVal(mFindCallBack(FindData(&findFileData, file, bMatched), m_pUserParam));
+                FindData fd(&findFileData, file, bMatched);
+				int fcbRetVal(mFindCallBack(fd, m_pUserParam));
 				if (fcbRetVal == FCBRV_ABORT)
 					break;
 				if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					&& fcbRetVal != FCBRV_SKIPDIR) {
 					c += StartFind(file);
-					mFindCallBack(FindData(NULL, file, false), m_pUserParam);
+                    fd.pFindData = NULL;
+                    fd.fileMatched = false;
+					mFindCallBack(fd, m_pUserParam);
 				}
 				if (bMatched)
 					c++;

@@ -13,6 +13,7 @@
 #include "CombinedButton.h"
 #include "ServerStatusDlg.h"
 #include "ContentSearchManager.h"
+#include "stlutils.h"
 
 // CFindServerDlg dialog
 
@@ -22,13 +23,6 @@ typedef enum {
 	SST_QuickSearch,
 	SST_Total
 } ServerSearchStatus;
-
-// Search flags
-#define SF_SEARCH_STARTED FLAGBIT(0)
-#define SF_SEARCH_CANCELLED FLAGBIT(1)
-#define SF_DIALOG_CLOSED FLAGBIT(2)
-#define SF_DIALOG_SHOW_MINIMIZED FLAGBIT(3)
-#define SF_ENUM_IPs FLAGBIT(4)
 
 class CFindServerDlg;
 
@@ -49,12 +43,8 @@ public:
 	CFindServerDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CFindServerDlg();
 	bool IsSearchCancelled(bool bCheckThread = false);
-	bool IsSearching() {return IsFlagSet(SF_SEARCH_STARTED);}
-	void SetFlag(UINT uFlags, bool bSet = true);
-	bool IsFlagSet(UINT uFlags) {return (m_uSearchFlags & uFlags) == uFlags;}
 	bool StartLimitedThreadOperation(ServerThreadOperation op, LPVOID threadData = NULL);
 	void StartSearchInNetworkFoder(LPNETRESOURCE lpnRes);
-	const CString* FindInSearchHistory(const CString &inSearchHistory, int &retVal);
 	int NetWorkFindShared(LPNETRESOURCE lpNetRes);
 	const CTime& GetLastStartTime() const {return m_LastStartTime;}
 	int IPEnumerator_Callback(void *ipData);
@@ -113,7 +103,13 @@ protected:
 	void AddThreadStatusPanel(bool bAdd = true);
 	bool IsMirrorServer(const CString &inServerName);
 	const CSearchHistory* PreSearchCheck(const CString &inSearchHistory, int &retVal, UINT uFlags = SDF_CHECK_INPROGRESS);
-	// Memeber variables
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, Searching);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, SearchCancel);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, SearchForce);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, DialogClosed);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, DialogShowMinized);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uSearchFlags, EnumIP);
+    // Memeber variables
 	CTreeCtrlDomain *mTreeCtrlDomain;
 	CEmbedListCtrl *mCatagoryEmbedListCtrl;
 	CResizeBar *mResizeBar;
@@ -121,7 +117,17 @@ protected:
 	CControlResizer mControlResizer;
 	CControlResizer mServerMainControls;
 	HICON m_hIcon;
+    enum SearchFlags {
+        // Search flags
+        Searching,
+        SearchCancel,
+        SearchForce,
+        DialogClosed,
+        DialogShowMinized,
+        EnumIP
+    };
 	UINT m_uSearchFlags;
+
 	ServerSearchStatus mServerSearchStatus;
 	struct FindCatagory {
 		FindCatagory()

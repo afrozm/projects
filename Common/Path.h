@@ -18,20 +18,34 @@ public:
 	Path(const lstring &inPath);
 	Path(LPCTSTR inPath);
     operator LPCTSTR () const {return c_str();}
-	Path Parent() const;
+    Path(const otherstring &inPath);
+    Path(const otherchar *inPath);
+    operator otherstring() const;
+    Path Parent() const;
+    bool IsParentOf(const Path &childPath) const;
 	Path FileName() const;
 	Path FileNameWithoutExt() const;
 	bool Exists() const;
 	bool IsDir() const;
+    bool IsUNC() const;
+    bool IsURL() const;
+    Path GetURL() const;
+    Path MakeUNCPath() const;
+    Path GetMachineNameFromUNCPath() const;
+    bool IsEmpty() const { return empty(); }
+    Path RemoveRoot() const;
 	bool CreateDir() const;
 	Path Append(const Path &append) const;
 	static Path CurrentDir();
+    static Path TempPath();
+    static Path TempFile(const Path &inPath, LPCTSTR preFix = nullptr, LPCTSTR ext = nullptr, unsigned long startNum = 0);
 	bool GetFileTime(LPFILETIME lpCreationTime, LPFILETIME lpLastAccessTime, LPFILETIME lpLastWriteTime) const;
 	Path RenameExtension(LPCTSTR newExtn = NULL) const;
 	Path GetExtension() const;
 	int Compare(const Path &p) const;
     int CompareExtension(LPCTSTR extn) const;
 	Path GetRoot() const;
+    Path NextComponent(unsigned *inoutpos = nullptr) const;
 	static Path GetSpecialFolderPath(int inFolderID, bool inCreate = false);
     static Path GetModuleFilePath(HMODULE hModule = NULL);
     static Path GetTempPath();
@@ -58,7 +72,13 @@ public:
 	ULONGLONG GetFileTime(FileTimeType fileType = CreationTime) const;
     bool Move(const Path &inNewLocation) const;
     bool CopyFile(const Path &newFilePath) const;
+    bool OpenInExplorer() const;
+#ifdef _WIN32
+    HICON GetIcon(bool bSmallIcon = true) const;
+#endif // _WIN32
+
 };
+int ComparePath(LPCTSTR path1, LPCTSTR path2, bool checkPath1IsSubPath = false );
 
 bool operator == (const Path& p1, const Path& p2);
 bool operator != (const Path& p1, const Path& p2);
@@ -83,12 +103,12 @@ struct FindData {
 #define FCBRV_ABORT 1
 #define FCBRV_SKIPDIR 2
 
-typedef int(*FindCallBack)(FindData&, void *pUserParam);
+typedef int(*PathFindCallBack)(FindData&, void *pUserParam);
 struct Finder {
-	Finder(FindCallBack fcb, void *pUserParam = NULL, LPCTSTR pattern = NULL, LPCTSTR excludePattern = NULL);
+	Finder(PathFindCallBack fcb, void *pUserParam = NULL, LPCTSTR pattern = NULL, LPCTSTR excludePattern = NULL);
     int StartFind(const Path &dir);
     std::basic_regex<TCHAR> mRegExp, mExcludeRegExp;
 	LPCTSTR mExcludePattern;
-	FindCallBack mFindCallBack;
+    PathFindCallBack mFindCallBack;
 	void *m_pUserParam;
 };

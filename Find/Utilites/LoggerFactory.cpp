@@ -58,7 +58,7 @@ Logger& LoggerFacory::GetLogger(const CString &loggerName)
 		mLoggerMap[loggerName] = new Logger;
 		pair = mLoggerMap.PLookup(loggerName);
 		Path logFilePath(GetLogFolderPath());
-		logFilePath = logFilePath.Append(loggerName);
+		logFilePath = logFilePath.Append((LPCTSTR)loggerName);
 		logFilePath = logFilePath.RenameExtension(_T(".log"));
 		LogTargetFile *pFileTarget = new LogTargetFile();
 		pFileTarget->SetLogFile(logFilePath);

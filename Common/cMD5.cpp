@@ -1,10 +1,9 @@
 #include "stdafx.h"
 #include "cMD5.h"
 #include "Path.h"
-
+#include "BinaryFind.h"
 
 #define _ReadBufSize 0x1000000
-
 
 void MD5Callback::SetTotal(MD5ULL total)
 {
@@ -25,17 +24,10 @@ cMD5::cMD5(MD5Callback *pMD5Callback /*= NULL*/) : m_pMD5Callback(pMD5Callback)
 {
     // don't alloc buffer here, only on request
 	MD5Init();
-    mp_s8ReadBuffer = NULL;
 }
 
 cMD5::~cMD5()
 {
-	FreeBuffer();
-}
-
-void cMD5::FreeBuffer()
-{
-    if (mp_s8ReadBuffer) delete [] mp_s8ReadBuffer;
 }
 
 /*********************************************************************
@@ -47,8 +39,6 @@ void cMD5::FreeBuffer()
 
 std::string cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
 {
-    if (!mp_s8ReadBuffer) mp_s8ReadBuffer = new char[_ReadBufSize];
-
 	if (bReset)
 		MD5Init();
 
@@ -59,19 +49,18 @@ std::string cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
         
     if (h_File == NULL)
         return "";
-	if (m_pMD5Callback != NULL) {
+	if (m_pMD5Callback != NULL)
 		m_pMD5Callback->SetTotal(Path(s8_Path).GetSize());
-	}
-    unsigned u32_Read = 0;
+    ::fseek(h_File, 0, SEEK_SET);
+    size_t u32_Read = 0;
+    BinaryData readBuffer(NULL, _ReadBufSize);
     while (1)
     {
-        u32_Read = (unsigned)fread(mp_s8ReadBuffer, _ReadBufSize, 1, h_File);
+        u32_Read = readBuffer.ReadFromFile(h_File);
 		if (u32_Read == 0)
-        {
             break;
-        }
 
-        MD5Update((unsigned char*)mp_s8ReadBuffer, u32_Read);
+        MD5Update((unsigned char*)(const void *)readBuffer, (unsigned int)u32_Read);
 		if (m_pMD5Callback != NULL) {
 			if (m_pMD5Callback->UpdateCurrent(u32_Read)) // Non-zero - Cancel
 				break;
@@ -351,7 +340,7 @@ void cMD5::MD5Transform(unsigned int buf[4], unsigned int in[16])
 
 
 #ifndef HIGHFIRST
-    void cMD5::byteReverse(unsigned char *buf, unsigned ints)  
+    void cMD5::byteReverse(unsigned char * /*buf*/, unsigned /*ints*/)  
     {
         // Nothing
     }

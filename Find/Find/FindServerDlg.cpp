@@ -38,12 +38,13 @@ CFindServerDlg::CFindServerDlg(CWnd* pParent /*=NULL*/)
 	mTreeCtrlDomain(NULL), mResizeBar(NULL),
 	mControlResizer(this), mServerMainControls(this),
 	m_hIcon(NULL), mCatagoryEmbedListCtrl(NULL),
-	mCmdEditCtrl(NULL), m_uSearchFlags(SF_DIALOG_SHOW_MINIMIZED),
+	mCmdEditCtrl(NULL), m_uSearchFlags(0),
 	mServerSearchStatus(SST_NewSearch),
 	mDataBase(FDB_CacheDatabase), m_pStatusDlg(NULL),
 	mSearchHistory(this), mCombinedBotton(this, IDC_BUTTON_LEFT, IDC_BUTTON_RIGHT), mFindServerDlgContext(this), m_iMaxThreadCount(FIND_MAX_THREAD_COUNT),
     m_pDBCommitter(NULL)
 {
+    SetDialogShowMinized();
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -202,20 +203,22 @@ BOOL CFindServerDlg::OnInitDialog()
 	mCmdEditCtrl->SubclassDlgItem(IDC_EDIT_COMMAND, this);
 	mCombinedBotton.Init();
 	mCombinedBotton.AddPage(&mFindServerDlgContext);
-	if (FindDataBase::SGetProperty(_T("StartedByUser"), FDB_CacheDatabase).IsEmpty()) {
+    if (FindDataBase::SGetProperty(_T("Command"), FDB_CacheDatabase).IsEmpty())
         OnBnClickedButtonLoaddefault();
-		SetFlag(SF_DIALOG_SHOW_MINIMIZED, false);
+    else
+        LoadFromDB();
+	if (FindDataBase::SGetProperty(_T("StartedByUser"), FDB_CacheDatabase).IsEmpty()) {
+        SetDialogShowMinized(false);
 	}
 	else {
-		SetFlag(SF_DIALOG_SHOW_MINIMIZED);
-		LoadFromDB();
+        SetDialogShowMinized();
 		StartFind();
 	}
 	return TRUE;
 }
 bool CFindServerDlg::IsSearchCancelled(bool bCheckThread)
 {
-	bool bIsCancelled(IsFlagSet(SF_SEARCH_CANCELLED));
+	bool bIsCancelled(IsSearchCancel());
 	if (bIsCancelled)
 		return bIsCancelled;
 	if (bCheckThread) {
@@ -429,7 +432,7 @@ void CFindServerDlg::Execute(LPCTSTR commandsToExecute /* = NULL */)
 			arrCommandToExecute.InsertUnique(commands.GetAt(i));
 	}
 	mCmdEditCtrl->GetLines();
-	SetFlag(SF_ENUM_IPs, false);
+    SetEnumIP(false);
 	if (SST_QuickSearch != mServerSearchStatus) {
 		const CArrayCString &commands(mCmdEditCtrl->GetCommands());
 		for (int i = 0; i < commands.GetCount(); ++i) {
@@ -445,7 +448,7 @@ void CFindServerDlg::Execute(LPCTSTR commandsToExecute /* = NULL */)
 			if (!arrCommandToExecute.IsEmpty() && arrCommandToExecute.Find(commandName) < 0)
 				continue;
 			if (command.Find(_T("ip:"))==0) {
-				SetFlag(SF_ENUM_IPs);
+                SetEnumIP();
 				CString text = command;
 				text.Delete(0, text.Find(':')+1);
 				mHostIPsToEnumerate.Add(text);
@@ -465,7 +468,7 @@ void CFindServerDlg::Execute(LPCTSTR commandsToExecute /* = NULL */)
 					mArrMirrorInfo[index].mStringMatcher.SetExpression(outStrs[0]);
 					if (outStrs.GetCount() > 1) {
 						mArrMirrorInfo[index].mMirrorMachine = outStrs[1];
-						PushIpHostname(Path(outStrs[1]).MakeUNCPath());
+						PushIpHostname(CString(Path(outStrs[1]).MakeUNCPath()));
 					}
 				}
 				else
@@ -480,10 +483,10 @@ void CFindServerDlg::Execute(LPCTSTR commandsToExecute /* = NULL */)
 			if (check > -1) {
 				CString text = command;
 				text.Delete(0, text.Find(':')+1);
-				Path path(text);
+				CString path(text);
 				int pos(text.Find(':'));
 				if (pos == 1) { // may be a local drive c:
-					Path localDrive(path.GetRoot());
+					Path localDrive(Path(path).GetRoot());
 					if (localDrive.Exists())
 						pos = text.Find(':', 2);
 				}
@@ -648,14 +651,15 @@ void CFindServerDlg::OnBnClickedButtonExecute()
 }
 void CFindServerDlg::SetSearchStarted(bool bSearchStarted)
 {
-	SetFlag(SF_SEARCH_STARTED, bSearchStarted);
+    SetSearching(bSearchStarted);
 	CString buttonText;
 	buttonText.LoadString(bSearchStarted ? IDS_STOP : IDS_START);
 	SetDlgItemText(IDOK, buttonText);
 	DisableControls(bSearchStarted);
 	FindDataBase *pDataBase(&mDataBase);
 	if (bSearchStarted == false) {
-		SetFlag(SF_SEARCH_CANCELLED, false);
+        SetSearchCancel(false);
+        SetSearchForce(false);
 		pDataBase = NULL;
 	}
 	mSearchHistory.Load(pDataBase);
@@ -949,14 +953,14 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 			pFindFile->GetLastAccessTime(at);
 			}
 			catch(...) {}
-			CString query;
+			CString query, rootPath(Path(path).GetRoot());
 			INT_PTR curTime(SystemUtils::TimeToInt(CTime::GetCurrentTime()));
 			query.Format(_T("INSERT OR REPLACE INTO CachedData VALUES ('%s', '%s', %I64d, 0, '%d', '%s', '%I64d', '%I64d', '%I64d', %I64d)"),
 				path,
 				bIsDir ? _T("") : SystemUtils::LongLongToString(pFindFile->GetFileSize()),
 				curTime,
 				pCatagotyMatched->catagoryNum,
-				Path(path).GetRoot(),
+                rootPath,
 				SystemUtils::TimeToInt(ct),
 				SystemUtils::TimeToInt(mt),
 				SystemUtils::TimeToInt(at),
@@ -969,7 +973,7 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 				bIsDir ? _T("") : SystemUtils::LongLongToString(pFindFile->GetFileSize()),
 				curTime,
 				pCatagotyMatched->catagoryNum,
-				Path(path).GetRoot(),
+                rootPath,
 				SystemUtils::TimeToInt(ct),
 				SystemUtils::TimeToInt(mt),
 				SystemUtils::TimeToInt(at),
@@ -1021,15 +1025,16 @@ int CFindServerDlg::ItrVerifyCacheDataTableRowsCallbackFn(sqlite3_stmt *statemen
 	if (IsSearchCancelled(true))
 		return 1;
 	CTime cuurentTime(CTime::GetCurrentTime());
-	LONGLONG nDays(0);
+    Path path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
+    LONGLONG nDays(0);
 	{
 		CTime lastUpdated(SystemUtils::IntToTime(sqlite3_column_int64(statement, CachedData_LastUpdated)));
 		CTimeSpan timeDiff = cuurentTime -lastUpdated;
 		nDays = timeDiff.GetDays();
-		if (nDays < 3) // More than 3 days
+        const int delayDays(path.IsUNC() ? 3 : IsSearchForce() ? 0 : 1);
+		if (nDays < delayDays) // More than 3 days
 			return 0;
 	}
-	Path path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
 	CString query;
 	CString condition;
 	{
@@ -1101,7 +1106,7 @@ void CFindServerDlg::Verify(CSearchHistory *rootPath, bool bRemove /* = false */
 }
 void CFindServerDlg::StartIpEnum()
 {
-	if (IsFlagSet(SF_ENUM_IPs)) {
+	if (IsEnumIP()) {
 		bool bStartIPEnum(true);
 		CString lastUpdatedStr(mDataBase.GetProperty(_T("EnumIP_LastUpdateTime")));
 		if (!lastUpdatedStr.IsEmpty()) {
@@ -1160,12 +1165,14 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 			m_LastStartTime = SystemUtils::StringToDate(lastStartTime);
 		}
 	}
+    SetSearchForce(bForce);
 	AddThreadStatusPanel();
 	SystemUtils::LogMessage(_T("Server: Start"));
-	SetSearchStarted();
-	// Start db commiter thread
+    // Start db commiter thread
     m_pDBCommitter = DBCommiterManager::GetInstance().AddDbCommiter(&mDataBase);
-    mContentSearchManager.StartContentSearch(true);
+    SetSearchStarted();
+    mContentSearchManager.StartContentSearch(ContentSearchManager::CheckIfContentSearchRequired|
+        (bForce ? ContentSearchManager::ForceSearch : 0));
 	if (mServerSearchStatus != SST_Verify) { // Search mode
 		SystemUtils::LogMessage(_T("Server: Search started"));
 		{
@@ -1229,17 +1236,16 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	Sleep(5000);
 	// Wait for other worker threads to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for other worker threads to finish up"));
-	bool bSearchCancelled(IsSearchCancelled());
     // Wait for content search to finish up
     SystemUtils::LogMessage(_T("Server: Wait for content search finish up"));
-    mContentSearchManager.StopContentSearch(bSearchCancelled);
+    mContentSearchManager.StopContentSearch(IsSearchCancelled());
     // Wait for db commiter thread to finish up
 	SystemUtils::LogMessage(_T("Server: Wait for db finish up"));
     DBCommiterManager::GetInstance().RemoveDBCommitter((FindDataBase*)-1); // Remove all and wait
     InitCatagotyList(false);
     // toggle search type 
 	// Restart search again 
-	if (!bSearchCancelled) {
+	if (!IsSearchCancelled()) {
 		mServerSearchStatus = (ServerSearchStatus)((mServerSearchStatus + 1) % SST_Total);
 		mDataBase.SetProperty(_T("ServerSearchStatus"),
 			SystemUtils::IntToString(mServerSearchStatus));
@@ -1247,11 +1253,12 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 			SystemUtils::DateToString(CTime::GetCurrentTime()));
 		mDataBase.RemoveProperty(_T("StartTime"));
 	}
-    else if (!IsFlagSet(SF_DIALOG_CLOSED)) // Explicitly stopped by user
+    else if (!IsDialogClosed()) // Explicitly stopped by user
         mDataBase.RemoveProperty(_T("StartedByUser"));
     mDataBase.Commit();
 	mDataBase.Close();
 	AddThreadStatusPanel(false);
+    bool bSearchCancelled(IsSearchCancelled());
 	SetSearchStarted(false);
 	SetTitle(NULL);
 	SystemUtils::LogMessage(_T("Server: Finished%s"), bSearchCancelled ? _T(" - Operation cancelled") : _T(""));
@@ -1295,7 +1302,7 @@ int CFindServerDlg::DoThreadOperation(LPVOID pInThreadData)
         break;
 	case SERVER_THREAD_OP_START_SEARCH:
 		Find(pThreadData->pThreadData != NULL);
-        if (IsFlagSet(SF_DIALOG_CLOSED))
+        if (IsDialogClosed())
             SetTimer(TIMER_QUIT_APP, 100, NULL);
         SetTimer(TIMER_NEXT_SEARCH, 1000 * 60 * 60 * 3, NULL); // Wait for other 3 hours
 		break;
@@ -1358,7 +1365,7 @@ void CFindServerDlg::StartFind(bool bForce)
 		CString buttonText;
 		buttonText.LoadString(IDS_STOPPING);
 		SetDlgItemText(IDOK, buttonText);
-		SetFlag(SF_SEARCH_CANCELLED);
+        SetSearchCancel();
 		tm.TerminateThreads();
 	}
 }
@@ -1371,9 +1378,9 @@ void CFindServerDlg::OnCancel()
 	if (GetCapture())
 		return;
 	if (IsSearching()) {
-		SetFlag(SF_SEARCH_CANCELLED);
+        SetSearchCancel();
         mContentSearchManager.StopContentSearch(true, false);
-		SetFlag(SF_DIALOG_CLOSED);
+        SetDialogClosed();
 		ShowWindow(SW_HIDE);
 	}
 	else {
@@ -1432,13 +1439,6 @@ void CFindServerDlg::OnTvnItemCheckStateChangedTreeDomain(NMHDR *pNMHDR, LRESULT
 		command = _T("check:") + mTreeCtrlDomain->GetFilePath(pTVItemCheckStateChanged->item, true);
 		mCmdEditCtrl->RemoveCommand(command, true);
 	}
-}
-void CFindServerDlg::SetFlag(UINT uFlags, bool bSet)
-{
-	if (bSet)
-		m_uSearchFlags |= uFlags;
-	else
-		m_uSearchFlags &= ~uFlags;
 }
 BOOL CFindServerDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 {
@@ -1701,7 +1701,7 @@ int CFindServerDlg::QuickSearch( const Path& remoteHostPath )
 {
 	int count(0);
 	int retVal(0);
-	const CSearchHistory* outRetVal(PreSearchCheck(remoteHostPath, retVal));
+	const CSearchHistory* outRetVal(PreSearchCheck(CString(remoteHostPath), retVal));
 	if (outRetVal != NULL && NetWorkOpenConnect(outRetVal->GetRootKey()) == 0) {
 		CSortedArrayCString allPaths;
 		ItrTableRowsCallbackData_CFindServerDlg itSHTable(this,
@@ -1723,8 +1723,8 @@ int CFindServerDlg::ItrGetFolderListCacheDataTableRowsCallbackFn( sqlite3_stmt *
 	int retVal(FIND_CONTINUE_SEARCH);
 	if (IsSearchCancelled(true))
 		return FIND_ABORT_SEARCH;
-	Path path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
-	path = path.Parent();
+	CString path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
+	path = Path(path).Parent();
 	CSortedArrayCString *pDirList((CSortedArrayCString *)pUserData);
 	if (pDirList->Find(path) < 0) {
 		pDirList->InsertUnique(path);

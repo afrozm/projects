@@ -114,6 +114,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\BinaryFind.h" />
+    <ClInclude Include="..\..\Common\cMD5.h" />
+    <ClInclude Include="..\..\Common\Common.h" />
     <ClInclude Include="..\..\Common\DataReader.h" />
     <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.h" />
     <ClInclude Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.h" />
@@ -125,8 +127,10 @@
     <ClInclude Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.h" />
     <ClInclude Include="..\..\Common\MFC\UtilControls\LogEditCtrl.h" />
     <ClInclude Include="..\..\Common\MFC\UtilControls\ResizeBar.h" />
+    <ClInclude Include="..\..\Common\Path.h" />
     <ClInclude Include="..\..\Common\Property.h" />
     <ClInclude Include="..\..\Common\StdUtils.h" />
+    <ClInclude Include="..\..\Common\stlutils.h" />
     <ClInclude Include="..\..\Common\StringUtils.h" />
     <ClInclude Include="..\..\Common\TextReader.h" />
     <ClInclude Include="..\Utilites\AutoLock.h" />
@@ -134,7 +138,6 @@
     <ClInclude Include="..\Utilites\FileIconMgr.h" />
     <ClInclude Include="..\Utilites\Logger.h" />
     <ClInclude Include="..\Utilites\LoggerFactory.h" />
-    <ClInclude Include="..\Utilites\Path.h" />
     <ClInclude Include="..\Utilites\ReadWriteLock.h" />
     <ClInclude Include="..\Utilites\RefCountObj.h" />
     <ClInclude Include="..\Utilites\SocketUitl.h" />
@@ -159,7 +162,6 @@
     <ClInclude Include="FindReplaceDialogEx.h" />
     <ClInclude Include="FindServerDlg.h" />
     <ClInclude Include="IPEnumerator.h" />
-    <ClInclude Include="MD5.h" />
     <ClInclude Include="NamedLock.h" />
     <ClInclude Include="NetWorkFinder.h" />
     <ClInclude Include="Percentage.h" />
@@ -209,6 +211,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\BinaryFind.cpp" />
+    <ClCompile Include="..\..\Common\cMD5.cpp" />
     <ClCompile Include="..\..\Common\DataReader.cpp" />
     <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedComboBox.cpp" />
     <ClCompile Include="..\..\Common\MFC\EmbedControls\EmbedEditControl.cpp" />
@@ -220,6 +223,7 @@
     <ClCompile Include="..\..\Common\MFC\UtilControls\ListCtrlUtil.cpp" />
     <ClCompile Include="..\..\Common\MFC\UtilControls\LogEditCtrl.cpp" />
     <ClCompile Include="..\..\Common\MFC\UtilControls\ResizeBar.cpp" />
+    <ClCompile Include="..\..\Common\Path.cpp" />
     <ClCompile Include="..\..\Common\Property.cpp" />
     <ClCompile Include="..\..\Common\StdUtils.cpp" />
     <ClCompile Include="..\..\Common\StringUtils.cpp" />
@@ -229,7 +233,6 @@
     <ClCompile Include="..\Utilites\FileIconMgr.cpp" />
     <ClCompile Include="..\Utilites\Logger.cpp" />
     <ClCompile Include="..\Utilites\LoggerFactory.cpp" />
-    <ClCompile Include="..\Utilites\Path.cpp" />
     <ClCompile Include="..\Utilites\ReadWriteLock.cpp" />
     <ClCompile Include="..\Utilites\RefCountObj.cpp" />
     <ClCompile Include="..\Utilites\SocketUtil.cpp" />
@@ -254,7 +257,6 @@
     <ClCompile Include="FindReplaceDialogEx.cpp" />
     <ClCompile Include="FindServerDlg.cpp" />
     <ClCompile Include="IPEnumerator.cpp" />
-    <ClCompile Include="MD5.cpp" />
     <ClCompile Include="NamedLock.cpp" />
     <ClCompile Include="NetWorkFinder.cpp" />
     <ClCompile Include="Percentage.cpp" />

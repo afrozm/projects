@@ -57,7 +57,8 @@ BOOL CDialogPreviewMedia::ShowPreview(const CString &path)
 	m_iLastPlayedLength = m_iLengthToSkip = 0;
 	if (m_VLCPlayer != NULL) {
 		mDialogMediaControl.ResetConrols();
-		SetMessage(_T("Buffering ") + Path(path).FileName());
+        CString fileName(Path(path).FileName());
+		SetMessage(_T("Buffering ") + fileName);
 		m_VLCPlayer->OpenMedia(SystemUtils::UnicodeToUTF8(path).c_str());
 		m_VLCPlayer->Play();
 	}
@@ -112,7 +113,8 @@ void CDialogPreviewMedia::UpdatePosition()
 	if (m_iLengthToSkip == 0) {
 		m_iLengthToSkip = (m_VLCPlayer->GetLength()-VLC_TRAILER_TIME)/VLC_NUM_SCENE;
 		if (m_VLCPlayer->HasVOut() == 0) {
-			SetMessage(_T("Playing ") + Path(GetFileToPreview()).FileName());
+            CString fileName(Path(GetFileToPreview()).FileName());
+			SetMessage(_T("Playing ") + fileName);
 		}
 		else SetMessage();
 	}
@@ -176,8 +178,7 @@ void CDialogPreviewMedia::OnBnClickedButtonLocate()
 {
 	CFileDialog cf(TRUE, NULL, NULL, 4|2, _T("Excutable Files (*.exe)|*.exe|All Files (*.*)|*.*||"), this);
 	if (cf.DoModal() == IDOK) {
-		Path pathName = cf.GetPathName();
-		pathName = pathName.Parent();
+		CString pathName = Path(cf.GetPathName()).Parent();
 		if (VLC_InitLib(pathName)) {
 			FindDataBase::SSetProperty(_T("VLCPath"), pathName);
 			ShowPreview(GetFileToPreview());

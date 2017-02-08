@@ -217,7 +217,7 @@ HTREEITEM CTreeCtrlDomain::FindPath(const CString &path, HTREEITEM hStartItem)
 {
 	Path fullPath(path);
 	if (fullPath.IsUNC()) {
-		fullPath.Delete(0, 2);
+		fullPath.erase(0, 2);
 		if (hStartItem == TVI_ROOT) {
             hStartItem = FindText(fullPath.GetRoot(), hStartItem, true);
             if (NULL != hStartItem)
@@ -275,7 +275,7 @@ HTREEITEM CTreeCtrlDomain::FindAddNetworkPath(const CString &networkPath)
 	if (hItem != NULL) {
 		Path fullPath(networkPath);
 		Path networkDrivePath(fullPath.RemoveRoot().GetRoot());
-		if (networkDrivePath.Find('$') == networkDrivePath.GetLength()-1) { // Network disk path e.g. \\computer\\c$
+		if (networkDrivePath.find('$') == networkDrivePath.size()-1) { // Network disk path e.g. \\computer\\c$
 			networkDrivePath = fullPath.GetRoot().Append(networkDrivePath);
 			if (networkDrivePath.Exists() && networkDrivePath.IsDir()) {
 				Expand(hItem, TVE_EXPAND, false);
@@ -365,8 +365,8 @@ HTREEITEM CTreeCtrlDomain::Expand(const CString &inPath, HTREEITEM hPrentItem, U
     if (!IsFileListing() && !Path(inPath).IsDir())
         path = path.Parent();
 	if (path.IsUNC())
-		path.Delete(0, 2);
-	while (path != _T("")) {
+		path.erase(0, 2);
+	while (!path.empty()) {
 		hPrentItem = FindText(path.GetRoot(), hPrentItem, false);
 		path = path.RemoveRoot();
 		if (hPrentItem != NULL) {

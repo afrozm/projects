@@ -79,7 +79,7 @@ void FileIconMgr::SetImageList(CImageList *pImageList)
 int FileIconMgr::GetIconIndex(const CString& filePath)
 {
 	InitKnownExtnList();
-	CString ext(Path(filePath).GetExtension().MakeLower());
+	CString ext(CString(Path(filePath).GetExtension()).MakeLower());
 	MapStrVsInt::CPair *pVal(mExtVsIconIndex.PLookup(ext));
 	if (pVal == NULL)
 		pVal = mExtVsIconIndex.PLookup(_T(""));
@@ -95,7 +95,7 @@ int FileIconMgr::GetIconIndex(const CString& filePath)
 				HICON hIcon(file.GetIcon());
 				iconIndex = InsertIcon(hIcon);
 				CloseHandle(hFile);
-				file.DeletePath();
+				file.DeleteFile();
 			}
 			mExtVsIconIndex[ext] = iconIndex;
 		}

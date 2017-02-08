@@ -3,7 +3,8 @@
 #include "DupFileFilter.h"
 #include "FilterDuplicateDialog.h"
 #include "Percentage.h"
-#include "MD5.h"
+#include "cMD5.h"
+#include "StringUtils.h"
 
 __int64 FileSize(HANDLE pFile)
 {
@@ -72,7 +73,6 @@ void CDupFileFilter::ApplyFilter()
 		listItemCount -= startIndex;
 	}
 	CAutoDisableNotificaltion autoDisableNotification(mListCtrl);
-	CMD5Init::AutoReleaseInstance initMD5;
 	ULONGLONG itemCount(listItemCount);
 	itemCount *= 2;
 	CPercentage percentage(itemCount, FilterDuplicateUpdateCallback, m_pDialog);
@@ -193,32 +193,45 @@ bool CDupFileFilter::FilePartialMatch(int nItem1, int nItem2)
 	}
 	return bPartialMatch;
 }
-struct MD5CBFn_File_data {
-	CDupFileFilter *pFilter;
-	CPercentage percentage;
+
+static void Md5PercentUpdateCallback(double curPercentage, void *pUserData)
+{
+    ((CFindDlg*)pUserData)->SetStatusMessage(_T("Computing file checksum: %.2f%% done"), curPercentage);
+}
+
+class MD5FileCallback : public MD5Callback
+{
+public:
+    MD5FileCallback(CDupFileFilter *pDupFilter) : pFilter(pDupFilter)
+    {
+        percentage.SetCallback(Md5PercentUpdateCallback, pFilter->GetDlg());
+        percentage.SetFlag(PF_UPDATE_AT_TIME_OUT);
+    }
+    virtual int Status() override
+    {
+        percentage.Update(GetCurrent());
+        return pFilter->GetDlg()->IsSearchCancelled();
+    }
+
+
+protected:
+    CDupFileFilter *pFilter;
+    CPercentage percentage;
+    virtual void SetTotal(MD5ULL total) override
+    {
+        __super::SetTotal(total);
+        percentage.SetTototal(total);
+    }
+
 };
-static int MD5CBFn_File(MD5CBData *pData)
-{
-	MD5CBFn_File_data* cbData((MD5CBFn_File_data*)pData->pUserData);
-	cbData->percentage.SetTototal(pData->totalSize);
-	cbData->percentage.Update(pData->done);
-	return cbData->pFilter->GetDlg()->IsSearchCancelled();
-}
-void Md5PercentUpdateCallback(double curPercentage, void *pUserData)
-{
-	((CFindDlg*)pUserData)->SetStatusMessage(_T("Computing file checksum: %.2f%% done"), curPercentage);
-}
+
 
 const CString& CDupFileFilter::GetFileMD5(const CString &filePath)
 {
 	if (mFileHash.PLookup(filePath) == NULL) {
-		CMD5 cmd5;
-		MD5CBFn_File_data data;
-		data.pFilter = this;
-		data.percentage.SetCallback(Md5PercentUpdateCallback, GetDlg());
-		data.percentage.SetFlag(PF_UPDATE_AT_TIME_OUT);
-		cmd5.SetMD5CBFn(MD5CBFn_File, &data);
-		mFileHash[filePath] = cmd5.GetMD5(filePath);
+        MD5FileCallback callback(this);
+		cMD5 cmd5(&callback);
+		mFileHash[filePath] = UTF8_TO_UNICODE(cmd5.CalcMD5FromFile(filePath)).c_str();
 	}
 	return mFileHash[filePath];
 }

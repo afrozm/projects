@@ -95,10 +95,10 @@ void CDBCommiter::DoCommit()
                     mSavedRowValue.RemoveAll();
                 }
                 if (m_pDB->GetTableRowCount(arrQueryStr[2], arrQueryStr[3]) == 0) // No rows
-                    pStrQuery = arrQueryStr[4]; // execute query 4, else query 1 will be executed
+                    pStrQuery = arrQueryStr.GetCount() > 4 ? arrQueryStr[4] : nullptr; // execute query 4, else query 1 will be executed
                 else
                     pStrQuery = arrQueryStr[1];
-                if (*pStrQuery == 0) // empty
+                if (nullptr == pStrQuery || *pStrQuery == 0) // empty
                     continue;
             }
             int retVal = m_pDB->QueryNonRows2(SystemUtils::UnicodeToUTF8(pStrQuery).c_str());
@@ -193,7 +193,7 @@ int DBCommiterManager::DoCommitterThreadFn()
     while (mDBCommiters.GetCount() > 0)
     {
         Sleep(1000);
-        bool bFinished(!mbFinished);
+        bool bFinished(mbFinished);
         if (lastCommitTime.UpdateTimeDuration(bFinished))
         {
             CAutoLock autoLock(mLockerDBCommitters);

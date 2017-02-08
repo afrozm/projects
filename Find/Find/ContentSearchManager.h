@@ -6,15 +6,21 @@
 
 struct FileTableEntry
 {
-    CString path, fileID;
+    CString path;
     CTime fileModTime, lastUpdatedTime;
-    unsigned flags;
     void UpdateFromSQliteEntry(sqlite3_stmt *statement);
     FileTableEntry(LPCTSTR inpath = NULL);
-    const CString& GetFileID(bool bComputeIfEmpty = false);
+    const std::string& GetFileID() const { return fileID; }
+    bool SetFileID(const std::string &fileID);
     unsigned GetMissedCount() const;
     unsigned IncrementMissedCount();
     bool UpdateFileModTime();
+    bool IsUpdated() const { return bUpdated; }
+    bool IsFileIDEmpty() const { return fileID.empty() || fileID == "-"; }
+private:
+    std::string fileID;
+    unsigned flags;
+    bool bUpdated;
 };
 
 
@@ -23,12 +29,18 @@ class ContentSearchManager
 public:
     ContentSearchManager();
     ~ContentSearchManager();
-    bool StartContentSearch(bool bCheckIfContentSearchRequired = false);
+    enum ContentSearchFlags
+    {
+        CheckIfContentSearchRequired = FLAGBIT(1),
+        ForceSearch = FLAGBIT(2)
+    };
+    bool StartContentSearch(unsigned uFlags = 0);
     void StopContentSearch(bool bCancel = false, bool bWaitForFinish = true);
     void AddFileEntry(const FileTableEntry &fte);
     void UpdateFileEntriesFromSourceDB(FindDataBase &inDB);
-    void RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped = false);
-    DEFINE_FUNCTION_IS_FLAGBIT_SET(uFlags, SearchStarted);
+    void RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped = false, const char *fileID = nullptr);
+    void RemoveFileEntry(const FileTableEntry &fte);
+    DEFINE_FUNCTION_IS_FLAGBIT_SET(m_uFlags, SearchStarted);
 private:
     void WaitForFinish();
     FindDataBase& GetDatabase();
@@ -47,11 +59,13 @@ private:
         SearchStarted,
         SearchFinished,
         SearchScheduleImmediate,
+        SearchForce,
     };
-    DEFINE_FUNCTION_SET_FLAGBIT(uFlags, SearchStarted);
-    DEFINE_FUNCTION_SET_GET_FLAGBIT(uFlags, SearchFinished);
-    DEFINE_FUNCTION_SET_GET_FLAGBIT(uFlags, SearchScheduleImmediate);
-    unsigned uFlags;
+    DEFINE_FUNCTION_SET_FLAGBIT(m_uFlags, SearchStarted);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchFinished);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchScheduleImmediate);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchForce);
+    unsigned m_uFlags;
     DWORD m_dwContentSearchThreadIDManager;
     CDBCommiter *m_pDBCommitter;
     CString m_DBSearchState; // fresh, search

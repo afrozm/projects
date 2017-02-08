@@ -1,14 +1,6 @@
 #include "stdafx.h"
 #include "BinaryFind.h"
 
-#ifndef _WIN32
-#define memcpy_s(d,dn,s,sn) memcpy(d,s,dn<sn?dn:sn)
-#define _fseeki64 fseeko
-#define fread_s(d,dn,ds,n,f) fread(d,dn<n?dn:n,ds,f)
-#define _stprintf_s sprintf
-#endif
-
-
 BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
     : m_pBuffer(pBuffer), mBufferSize(bufLen), mDataSize(bufLen)
 {

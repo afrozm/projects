@@ -25,7 +25,6 @@ public:
     std::string CalcMD5FromString(const char *s8_Input);
     std::string CalcMD5FromFile  (LPCTSTR s8_Path, bool bReset = true);
 
-    void FreeBuffer();
     cMD5(MD5Callback *pMD5Callback = NULL);
     virtual ~cMD5();
 	void SetMD5Callback(MD5Callback *pMD5Callback)
@@ -49,7 +48,6 @@ private:
 
     void byteReverse (unsigned char *buf, unsigned ints);
 
-    char *mp_s8ReadBuffer;
     MD5Context ctx;
 
 	MD5Callback *m_pMD5Callback;

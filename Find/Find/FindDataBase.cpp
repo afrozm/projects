@@ -61,22 +61,22 @@ CString FindDataBase::GetDBPath()
 	Path prefDatabasePath(GetPreferencesFolderPahth());
 	switch (mFDB_DatabaseType) {
 		case FDB_PrefDatabase:
-			prefDatabasePath = prefDatabasePath.Append(CString(_T("FindPref.db")));
+			prefDatabasePath = prefDatabasePath.Append(_T("FindPref.db"));
 			break;
 		case FDB_CacheDatabase:
 			if (sCacheDBPath.IsEmpty()) {
 				prefDatabasePath = prefDatabasePath.Parent();
-				prefDatabasePath = prefDatabasePath.Append(CString(_T("FindCache.db")));
+				prefDatabasePath = prefDatabasePath.Append(_T("FindCache.db"));
 			}
 			else
-				prefDatabasePath = sCacheDBPath;
+				prefDatabasePath = (LPCTSTR)sCacheDBPath;
 			break;
         case FDB_Words:
             prefDatabasePath = prefDatabasePath.Parent();
-            prefDatabasePath = prefDatabasePath.Append(CString(_T("FindWords.db")));
+            prefDatabasePath = prefDatabasePath.Append(_T("FindWords.db"));
             break;
 	}
-	return prefDatabasePath;
+	return (LPCTSTR)prefDatabasePath;
 }
 
 int FindDataBase::Open()

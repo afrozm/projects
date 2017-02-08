@@ -131,16 +131,16 @@ ULONGLONG CZipFileFinder::GetLength() const
 CString CZipFileFinder::GetFileName() const
 {
 	UZ_FileInfo *pUzFileInfo((UZ_FileInfo *)m_pFoundInfo);
-	return Path(pUzFileInfo->szFileName).FileName();
+	return (LPCTSTR)Path(pUzFileInfo->szFileName).FileName();
 }
 CString CZipFileFinder::GetFilePath() const
 {
 	UZ_FileInfo *pUzFileInfo((UZ_FileInfo *)m_pFoundInfo);
-	return Path(m_strRoot).Append(Path(pUzFileInfo->szFileName));
+	return (LPCTSTR)Path(m_strRoot).Append(Path(pUzFileInfo->szFileName));
 }
 CString CZipFileFinder::GetFileTitle() const
 {
-	return Path(GetFileName()).RenameExtension();
+	return (LPCTSTR)Path(GetFileName()).RenameExtension();
 }
 BOOL CZipFileFinder::GetLastWriteTime(FILETIME* pTimeStamp) const
 {
@@ -260,7 +260,7 @@ BOOL CZipFileFinder::FindNext()
                 Path zipPath(pUzFileInfo->szFileName);
                 int parentCount(0);
                 do {
-                    Path childPath(zipPath);
+                    CString childPath(zipPath);
                     zipPath = zipPath.Parent();
                     if (mChildPath == zipPath) {
                         if (mRootItems.Find(childPath) < 0) {

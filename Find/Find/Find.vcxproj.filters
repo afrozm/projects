@@ -183,9 +183,6 @@
     <ClInclude Include="..\Utilites\SystemUtils.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="..\Utilites\Path.h">
-      <Filter>Header Files\Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="..\Utilites\AutoLock.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
@@ -275,9 +272,6 @@
     </ClInclude>
     <ClInclude Include="FilterDuplicateDialog.h">
       <Filter>Header Files\Find\Client</Filter>
-    </ClInclude>
-    <ClInclude Include="MD5.h">
-      <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="TimeOut.h">
       <Filter>Header Files\Utilities</Filter>
@@ -369,6 +363,18 @@
     <ClInclude Include="..\..\Common\TextReader.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Common\cMD5.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Path.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Common.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\stlutils.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Preview\CAcroAXDocShim.cpp">
@@ -420,9 +426,6 @@
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\Utilites\AutoLock.cpp">
-      <Filter>Source Files\Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Utilites\Path.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="Preview\DialogPreviewExplorer.cpp">
@@ -490,9 +493,6 @@
     </ClCompile>
     <ClCompile Include="IPEnumerator.cpp">
       <Filter>Source Files\Find\Finder</Filter>
-    </ClCompile>
-    <ClCompile Include="MD5.cpp">
-      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="NamedLock.cpp">
       <Filter>Source Files\Utilities</Filter>
@@ -603,6 +603,12 @@
       <Filter>Source Files\Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\TextReader.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\cMD5.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\Path.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>

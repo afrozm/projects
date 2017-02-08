@@ -94,6 +94,7 @@ typedef std::string lstring;
 #endif
 
 #include "SystemUtils.h"
+#include "StringUtils.h"
 #include <Dbt.h>
 #include <afxcontrolbars.h>
 

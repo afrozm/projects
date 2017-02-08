@@ -41,11 +41,10 @@ BOOL CDialogPreviewExplorer::ShowPreview(const CString &path)
 bool CDialogPreviewExplorer::Load(LPCTSTR path)
 {
 	CExplorerPreviewManager &expMgr(CExplorerPreviewManager::GetInstance());
-	Path filePath(path);
-	m_pPreviewExp = expMgr.GetPreviewHandler(filePath.GetExtension());
+	m_pPreviewExp = expMgr.GetPreviewHandler((LPCTSTR)Path(path).GetExtension());
 	BOOL bSuccess(FALSE);
 	if (m_pPreviewExp != NULL)
-		bSuccess = m_pPreviewExp->ShowPreview(filePath);
+		bSuccess = m_pPreviewExp->ShowPreview(path);
 	return bSuccess == TRUE;
 }
 void CDialogPreviewExplorer::StopPreview()

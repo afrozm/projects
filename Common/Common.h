@@ -13,6 +13,9 @@
 #define lstrncmp wcsncmp
 #define lstrncmpi wcsnicmp
 typedef std::wstring lstring;
+typedef std::string otherstring;
+typedef char otherchar;
+#define OTHER_T(x) x
 #define lfopen(f,p,m) _wfopen_s(&f,p,m)
 
 #ifndef _WIN32
@@ -33,10 +36,13 @@ typedef std::wstring lstring;
 #define sprintf_s snprintf
 #define strcat_s(d,n,s) strlcat(d,s,n)
 typedef std::string lstring;
-
+typedef std::wstring otherstring;
+typedef wchar_t otherchar;
 #ifndef _WIN32
 #define _T(x) x
 #endif
+#define OTHER__T(x) L ##x
+#define OTHER_T(x) OTHER__T(x)
 
 #endif
 
@@ -59,6 +65,11 @@ typedef char TCHAR;
 #define sprintf_s snprintf
 #define lstrcmp strcmp
 #endif
+
+#define memcpy_s(d,dn,s,sn) memcpy(d,s,dn<sn?dn:sn)
+#define _fseeki64 fseeko
+#define fread_s(d,dn,ds,n,f) fread(d,dn<n?dn:n,ds,f)
+#define _stprintf_s sprintf
 
 #define _TCHAR TCHAR
 #define _tmain main

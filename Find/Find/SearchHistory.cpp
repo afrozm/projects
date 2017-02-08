@@ -4,7 +4,7 @@
 #include "SystemUtils.h"
 #include "Find.h"
 #include "FindServerDlg.h"
-
+#include "StringUtils.h"
 
 CArrayCString& GetQueryRemoveFromSearchHistory(const CString &searchHistory, CArrayCString &queryArray)
 {
@@ -53,7 +53,7 @@ int CSearchHistory::Load(sqlite3_stmt *statement, const CTime &pLastSearchStartT
 	mRoot = (SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, SearchHistory_SearchKeys)));
 	mLastUpdated = SystemUtils::IntToTime(sqlite3_column_int64(statement, SearchHistory_LastUpdated));
 	miMissCount = sqlite3_column_int(statement, SearchHistory_MissCount);
-	mSearchKey = Path(mRoot).Append((SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, SearchHistory_LastSearchPath))));
+	mSearchKey = Path(mRoot).Append((StringUtils::UTF8ToUnicode((const char *)sqlite3_column_text(statement, SearchHistory_LastSearchPath))));
 	miFlags =  sqlite3_column_int(statement, SearchHistory_flags);
 	if (miFlags & SHF_ALREADY_SEARCHED) {
 		if (mLastUpdated < pLastSearchStartTime)
@@ -90,7 +90,7 @@ int CSearchHistoryArray::ItrSearchHistoryTableRowsCallbackFn(sqlite3_stmt *state
 int CSearchHistoryArray::ItrCachedDataTableRowsCallbackFn(sqlite3_stmt *statement, void *pUserData)
 {
     UNREFERENCED_PARAMETER(pUserData);
-	CSearchHistory newCSearchHistory(Path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, 0))).GetRoot());
+	CSearchHistory newCSearchHistory(CString(Path((const char *)sqlite3_column_text(statement, 0)).GetRoot()));
 	if (Find(newCSearchHistory) == NULL) {
 		mSearchHistory.Insert(newCSearchHistory);
 		CArrayCString queryArray;
