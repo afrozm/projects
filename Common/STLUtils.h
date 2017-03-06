@@ -67,17 +67,17 @@ namespace STLUtils {
         long long AddUnique(const T& t) {
             long long index(Find(t));
             if (index >= 0)
-                (*this)[(size_type)index] = t;
+                (*this)[(size_t)index] = t;
             else {
-                index = size();
-                push_back(t);
+                index = this->size();
+                this->push_back(t);
             }
             return index;
         }
         bool Remove(const T& t) {
             long long index(Find(t));
             if (index >= 0) {
-                erase(begin() + index);
+                erase(this->begin() + index);
                 return true;
             }
             return false;
