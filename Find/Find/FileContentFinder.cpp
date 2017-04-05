@@ -15,6 +15,8 @@ void CFileContentFinder::SetCallBack(CFileContentFinderCallback *pCallback /* = 
 }
 int CFileContentFinder::Find(LPCTSTR fileName, LPCTSTR matchString)
 {
+    if (fileName == nullptr || *fileName == 0)
+        return 0;
 	CSimpleStringMatcher sm(matchString);
 	bool bSetSMToNull(m_pStringMatcher == NULL);
 	if (bSetSMToNull)
@@ -25,7 +27,8 @@ int CFileContentFinder::Find(LPCTSTR fileName, LPCTSTR matchString)
 		md.strLine = textReader.ReadLine().c_str();
 		if (md.strLine.IsEmpty())
 			break;
-		md.bMatched = m_pStringMatcher->Match(md.strLine);
+		md.bMatched = m_pStringMatcher->Match((LPCTSTR)md.strLine);
+        md.matchString = m_pStringMatcher->GetMatchString();
 		if (md.bMatched)
 			++md.iMatchCount;
 		md.iLineNo = textReader.GetCurrentLineNumber();
@@ -37,8 +40,4 @@ int CFileContentFinder::Find(LPCTSTR fileName, LPCTSTR matchString)
 	if (bSetSMToNull)
 		m_pStringMatcher = NULL;
 	return md.iMatchCount;
-}
-
-CFileContentFinder::~CFileContentFinder(void)
-{
 }

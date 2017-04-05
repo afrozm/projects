@@ -3,6 +3,49 @@
 
 
 
+CDiskFileMetaDataProvider::CDiskFileMetaDataProvider(LPCTSTR path)
+    : mFilePath(path)
+{
+
+}
+
+void CDiskFileMetaDataProvider::SetPath(LPCTSTR path /*= nullptr*/)
+{
+    mFilePath = path;
+}
+
+LONGLONG CDiskFileMetaDataProvider::GetFileSize() const
+{
+    if (!mFilePath.IsDir())
+        return mFilePath.GetSize();
+    return 0;
+}
+
+BOOL CDiskFileMetaDataProvider::GetLastWriteTime(CTime &time) const
+{
+    CFileTime ft;
+    bool bSuccess = mFilePath.GetFileTime(nullptr, nullptr, &ft);
+    time = ft;
+    return bSuccess;
+}
+
+BOOL CDiskFileMetaDataProvider::GetCreationTime(CTime &time) const
+{
+    CFileTime ft;
+    bool bSuccess = mFilePath.GetFileTime(&ft, nullptr, nullptr);
+    time = ft;
+    return bSuccess;
+}
+
+BOOL CDiskFileMetaDataProvider::GetLastAccessTime(CTime &time) const
+{
+    CFileTime ft;
+    bool bSuccess = mFilePath.GetFileTime(nullptr, &ft, nullptr);
+    time = ft;
+    return bSuccess;
+}
+
+
 CFileFindExMetaDataProvider::CFileFindExMetaDataProvider(const CFileFindEx &fileFindEx)
 	: mFileFindEx(fileFindEx)
 {

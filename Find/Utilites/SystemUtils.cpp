@@ -145,6 +145,17 @@ int SystemUtils::StringToInt(LPCTSTR number)
 {
 	return _ttoi(number);
 }
+
+wchar_t SystemUtils::StringGetAt(const CString &inStr, int index)
+{
+    wchar_t ch(0);
+
+    if (index >= 0 && index < inStr.GetLength())
+        ch = inStr.GetAt(index);
+
+    return ch;
+}
+
 LONGLONG SystemUtils::StringToLongLong(LPCTSTR number)
 {
 	return _ttoi64(number);
@@ -268,13 +279,16 @@ INT_PTR SystemUtils::SplitString(const CString& inString, CArrayCString &outStri
 	return outStrings.GetCount();
 }
 
-CString SystemUtils::CombineString(const CArrayCString &inStringArray, LPCTSTR sep /* = _T */, INT_PTR startIndex /*= 0*/, INT_PTR endIndex /*= -1*/)
+CString SystemUtils::CombineString(const CArrayCString &inStringArray, LPCTSTR sep /* = _T(",") */, INT_PTR startIndex /* = 0 */, INT_PTR endIndex /* = -1 */, bool bInlcudeEmpty /* = true */)
 {
 	CString outStr;
 	if (endIndex < 0)
 		endIndex = inStringArray.GetCount();
-	for (INT_PTR i = startIndex; i < endIndex; ++i)
-		outStr += inStringArray.GetAt(i) + sep;
+    for (INT_PTR i = startIndex; i < endIndex; ++i) {
+        auto &inStr(inStringArray.GetAt(i));
+        if (bInlcudeEmpty || !inStr.IsEmpty())
+            outStr += inStr + sep;
+    }
 	if (outStr.GetLength() > 0) {
 		int sepLen(lstrlen(sep));
 		outStr.Delete(outStr.GetLength()-sepLen, sepLen);
@@ -294,15 +308,6 @@ CString SystemUtils::StringFindOneOf(const CString &inStr, const CString &inFind
     return outString;
 }
 
-bool SystemUtils::IsCompleteWord(const CString& inString, int pos, int len)
-{
-	if (pos == 0 || _istalnum(inString[pos])) {
-		if (inString.GetLength()<=pos+len)
-			return true;
-		return _istalnum(inString[pos+len]) != 0;
-	}
-	return false;
-}
 BOOL SystemUtils::GetFileVersion(LPCTSTR filePath, DWORD &outFileVersionMS, DWORD &outFileVersionLS)
 {
 	DWORD dwHandle(0);
@@ -416,18 +421,18 @@ CString SystemUtils::FirstDriveFromMask( ULONG unitmask, int *startPos)
     drive[2] = 0;
 	return CString(drive);
 }
-CString SystemUtils::GetLine(LPCTSTR inStr, int startPos /* = 0 */)
-{
-	if (inStr == NULL || startPos >= lstrlen(inStr))
-		return CString();
-	LPCTSTR curStr(inStr+startPos);
-	STR_SKIP_LINE(curStr);
-	LPCTSTR endStr(curStr);
-	STR_SKIP_TILL_LINE(endStr);
-	STR_SKIP_TILL_LINE_REV(curStr, inStr);
-	CString outStr(curStr, (int)(endStr-curStr));
-	return outStr;
-}
+//CString SystemUtils::GetLine(LPCTSTR inStr, int startPos /* = 0 */)
+//{
+//	if (inStr == NULL || startPos >= lstrlen(inStr))
+//		return CString();
+//	LPCTSTR curStr(inStr+startPos);
+//	STR_SKIP_LINE(curStr);
+//	LPCTSTR endStr(curStr);
+//	STR_SKIP_TILL_LINE(endStr);
+//	STR_SKIP_TILL_LINE_REV(curStr, inStr);
+//	CString outStr(curStr, (int)(endStr-curStr));
+//	return outStr;
+//}
 
 int SystemUtils::GetCurrentDPIX()
 {

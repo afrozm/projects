@@ -45,3 +45,30 @@ public:
 		m_pList->DisableNotification(false);
 	}
 };
+
+class CListCtrlUtilITer
+{
+public:
+    CListCtrlUtilITer(const CListCtrl &listCtrl) : mListCtrl(listCtrl) {}
+    virtual int GetNextItem() = 0;
+protected:
+    const CListCtrl &mListCtrl;
+};
+
+class CListCtrlUtilITerSelection : public CListCtrlUtilITer
+{
+public:
+    CListCtrlUtilITerSelection(const CListCtrl &listCtrl);
+    virtual int GetNextItem() override;
+private:
+    POSITION mCurrentSelectedPosition;
+};
+
+class CListCtrlUtilITerRange : public CListCtrlUtilITer
+{
+public:
+    CListCtrlUtilITerRange(const CListCtrl &listCtrl, int itemRange);
+    virtual int GetNextItem() override;
+private:
+    int m_iStartPos, m_iCurrentPos, m_iEndPos;
+};

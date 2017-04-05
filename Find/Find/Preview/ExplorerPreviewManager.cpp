@@ -71,7 +71,7 @@ void CExplorerPreviewManager::LoadSupportedExts()
         if (ownSupportedFormats.Find(ext) < 0)
             mPattern += ext;
 	}
-	mPattern = WildCardExpToRegExp(mPattern);
+	mPattern = StringUtils::WildCardExpToRegExp(mPattern);
 }
 void CExplorerPreviewManager::Unload()
 {

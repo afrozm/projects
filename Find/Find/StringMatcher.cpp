@@ -1,54 +1,40 @@
 #include "StdAfx.h"
 #include "StringMatcher.h"
-#include "SystemUtils.h"
+#include "WordParser.h"
 
-static CString WildCardToRegExp(LPCTSTR wildCard)
+
+bool IsWildCardExp(LPCTSTR wildCardExp)
 {
-	LPTSTR regExp = new TCHAR[6*lstrlen(wildCard)+1];
-	unsigned len = 0;
-
-	while (*wildCard) {
-		TCHAR extraCharToAdd = 0;
-
-		switch (*wildCard) {
-		case '*':
-			extraCharToAdd = '.';
-			break;
-		case '.':
-			extraCharToAdd = '\\';
-			break;
-		}
-		if (extraCharToAdd)
-			regExp[len++] = extraCharToAdd;
-		regExp[len++] = *wildCard++;
-	}
-	regExp[len] = 0;
-	CString regExpStr(regExp);
-
-	delete[] regExp;
-
-	return regExpStr;
+	return StdString(wildCardExp).find_first_of(_T(";*[]|:")) != StdString::npos;
 }
 
-CString WildCardExpToRegExp(LPCTSTR wildCardExp)
+StringMatcher* StringMatcher_GetStringMatcher(LPCTSTR inString)
 {
-	CString exp(wildCardExp);
-	CString token;
-	int curPos = 0;
-	token = exp.Tokenize(_T(";"), curPos);
-	CString regExp;
-	while (token != _T("")) {
-		regExp += _T("(") + WildCardToRegExp(token) + _T(")");
-		token = exp.Tokenize(_T(";"), curPos);
-		if (token != _T("")) {
-			regExp +=_T("|");
-		}
-	}
-	return regExp;
+    if (IsWildCardExp(inString))
+        return new CRegExpMatcher(inString);
+    if (StringMatcher_IsPhonetic(inString))
+        return new CPhoneticStringMatcherList(inString+1);
+    if (StdString(inString).find(' ') != StdString::npos) // has spaces
+        return new CStringMatcherList(inString);
+    if (inString != nullptr && *inString)
+        return new CSimpleStringMatcher(inString);
+    return nullptr;
 }
-bool IsWildCardExp(const CString &wildCardExp)
+bool StringMatcher_IsSimpleMatch(LPCTSTR inString)
 {
-	return wildCardExp.FindOneOf(_T(";*[]|:")) >= 0;
+    if (inString == nullptr || *inString == 0)
+        return true;
+    if (IsWildCardExp(inString))
+        return false;
+    if (StringMatcher_IsPhonetic(inString))
+        return false;
+    return StdString(inString).find(' ') == StdString::npos;
+}
+
+
+bool StringMatcher_IsPhonetic(LPCTSTR inString)
+{
+    return !inString && inString[0] == '?';
 }
 
 #define MW_MATCH_EXACT 4
@@ -58,33 +44,39 @@ bool IsWildCardExp(const CString &wildCardExp)
 #define MW_MATCH_IN_ORDER (MW_WHITE_SPACE*2+1)
 #define MW_MATCH_CHAR_IN_ORDER (MW_MATCH_EXACT>>1)
 
-int StringMatcher::GetWordMatchCharWeight( TCHAR ch )
+StringMatcher::StringMatcher()
+    : mMatchWeight(0)
+{
+
+}
+
+int StringMatcher::GetWordMatchCharWeight(TCHAR ch)
 {
 	int wt(0);
 	if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\n')
 		wt += MW_WHITE_SPACE;
-	else if (!_istalnum(ch))
+	else if (WordParser::IsWordSep(ch))
 		wt += MW_NON_WHITE_SPACE;
 	return wt;
 }
-int StringMatcher::GetWordMatchWeight(const CString &matchString, int startPos /* = 0 */, int lengthMatch /* = -1 */)
+int StringMatcher::GetWordMatchWeight(const StdString& matchString, int startPos /* = 0 */, int lengthMatch /* = -1 */)
 {
 	int wMWt(0);
 	if (startPos == 0)
 		wMWt += MW_NON_WHITE_SPACE;
-	else if (startPos > 0 && startPos < matchString.GetLength())
+	else if (startPos > 0 && startPos < matchString.length())
 		wMWt += GetWordMatchCharWeight(matchString[startPos-1]);
 	if (lengthMatch < 0)
-		lengthMatch = matchString.GetLength();
+		lengthMatch = matchString.length();
 	int endPos(startPos+lengthMatch);
-	if (endPos >= matchString.GetLength())
+	if (endPos >= matchString.length())
 		wMWt += MW_NON_WHITE_SPACE;
 	else
 		wMWt += GetWordMatchCharWeight(matchString[endPos]);
 	return wMWt;
 }
 
-int StringMatcher::GetWordIndex( LPCTSTR inStr, int startPos /*= 0*/)
+int StringMatcher::GetWordIndex( const StdString& inStr, int startPos /*= 0*/)
 {
 	if (!GetWordMatchCharWeight(inStr[startPos]) && startPos > 0) {					// Already in word
 		for (++startPos; inStr[startPos]; ++startPos) { // skip all word letters
@@ -113,28 +105,20 @@ void CRegExpMatcher::SetExpression(LPCTSTR lpExpression, bool bExpressionIsRegEx
 	if (lpExpression == NULL)
 		lpExpression = _T("*");
 	if (lstrcmp(lpExpression, _T("*"))) {
-		CString expr(lpExpression);
-		CString excp;
-		int exceptPos = expr.Find(':');
-		if (exceptPos >= 0) {
-			excp = expr.Right(expr.GetLength()-(exceptPos+1));
-			expr = expr.Left(exceptPos);
+		StdString expr(lpExpression);
+		StdString excp;
+		size_t exceptPos = expr.find(':');
+		if (exceptPos != StdString::npos) {
+			excp = expr.substr(expr.length()-(exceptPos+1));
+			expr = expr.substr(0,exceptPos);
 		}
-		if (expr.GetLength() > 0) {
-			mRegExp = new CAtlRegExp<>();
-			if (bExpressionIsRegExp)
-				mRegExp->Parse(expr, mbCaseSensitive);
-			else {
-				mRegExp->Parse(WildCardExpToRegExp(expr), mbCaseSensitive);
-			}
+		if (expr.length() > 0) {
+			mRegExp = new std::wregex(bExpressionIsRegExp ? expr : StringUtils::WildCardExpToRegExp(expr.c_str()),
+                mbCaseSensitive ? std::regex_constants::icase : std::regex_constants::ECMAScript);
 		}
-		if (excp.GetLength() > 0) {
-			mRegExpException = new CAtlRegExp<>();
-			if (bExpressionIsRegExp)
-				mRegExpException->Parse(excp, mbCaseSensitive);
-			else {
-				mRegExpException->Parse(WildCardExpToRegExp(excp), mbCaseSensitive);
-			}
+		if (excp.length() > 0) {
+            mRegExpException = new std::wregex(bExpressionIsRegExp ? excp : StringUtils::WildCardExpToRegExp(excp.c_str()),
+                mbCaseSensitive ? std::regex_constants::icase : std::regex_constants::ECMAScript);
 		}
 	}
 }
@@ -154,104 +138,139 @@ void CRegExpMatcher::Free(void)
 bool CRegExpMatcher::Match(LPCTSTR matchString)
 {
 	bool bMatched(true);
-	if (mRegExp) {
-		CAtlREMatchContext<> mc;
-		bMatched = mRegExp->Match(matchString, &mc) ? true : false;
-	}
-	if (bMatched && mRegExpException) {
-		CAtlREMatchContext<> mc;
-		bMatched = mRegExpException->Match(matchString, &mc) ? false : true;
-	}
+    if (mRegExp) {
+        std::wcmatch m;
+        bMatched = std::regex_match(matchString, m, *mRegExp);
+        if (bMatched)
+            mMatchString= m[0].first;
+    }
+	if (bMatched && mRegExpException)
+        bMatched = !std::regex_match(matchString, *mRegExpException);
 	return bMatched;
 }
 
 CStringMatcherList::CStringMatcherList(LPCTSTR lpExpression /* = NULL */)
-	: mMatchWeight(0)
+	: mMinMatchCount(0)
 {
 	SetExpression(lpExpression);
 }
 void CStringMatcherList::SetExpression(LPCTSTR lpExpression /* = NULL */)
 {
 	mMatchWeight = 0;
-	mStrListToMatch.RemoveAll();
+	mStrListToMatch.clear();
 	if (lpExpression) {
-		CString exp(lpExpression);
+		StdString exp(lpExpression);
 		exp.MakeLower();
-		SystemUtils::SplitString(exp, mStrListToMatch, _T(" "));
-		for (INT_PTR i = 0; i < mStrListToMatch.GetCount(); ++i) {
-			mStrListToMatch[i].Trim();
-			if (mStrListToMatch[i].IsEmpty()) {
-				mStrListToMatch.RemoveAt(i, 1);
-				--i;
-			}
+		StringUtils::SplitString(mStrListToMatch, exp, _T(" "));
+        
+		for (auto it = mStrListToMatch.begin(); it != mStrListToMatch.end();) {
+            ((StdString&)(*it)).Trim();
+            if (it->empty())
+                it = mStrListToMatch.erase(it);
+            else
+                ++it;
 		}
 	}
+    if (mMinMatchCount == 0 || mMinMatchCount > GetWordCount())
+        mMinMatchCount = (unsigned)GetWordCount() / 2;
+    if (mMinMatchCount == 0)
+        mMinMatchCount = 1;
 }
 bool CStringMatcherList::Match(LPCTSTR matchString) 
 {
-	CString mS(matchString);
+	StdString mS(matchString);
 	mS.MakeLower();
 	mMatchWeight = 0;
+    mMatchString.clear();
 	int matchPos(-1);
-	int matchCount(0);
-	for (INT_PTR i = 0; i < mStrListToMatch.GetCount(); ++i) {
-		int curMatchPos(mS.Find(mStrListToMatch[i], 0));
+	unsigned matchCount(0);
+	for (size_t i = 0; i < mStrListToMatch.size(); ++i) {
+		int curMatchPos((int)mS.find(mStrListToMatch[i], 0));
 		if (curMatchPos >= 0) {
-			++matchCount;
-			mMatchWeight += GetWordMatchWeight(mS, curMatchPos, mStrListToMatch[i].GetLength());
-			mS.SetAt(curMatchPos, ':');
+            int matchLEnght(mStrListToMatch[i].length());
+            if (matchLEnght > mMatchString.length())
+                mMatchString.assign(matchString, curMatchPos, matchLEnght);
+            ++matchCount;
+			mMatchWeight += GetWordMatchWeight(mS, curMatchPos, matchLEnght);
+			mS[curMatchPos]= ':';
 			if (curMatchPos > matchPos) {
 				mMatchWeight += MW_MATCH_IN_ORDER;
 				++matchCount;
 			}
-			matchPos = curMatchPos;
+			matchPos = (int)curMatchPos;
 		}
 	}
-	return matchCount > mStrListToMatch.GetCount();
+	return matchCount > mMinMatchCount;
 }
 
 CSimpleStringMatcher::CSimpleStringMatcher(LPCTSTR strToSearch /* = NULL */, BOOL bCaseSensitive /* = FALSE */, BOOL bMatchWholeWord /* = FALSE */, MatchCallback mcb /* = NULL */, void *pUserParam /* = NULL */)
 	: muFlags(0)
 {
 	SetCallBack(mcb, pUserParam);
-	SET_UNSET_FLAGBIT(bCaseSensitive, muFlags,  caseSensitive);
-	SET_UNSET_FLAGBIT(bMatchWholeWord, muFlags,  matchWholeWord);
-	if (strToSearch != NULL)
-		mStrToSearch = strToSearch;
+	SET_UNSET_FLAGBIT(muFlags,  caseSensitive, bCaseSensitive);
+	SET_UNSET_FLAGBIT(muFlags,  matchWholeWord, bMatchWholeWord);
+    if (strToSearch != NULL)
+        mStrToSearch = strToSearch;
+    mOrgStrToSearch = mStrToSearch;
 	if (!IS_FLAGBIT_SET(muFlags, caseSensitive))
-		mStrToSearch.MakeLower();
+		mStrToSearch = StdString(mStrToSearch).MakeLower();
 }
 void CSimpleStringMatcher::SetCallBack(MatchCallback mcb /* = NULL */, void *pUserParam /* = NULL */)
 {
 	mMatchCallback = mcb;
 	m_pUserParam = pUserParam;
 }
+#define SM_CHAR_IS_WHITE_SPACE(c) ((c)==' '||(c)=='\t'||(c)=='\n'||(c)=='\r')
 bool CSimpleStringMatcher::Match(LPCTSTR matchString)
 {
-	CString matchStr(matchString);
+    mMatchWeight = 0;
+    mMatchString.clear();
+    if (mStrToSearch.empty())
+        return true;
+	StdString matchStr(matchString);
+    if (matchStr == mOrgStrToSearch) { // match case and whole word
+        mMatchString = matchStr;
+        mMatchWeight = 5; // match + case + whole word
+        return true;
+    }
 	if (!IS_FLAGBIT_SET(muFlags, caseSensitive))
-		matchStr.MakeLower();
-	bool bMatch(false);
+        matchStr.MakeLower();
+    if (matchStr == mStrToSearch) { // match case and whole word
+        mMatchString = matchString;
+        mMatchWeight = 4; // match + whole word - case
+        return true;
+    }
+    bool bMatch(false);
 	int startPos = 0;
-	int lenStrToSearch = mStrToSearch.GetLength();
+	int lenStrToSearch = mStrToSearch.length(), lenInStr(matchStr.length());
 	while (startPos >= 0) {
 		if (mMatchCallback != NULL)
 			if (mMatchCallback(-1, m_pUserParam))
 				break;
-		startPos = matchStr.Find(mStrToSearch, startPos);
+		startPos = (int)matchStr.find(mStrToSearch, startPos);
 		if (startPos < 0)
 			continue;
 		bool bStrMatch(true);
+        auto ch(matchStr[startPos]);
+        if (startPos == 0 || SM_CHAR_IS_WHITE_SPACE(ch)) // word starting
+            mMatchWeight += 2;
 		if (IS_FLAGBIT_SET(muFlags, matchWholeWord)) {
-			bStrMatch = SystemUtils::IsCompleteWord(matchStr, startPos, lenStrToSearch);
+			bStrMatch = WordParser::IsCompleteWord(matchString, startPos, lenStrToSearch);
 		}
-		if (!bStrMatch)
-			continue;
+        if (!bStrMatch) {
+            startPos += lenStrToSearch;
+            continue;
+        }
 		bMatch = true;
+        if (mMatchString.empty())
+            mMatchString = WordParser::GetCompleteWord(matchString, startPos, lenStrToSearch);
 		if (mMatchCallback != NULL)
 			if (mMatchCallback(startPos, m_pUserParam))
 				break;
 		startPos += lenStrToSearch;
+        ch = startPos < lenInStr ? matchStr[startPos] : 0;
+        if (ch == 0 || SM_CHAR_IS_WHITE_SPACE(ch)) // word end
+            mMatchWeight++;
 	}
 	return bMatch;
 }
@@ -259,19 +278,19 @@ static bool IsVowel(TCHAR ch)
 {
 	return ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u' || ch == 'y';
 }
-CString CPhoneticStringMatcher::GetPhoneticString(LPCTSTR inStr, PhoneticData &outPhoneticData, bool bUpdateCounts /* = true */)
+StdString CPhoneticStringMatcher::GetPhoneticString(const StdString& inStr, PhoneticData &outPhoneticData, bool bUpdateCounts /*= true*/)
 {
 	outPhoneticData.consonantCount = outPhoneticData.vowelCount = 0;
-	CString outStr(inStr);
+	StdString outStr(inStr);
 	outStr.MakeLower();
 	outPhoneticData.mStrVowel = outStr;
-	for (int i = 0; i < outStr.GetLength(); ++i) {
+	for (int i = 0; i < outStr.length(); ++i) {
 		if (IsVowel(outStr[i])) {
-			outStr.SetAt(i, ':');
+			outStr[i]=':';
 			outPhoneticData.vowelCount++;
 		}
 		else {
-			outPhoneticData.mStrVowel.SetAt(i, ':');
+			outPhoneticData.mStrVowel[i]=':';
 			if (bUpdateCounts) {
 				bool incrCount(true);
 				if (i > 0 && outStr[i] == 'h')
@@ -330,17 +349,16 @@ TCHAR CPhoneticStringMatcher::GetPhoneticChar(GetPhoneticData &inOutPhoticCharDa
 	inOutPhoticCharData.weight = pd.weight;
 	return pd.ch;
 }
-CPhoneticStringMatcher::CPhoneticStringMatcher( LPCTSTR lpExpression /*= NULL*/ )
-	: mMatchWeight(0), m_iMatchStartInddex(-1)
+CPhoneticStringMatcher::CPhoneticStringMatcher(LPCTSTR lpExpression /*= NULL*/ )
+	: m_iMatchStartInddex(-1)
 {
 	SetExpression(lpExpression);
 }
 
-void CPhoneticStringMatcher::SetExpression( LPCTSTR lpExpression /*= NULL*/ )
+void CPhoneticStringMatcher::SetExpression(LPCTSTR lpExpression /*= NULL*/ )
 {
-	CString vowels;
-	mStrOrgExpression = lpExpression;
-	mStrOrgExpression.MakeLower();
+	StdString vowels;
+	mStrOrgExpression = StdString(lpExpression).MakeLower();
 	mStrPhonetic = GetPhoneticString(lpExpression, mPhoneticData);
 	mMatchWeight = 0;
 	m_iMatchStartInddex = -1;
@@ -365,23 +383,24 @@ bool CPhoneticStringMatcher::Match( LPCTSTR matchString )
 {
 	mMatchWeight = 0;
 	m_iMatchStartInddex = -1;
-	if (mStrPhonetic.GetLength() <= 0)
+    mMatchString.clear();
+	if (mStrPhonetic.length() <= 0)
 		return false;
 	const bool bDoFullMatch(mPhoneticData.consonantCount < 3);
 	if (mPhoneticData.consonantCount == 0) {
-		CString str(matchString);
-		str.MakeLower();
-		m_iMatchStartInddex = str.Find(mStrOrgExpression, 0);
+		StdString str(StdString(matchString).MakeLower());
+		m_iMatchStartInddex = (int)str.find(mStrOrgExpression, 0);
 		if (m_iMatchStartInddex >= 0) {
-			mMatchWeight = mStrOrgExpression.GetLength() << 1;
-			mMatchWeight += GetWordMatchWeight(str, m_iMatchStartInddex, str.GetLength());
+			mMatchWeight = mStrOrgExpression.length() << 1;
+			mMatchWeight += GetWordMatchWeight(str, m_iMatchStartInddex, str.length());
+            mMatchString.assign(matchString, m_iMatchStartInddex, str.length());
 			return true;
 		}
 		return false;
 	}
 	PhoneticData phd;
 	int startIndex(0);
-	CString phoneticStr(GetPhoneticString(matchString, phd, false));
+	StdString phoneticStr(GetPhoneticString(matchString, phd, false));
 	int matchIndex(0);
 	int matchCount(0);
 	startIndex = GetWordIndex(matchString, startIndex);
@@ -390,8 +409,8 @@ bool CPhoneticStringMatcher::Match( LPCTSTR matchString )
 	while ( true ) {
 		SKIP_TILL_MATCH(phoneticStr, startIndex, ':');
 		SKIP_TILL_MATCH(mStrPhonetic, matchIndex, ':');
-		TCHAR ch2(startIndex < phoneticStr.GetLength() ? phoneticStr[startIndex++] : 0);
-		TCHAR ch(matchIndex < mStrPhonetic.GetLength() ? mStrPhonetic[matchIndex++] : 0);
+		TCHAR ch2(startIndex < phoneticStr.length() ? phoneticStr[startIndex++] : 0);
+		TCHAR ch(matchIndex < mStrPhonetic.length() ? mStrPhonetic[matchIndex++] : 0);
 		int mw(MatchChar(ch, ch2));
 		if (mw); // Char match
 		else if (prevCh && (ch == 'h' || MatchChar(ch, prevCh))) {
@@ -446,12 +465,13 @@ bool CPhoneticStringMatcher::Match( LPCTSTR matchString )
 	}
 	if (mMatchWeight > 0) {
 		mMatchWeight += GetWordMatchWeight(matchString, m_iMatchStartInddex, startIndex-m_iMatchStartInddex) + orderWt;
-		CString &vowels(phd.mStrVowel);
-		matchCount = bDoFullMatch ? startIndex : vowels.GetLength();
+        mMatchString.assign(matchString, m_iMatchStartInddex, startIndex - m_iMatchStartInddex);
+		StdString &vowels(phd.mStrVowel);
+		matchCount = bDoFullMatch ? startIndex : vowels.length();
 		startIndex = m_iMatchStartInddex;
 		matchIndex = 0;
-		CString &mStrVowel(mPhoneticData.mStrVowel);
-		while ( startIndex < matchCount && matchIndex < mStrVowel.GetLength() ) {
+		StdString &mStrVowel(mPhoneticData.mStrVowel);
+		while ( startIndex < matchCount && matchIndex < mStrVowel.length() ) {
 			TCHAR ch2(vowels[startIndex++]);
 			if (ch2 == ':') {// Skip escape char
 				SKIP_TILL_MATCH(vowels, startIndex, ':');
@@ -478,39 +498,42 @@ bool CPhoneticStringMatcher::Match( LPCTSTR matchString )
 	return mMatchWeight > 0;
 }
 
-bool CPhoneticStringMatcher::StringHasVowels( LPCTSTR str )
+
+bool CPhoneticStringMatcher::StringHasVowels(const StdString& str)
 {
-	CString vowels(str);
+	StdString vowels(str);
 	vowels.MakeLower();
-	return vowels.FindOneOf(_T("aeiouy")) >= 0;
+	return vowels.find_first_of(_T("aeiouy")) >= 0;
 }
 
-CPhoneticStringMatcherList::CPhoneticStringMatcherList( LPCTSTR lpExpression /*= NULL*/ )
+CPhoneticStringMatcherList::CPhoneticStringMatcherList(LPCTSTR lpExpression /*= NULL*/ )
 {
 	SetExpression(lpExpression);
 }
 
-void CPhoneticStringMatcherList::SetExpression( LPCTSTR lpExpression /*= NULL*/ )
+void CPhoneticStringMatcherList::SetExpression(LPCTSTR lpExpression /*= NULL*/ )
 {
 	__super::SetExpression(lpExpression);
-	mPhoneticMatchers.RemoveAll();
+	mPhoneticMatchers.clear();
 	for (INT_PTR i = 0; i < GetWordCount(); ++i)
-		mPhoneticMatchers.Add(CPhoneticStringMatcher(mStrListToMatch[i]));
+		mPhoneticMatchers.push_back(CPhoneticStringMatcher(mStrListToMatch[i]));
 }
 
 bool CPhoneticStringMatcherList::Match( LPCTSTR matchString )
 {
-	CString mS(matchString);
-	mS.MakeLower();
+	StdString mS(StdString(matchString).MakeLower()), strMatch;
 	mMatchWeight = 0;
+    mMatchString.clear();
 	int matchPos(-1);
-	int localWight(0);
-	for (INT_PTR i = 0; i < mPhoneticMatchers.GetCount(); ++i) {
-		if (mPhoneticMatchers[i].Match(mS)) {
+	unsigned localWight(0);
+	for (size_t i = 0; i < mPhoneticMatchers.size(); ++i) {
+		if (mPhoneticMatchers[i].Match(mS.c_str())) {
 			mMatchWeight += mPhoneticMatchers[i].GetMatchWeight();
+            if (mMatchString.length() > strMatch.length())
+                strMatch = mMatchString;
 			int curMatchPos(mPhoneticMatchers[i].GetMatchIndex());
 			if (curMatchPos >= 0) {
-				mS.SetAt(curMatchPos, '?');
+				mS[curMatchPos]='?';
 				++localWight;
 				if (curMatchPos > matchPos) {
 					mMatchWeight += MW_MATCH_IN_ORDER;
@@ -520,5 +543,6 @@ bool CPhoneticStringMatcherList::Match( LPCTSTR matchString )
 			}
 		}
 	}
-	return localWight > mStrListToMatch.GetCount();
+    mMatchString = strMatch;
+	return localWight > mMinMatchCount;
 }

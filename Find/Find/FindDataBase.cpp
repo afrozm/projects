@@ -114,7 +114,7 @@ CString FindDataBase::GetPreferencesFolderPahth()
 }
 static int ItrTableRowsCallback_GetTableColTexts(sqlite3_stmt *statement, void *pUserData)
 {
-	CArrayCString *pOutColTexts = (CArrayCString*)pUserData;
+    std::vector<std::string> *outStdColTexts((std::vector<std::string> *)pUserData);
 	int numColumns = sqlite3_column_count(statement);
 	for (int col = 0; col < numColumns; ++col)
 	{
@@ -122,21 +122,26 @@ static int ItrTableRowsCallback_GetTableColTexts(sqlite3_stmt *statement, void *
 		if (p == NULL) {
 			p = "";
 		}
-		pOutColTexts->Add(SystemUtils::UTF8ToUnicodeCString(p));
+        outStdColTexts->push_back(p);
 	}
 	return 0;
 }
 int FindDataBase::GetTableColTexts(const char *tableName, const char *conditions, CArrayCString &outColTexts)
 {
-	return IterateTableRows(tableName, ItrTableRowsCallback_GetTableColTexts,
-		conditions, &outColTexts);
+    ListString outStdColTexts;
+    int retVal = GetTableTexts(tableName, outStdColTexts, nullptr, 0, -1, "%s", conditions ? conditions : "");
+    if (retVal > 0) {
+        for (auto &text : outStdColTexts)
+            outColTexts.Add(SystemUtils::UTF8ToUnicodeCString(text.c_str()));
+    }
+    return retVal;
 }
 CString FindDataBase::GetProperty(const CString &propName)
 {
 	CString retVal;
 	CArrayCString arrString;
 	CString condition;
-	condition.Format(_T(" WHERE Name='%s'"), propName);
+	condition.Format(_T("WHERE Name='%s'"), propName);
 	GetTableColTexts("Property", SystemUtils::UnicodeToUTF8(condition).c_str(), arrString);
 	if (arrString.GetCount() > 0)
 		retVal = arrString.GetAt(1);

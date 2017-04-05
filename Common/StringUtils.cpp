@@ -5,6 +5,88 @@
 #include <windows.h>
 #endif
 
+
+StdString::StdString(const char *str)
+    :
+#if defined(_UNICODE) || defined(UNICODE)
+    lstring(UTF8_TO_UNICODE(str))
+#else
+    lstring(str ? str : "")
+#endif
+{
+
+}
+
+StdString::StdString(const wchar_t *str)
+    :
+#if defined(_UNICODE) || defined(UNICODE)
+    lstring(str ? str : _T(""))
+#else
+    lstring(StringUtils::UnicodeToUTF8(str))
+#endif
+{
+
+}
+
+
+StdString::StdString(const otherstring &str)
+    :
+#if defined(_UNICODE) || defined(UNICODE)
+    lstring(UTF8_TO_UNICODE(str))
+#else
+    lstring(StringUtils::UnicodeToUTF8(str))
+#endif
+{
+
+}
+
+StdString::operator otherstring() const
+{
+#if defined(_UNICODE) || defined(UNICODE)
+    return UNICODE_TO_UTF8(*this);
+#else
+    return StringUtils::UTF8ToUnicode(*this);
+#endif
+}
+
+
+StdString& StdString::MakeLower()
+{
+    *this = StringUtils::ToLower(*this);
+    return *this;
+}
+
+bool StdString::Trim(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLeft /*= true*/, bool bTrimRight /*= true*/)
+{
+    StdString &outStr(*this);
+    bool bContinue(true), bUpdated(false);
+    while (bContinue) {
+        bContinue = false;
+        for (auto cit(inTrimChars.begin()); cit != inTrimChars.end(); ++cit) {
+            auto len(outStr.length());
+            if (bTrimLeft && len > 0 && outStr[0] == *cit) {
+                outStr.erase(0, 1);
+                --len;
+                bContinue = true;
+                bUpdated = true;
+            }
+            if (bTrimRight && len > 0 && outStr[len - 1] == *cit) {
+                outStr.erase(len - 1);
+                bContinue = true;
+                bUpdated = true;
+            }
+        }
+    }
+    return bUpdated;
+}
+
+StdString StdString::Trim(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLeft /*= true*/, bool bTrimRight /*= true*/) const
+{
+    StdString outStr(*this);
+    outStr.Trim(inTrimChars, bTrimLeft, bTrimRight);
+    return outStr;
+}
+
 int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars /* = _T(",") */, bool bIncludeEmpty /* = false */, int maxCount /* = -1 */)
 {
     size_t count(outStrings.size());
@@ -166,13 +248,13 @@ static lstring WildCardToRegExp(LPCTSTR wildCard)
     return regExpStr;
 }
 
-lstring StringUtils::WildCardExpToRegExp(const TCHAR *wildCardExp)
+StdString StringUtils::WildCardExpToRegExp(const TCHAR *wildCardExp)
 {
     TCHAR *exp = new TCHAR[lstrlen(wildCardExp) + 1];
     lstrcpy(exp, wildCardExp);
     LPTSTR nexttoken(NULL);
     LPTSTR token = _tcstok_s(exp, _T(";"), &nexttoken);
-    lstring regExp;
+    StdString regExp;
     while (token != NULL) {
         regExp += _T("(") + WildCardToRegExp(token) + _T(")");
         token = _tcstok_s(NULL, _T(";"), &nexttoken);

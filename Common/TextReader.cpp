@@ -210,35 +210,36 @@ int CTextReader::LineCount()
 lstring CTextReader::Read(DWORD nBytes)
 {
     lstring outStr;
-    BinaryData buffer(NULL, nBytes + 2 * sizeof(TCHAR));
-    char *pBuffer = (char *)(void *)buffer;
-    nBytes = (DWORD)m_pDataReader->Read(pBuffer, nBytes, nBytes);
-    if (nBytes > 0) {
-        TCHAR *convString = (TCHAR *)pBuffer;
-        {
-            TCHAR *lastChar = (TCHAR*)(pBuffer + nBytes);
-            lastChar[0] = 0;
-            lastChar[1] = 0;
-        }
-        switch (mFileEncoding) {
-        case FileEncoding_ANSI:
-        case FileEncoding_UTF8:
-        {
-            outStr = StringUtils::UTF8ToUnicode(pBuffer);
-            break;
-        }
-        case FileEncoding_UNICODE_BIG:
-            while (*convString) {
-                *convString = *convString << 8 | *convString >> 8;
-                ++convString;
+    if (m_pDataReader != nullptr) {
+        BinaryData buffer(NULL, nBytes + 2 * sizeof(TCHAR));
+        char *pBuffer = (char *)(void *)buffer;
+        nBytes = (DWORD)m_pDataReader->Read(pBuffer, nBytes, nBytes);
+        if (nBytes > 0) {
+            TCHAR *convString = (TCHAR *)pBuffer;
+            {
+                TCHAR *lastChar = (TCHAR*)(pBuffer + nBytes);
+                lastChar[0] = 0;
+                lastChar[1] = 0;
             }
-        case FileEncoding_UNICODE:
-        default:
-            outStr = convString;
-            break;
+            switch (mFileEncoding) {
+            case FileEncoding_ANSI:
+            case FileEncoding_UTF8:
+            {
+                outStr = StringUtils::UTF8ToUnicode(pBuffer);
+                break;
+            }
+            case FileEncoding_UNICODE_BIG:
+                while (*convString) {
+                    *convString = *convString << 8 | *convString >> 8;
+                    ++convString;
+                }
+            case FileEncoding_UNICODE:
+            default:
+                outStr = convString;
+                break;
+            }
         }
     }
-    delete[]pBuffer;
     return outStr;
 }
 
@@ -256,7 +257,7 @@ lstring CTextLineReader::ReadLine()
         LPCTSTR pBuffer(mReadBuffer.c_str());
         pBuffer += m_iStartPos;
         TCHAR pCH(0);
-        while (IS_LINE_CHAR(*pBuffer)) {
+        while (STR_CHAR_IS_LINE(*pBuffer)) {
             if (!(*pBuffer == '\n' && pCH == '\r'))
                 m_iLineCount++;
             pCH = *pBuffer;

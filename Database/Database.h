@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sqlite3.h"
+#include <list>
+#include <string>
 
 typedef int (*ItrTableRowsCallback)(sqlite3_stmt *statement, void *pUserData);
 
@@ -13,18 +15,20 @@ struct SelectData {
 class Database
 {
 public:
+    typedef std::list<std::string> ListString;
 	Database(bool bReadOnly = false);
 	~Database(void);
 	int Open(const char *dbFile);
 	bool IsOpen();
 	int Close();
-	int IterateTableRows(const char *tableName, ItrTableRowsCallback itcbFn, const char *conditions, void *pUserData, const SelectData *pData = NULL);
-    int IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itcbFn, void *pUserData, const SelectData *pData = NULL, const char *conditions = NULL, ...);
-//	int GetTableColTexts(const char *tableName, const char *conditions, RIBS::VecRIBSStrings &outColTexts);
-	int GetTableRowCount(const char *tableName, unsigned long long &outCount, const char *conditions = NULL, ...);
-//	int GetTableNames(RIBS::VecRIBSStrings & outTableNamesVec);
-	int QueryNonRows(const char *inQuery, ...);
-	int QueryNonRows2(const char *inQuery);
+	int IterateTableRows(const char *tableName, ItrTableRowsCallback itcbFn, const char *conditions, void *pUserData, const SelectData *pData = NULL) const;
+    int IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itcbFn, void *pUserData, const SelectData *pData = NULL, const char *conditions = NULL, ...) const;
+    int GetTableTexts(const char *tableName, ListString &outColTexts, const char **coulumNames = nullptr, int startIndex = 0, int endIndex = -1, const char *conditions = NULL, ...) const;
+	int GetTableRowCount(const char *tableName, unsigned long long &outCount, const char *conditions = NULL, ...) const;
+    bool TableHasEntry(const char *tableName, const char *conditions = NULL, ...) const;
+	int GetTableNames(ListString & outTableNamesVec);
+	int QueryNonRows(const char *inQuery, ...) const;
+	int QueryNonRows2(const char *inQuery) const;
 	int Commit();
 	int Rollback();
 	int Vacuum();
@@ -33,10 +37,10 @@ public:
     // Effective only when db is closed. For already open db no effect.
     bool SetReadOnly(bool bReadOnly = true) { mbReadOnly = bReadOnly; }
 private:
-	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery);
-	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_list args);
-	int PrepareStmtEx(sqlite3_stmt **outStatement, const char *inQuery, ...);
-	int QueryNonRowsLoop(sqlite3_stmt *statement);
+	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery) const;
+	int PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_list args) const;
+	int PrepareStmtEx(sqlite3_stmt **outStatement, const char *inQuery, ...) const;
+	int QueryNonRowsLoop(sqlite3_stmt *statement) const;
     sqlite3 *db;
 	bool mbReadOnly;
 };

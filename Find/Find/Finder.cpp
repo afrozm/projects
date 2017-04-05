@@ -322,18 +322,21 @@ CRegExpMatcher::CRegExpMatcher(LPCTSTR lpExpression)
 CFinder::CFinder(LPCTSTR lpExpression /* = NULL */, FindCallBack fcb /* = NULL */, bool recurse /* = true */, void *pUserParam /* = NULL */, MatchType mt /* = WildCard */)
 : mFindCallBack(fcb), m_bRecursive(recurse), m_pUserParam(pUserParam), m_bAborted(false), m_pStringMatcher(NULL)
 {
-	switch (mt)
-	{
-	case CFinder::WildCard:
-	case CFinder::RegularExp:
-		m_pStringMatcher = new CRegExpMatcher(lpExpression, mt == RegularExp);
-		break;
-	case CFinder::Phonetic:
-		m_pStringMatcher = new CPhoneticStringMatcher(lpExpression);
-		break;
-	default:
-		break;
-	}
+    if (lpExpression && *lpExpression) {
+        switch (mt)
+        {
+        case CFinder::WildCard:
+        case CFinder::RegularExp:
+            m_pStringMatcher = new CRegExpMatcher(lpExpression, mt == RegularExp);
+            break;
+        case CFinder::Phonetic:
+            m_pStringMatcher = new CPhoneticStringMatcher(lpExpression);
+            break;
+        default:
+            m_pStringMatcher = StringMatcher_GetStringMatcher(lpExpression);
+            break;
+        }
+    }
 }
 CFinder::~CFinder(void)
 {

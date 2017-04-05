@@ -1,10 +1,6 @@
 #pragma once
 
 #include <string>
-#define IS_LINE_CHAR(ch) ((ch)=='\n'||(ch)=='\r')
-#define STR_SKIP_LINE(str) while(*str && IS_LINE_CHAR(*str)) ++str
-#define STR_SKIP_TILL_LINE(str) while(*str && !IS_LINE_CHAR(*str)) ++str
-#define STR_SKIP_TILL_LINE_REV(str,startStr) while(str <= startStr && !IS_LINE_CHAR(*str)) --str; if (str < startStr) str = startStr
 
 namespace SystemUtils
 {
@@ -17,6 +13,7 @@ namespace SystemUtils
 	CString GetReadableSize(LONGLONG size);
 	CString IntToString(int no);
 	int StringToInt(LPCTSTR number);
+    wchar_t StringGetAt(const CString &inStr, int index);
 	LONGLONG GetSizeFromString(LPCTSTR pszSize);
 	LONGLONG StringToLongLong(LPCTSTR number);
 	CString LongLongToString(LONGLONG no);
@@ -27,7 +24,7 @@ namespace SystemUtils
 	CTime IntToTime(INT_PTR time);
 	INT_PTR TimeToInt(const CTime &time);
 	INT_PTR SplitString(const CString& inString, CArrayCString &outStrings, LPCTSTR sep = _T(","));
-	CString CombineString(const CArrayCString &inStringArray, LPCTSTR sep = _T(","), INT_PTR startIndex = 0, INT_PTR endIndex = -1);
+	CString CombineString(const CArrayCString &inStringArray, LPCTSTR sep = _T(","), INT_PTR startIndex = 0, INT_PTR endIndex = -1, bool bInlcudeEmpty = true);
     CString StringFindOneOf(const CString &inStr, const CString &inFindStr);
 	BOOL GetFileVersion(LPCTSTR filePath, DWORD &outFileVersionMS, DWORD &outFileVersionLS);
 	void LogMessage(const wchar_t *msg, ...);
@@ -46,8 +43,6 @@ namespace SystemUtils
 		r |= b;
 		return r;
 	}
-	bool IsCompleteWord(const CString& inString, int pos, int len);
-	CString GetLine(LPCTSTR inStr, int startPos = 0);
 
 #define  DPI_RESIZE_FLAG_NO_LEFT	1
 #define  DPI_RESIZE_FLAG_NO_TOP		2

@@ -1,17 +1,23 @@
 #pragma once
+#include "Common.h"
+#include "StringUtils.h"
 
-CString WildCardExpToRegExp(LPCTSTR wildCardExp);
-bool IsWildCardExp(const CString &wildCardExp);
+bool IsWildCardExp(LPCTSTR wildCardExp);
 
 class StringMatcher {
 public:
+    StringMatcher();
 	virtual bool Match(LPCTSTR matchString) = 0;
-	virtual unsigned GetMatchWeight() const {return 0;}
+	virtual unsigned GetMatchWeight() const {return mMatchWeight;}
 	virtual ~StringMatcher() {}
+    virtual const StdString& GetMatchString() const { return mMatchString; }
 protected:
 	int GetWordMatchCharWeight(TCHAR ch);
-	int GetWordMatchWeight(const CString &matchString, int startPos = 0, int lengthMatch = -1);
-	int GetWordIndex(LPCTSTR inStr, int startPos = 0);
+	int GetWordMatchWeight(const StdString& matchString, int startPos = 0, int lengthMatch = -1);
+	int GetWordIndex(const StdString& inStr, int startPos = 0);
+
+    unsigned mMatchWeight;
+    StdString mMatchString; // string matched
 };
 
 class CRegExpMatcher : public StringMatcher
@@ -27,64 +33,64 @@ public:
 	}
 protected:
 	void Free();
-	CAtlRegExp<> *mRegExp;
-	CAtlRegExp<> *mRegExpException;
+	std::wregex *mRegExp;
+    std::wregex *mRegExpException;
 	BOOL mbCaseSensitive;
 };
 
 class CPhoneticStringMatcher : public StringMatcher {
 public:
-	CPhoneticStringMatcher(LPCTSTR lpExpression = NULL);
+    CPhoneticStringMatcher(LPCTSTR lpExpression = NULL);
 	void SetExpression(LPCTSTR lpExpression = NULL);
 	bool Match(LPCTSTR matchString);
 	unsigned GetMatchWeight() const {return mMatchWeight;}
 	int GetMatchIndex() const {return m_iMatchStartInddex;}
 	struct PhoneticData {
-		CString mStrVowel;
+		StdString mStrVowel;
 		int vowelCount;
 		int consonantCount;
 	};
-	static CString GetPhoneticString(LPCTSTR inStr, PhoneticData &outPhoneticData, bool bUpdateCounts = true);
-	static bool StringHasVowels(LPCTSTR str);
+	static StdString GetPhoneticString(const StdString& inStr, PhoneticData &outPhoneticData, bool bUpdateCounts = true);
+	static bool StringHasVowels(const StdString& str);
 	class GetPhoneticData {
 	public:
 		GetPhoneticData(TCHAR inCh = 0, LPCTSTR inChStr = NULL, int inChIndex = -1, LPCTSTR inTargetStr = NULL, int inTargerIndex = -1);
 		TCHAR GetChar(int idStr = 0, int relIndex = 1);
 		TCHAR ch;
 		int weight;
-		LPCTSTR chString[2]; // 0 - ch string, 1 - target string
+        LPCTSTR chString[2]; // 0 - ch string, 1 - target string
 		int chIndex[2];
 		int lenIndex[2];
 	};
 	static TCHAR GetPhoneticChar(GetPhoneticData &inOutPhoticCharData);
 private:
 	int MatchChar(TCHAR ch, TCHAR ch2);
-	CString mStrOrgExpression;
-	CString mStrPhonetic;
+	StdString mStrOrgExpression;
+	StdString mStrPhonetic;
 	PhoneticData mPhoneticData;
-	unsigned mMatchWeight;
 	int m_iMatchStartInddex;
 };
 
 class CStringMatcherList : public StringMatcher {
 public:
-	CStringMatcherList(LPCTSTR lpExpression = NULL);
+    CStringMatcherList(LPCTSTR lpExpression = NULL);
 	void SetExpression(LPCTSTR lpExpression = NULL);
 	bool Match(LPCTSTR matchString);
 	unsigned GetMatchWeight() {return mMatchWeight;}
-	INT_PTR GetWordCount() const {return mStrListToMatch.GetCount();}
+	INT_PTR GetWordCount() const {return mStrListToMatch.size();}
+    void SetMinimumMatchCount(unsigned mc) { mMinMatchCount = mc; }
 protected:
-	CArrayCString mStrListToMatch;
-	unsigned mMatchWeight;
+	StringUtils::VecString mStrListToMatch;
+    unsigned mMinMatchCount;
 };
 class CPhoneticStringMatcherList : public CStringMatcherList {
 public:
-	CPhoneticStringMatcherList(LPCTSTR lpExpression = NULL);
+    CPhoneticStringMatcherList(LPCTSTR lpExpression = NULL);
 	void SetExpression(LPCTSTR lpExpression = NULL);
 	bool Match(LPCTSTR matchString);
 protected:
-	typedef CArray<CPhoneticStringMatcher> CArrayPhoneticStringMatcher;
-	CArrayPhoneticStringMatcher mPhoneticMatchers;
+	typedef std::vector<CPhoneticStringMatcher> CArrayPhonetilstringMatcher;
+	CArrayPhonetilstringMatcher mPhoneticMatchers;
 };
 class CSimpleStringMatcher : public StringMatcher {
 public:
@@ -97,8 +103,12 @@ protected:
 		caseSensitive,
 		matchWholeWord
 	};
-	CString mStrToSearch;
+	StdString mStrToSearch, mOrgStrToSearch;
 	UINT muFlags;
 	MatchCallback mMatchCallback;
 	void *m_pUserParam;
 };
+
+StringMatcher* StringMatcher_GetStringMatcher(LPCTSTR inString);
+bool StringMatcher_IsSimpleMatch(LPCTSTR inString);
+bool StringMatcher_IsPhonetic(LPCTSTR inString);

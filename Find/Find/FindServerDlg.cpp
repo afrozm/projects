@@ -967,7 +967,7 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 				curTime);
 			CString query2;
 			CString condition;
-			condition.Format(_T(" WHERE Path='%s'"), path);
+			condition.Format(_T("WHERE Path='%s'"), path);
 			query2.Format(_T("UPDATE CachedData SET Path='%s', Size='%s', LastUpdated=%I64d, MissCount=0, CatagoryNumber=%d, Root='%s', CreatedTime=%I64d, ModifiedTime=%I64d, AccessedTime=%I64d WHERE Path='%s'"),
 				path,
 				bIsDir ? _T("") : SystemUtils::LongLongToString(pFindFile->GetFileSize()),
@@ -1037,8 +1037,8 @@ int CFindServerDlg::ItrVerifyCacheDataTableRowsCallbackFn(sqlite3_stmt *statemen
 	}
 	CString query;
 	CString condition;
-	{
-		CString qpath(path);
+    CString qpath(path);
+    {
 		FindDataBase::MakeSQLString(qpath);
 		condition.Format(_T(" WHERE Path='%s'"), qpath);
 	}
@@ -1048,6 +1048,7 @@ int CFindServerDlg::ItrVerifyCacheDataTableRowsCallbackFn(sqlite3_stmt *statemen
 	if (path.Exists()) {
 		query.Format(_T("UPDATE CachedData SET LastUpdated=%I64d, MissCount=0"),
 			SystemUtils::TimeToInt(cuurentTime));
+        mContentSearchManager.AddFileEntry(FileTableEntry(qpath));
 	}
 	else {
 		UINT missCount(sqlite3_column_int(statement, CachedData_MissCount)+1);
@@ -1088,7 +1089,7 @@ void CFindServerDlg::Verify(CSearchHistory *rootPath, bool bRemove /* = false */
 			&verifyData);
 		char condition[1024];
 		sprintf_s(condition, sizeof(condition)/sizeof(condition[0]),
-			" WHERE Root='%s'",
+			"WHERE Root='%s'",
 			SystemUtils::UnicodeToUTF8(rootKey).c_str());
 		itSHTable.IterateTableRows(mDataBase, "CachedData", condition);
 		NetWorkCloseConnection(rootKey);
@@ -1111,7 +1112,7 @@ void CFindServerDlg::StartIpEnum()
 		CString lastUpdatedStr(mDataBase.GetProperty(_T("EnumIP_LastUpdateTime")));
 		if (!lastUpdatedStr.IsEmpty()) {
 			CArrayCString ipes;
-			mDataBase.GetTableColTexts("Property", " WHERE Name LIKE 'IPE_%'", ipes);
+			mDataBase.GetTableColTexts("Property", "WHERE Name LIKE 'IPE_%'", ipes);
 			if (ipes.IsEmpty() && mDataBase.GetProperty(_T("Main_IPE")).IsEmpty()) { // start only if all ip enum threads were finished.
 				CTime lastUpdated(SystemUtils::StringToDate(lastUpdatedStr));
 				CTimeSpan timeDiff = CTime::GetCurrentTime() - lastUpdated;
@@ -1207,7 +1208,6 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 		SystemUtils::LogMessage(_T("Server: Verify started"));
 		SetTitle(_T("Verifying"));
 		Execute(_T("mirror,skip"));
-        mContentSearchManager.UpdateFileEntriesFromSourceDB(mDataBase);
     }
 	// Also search in history machines
 	INT_PTR searchHistoryCount(mSearchHistory.GetCount());
@@ -1538,7 +1538,7 @@ void CFindServerDlg::EnumerateIps(DWORD_PTR ipRange)
 		StartThreadOperation(SERVER_THREAD_OP_IPENUM, (LPVOID)~0);
 		{
 			CArrayCString ipes;
-			mDataBase.GetTableColTexts("Property", " WHERE Name LIKE 'IPE_%'", ipes);
+			mDataBase.GetTableColTexts("Property", "WHERE Name LIKE 'IPE_%'", ipes);
 			if (!ipes.IsEmpty()) {
 				if (startIPs.IsEmpty())
 					bStartMainIPEnum = false; // Main ip enumerator thread was finished - so do not start it again
@@ -1709,7 +1709,7 @@ int CFindServerDlg::QuickSearch( const Path& remoteHostPath )
 			&allPaths);
 		char condition[1024];
 		sprintf_s(condition, sizeof(condition)/sizeof(condition[0]),
-			" WHERE Root='%s'",
+			"WHERE Root='%s'",
 			SystemUtils::UnicodeToUTF8(outRetVal->GetRootKey()).c_str());
 		itSHTable.IterateTableRows(mDataBase, "CachedData", condition);
 		count = 1;

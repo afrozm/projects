@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "WordParser.h"
-#include "SystemUtils.h"
 
 WordParser::WordParser()
     : mEncoding(FileEncoding_NotInitialized)
@@ -11,8 +10,10 @@ WordParser::~WordParser()
 {
 }
 
-static bool IsWordSep(wchar_t ch)
+bool WordParser::IsWordSep(wchar_t ch)
 {
+    if (ch == 0)
+        return true;
     if (STR_CHAR_IS_SPACE(ch))
         return true;
     static char sSeps[256] = { 0 };
@@ -24,6 +25,47 @@ static bool IsWordSep(wchar_t ch)
     if (ch < 256)
         return sSeps[ch] != 0;
     return false;
+}
+
+bool WordParser::IsCompleteWord(LPCTSTR inString, int pos, int len)
+{
+    if (inString == nullptr || *inString == 0)
+        return true;
+    if (pos == 0 || (!IsWordSep(inString[pos]) && IsWordSep(inString[pos-1]))) {
+        if (lstring(inString).length() <= pos + len)
+            return true;
+        return IsWordSep(inString[pos + len]);
+    }
+    return false;
+}
+
+lstring WordParser::GetCompleteWord(LPCTSTR inString, int startPos, int len)
+{
+    if (inString == nullptr || *inString == 0)
+        return lstring();
+    if (startPos < 0)
+        startPos = 0;
+    int endPos(startPos);
+    LPCTSTR pStr(inString + startPos);
+    while (startPos > 0)
+    {
+        --pStr;
+        if (IsWordSep(*pStr))
+            break;
+        --startPos;
+    }
+    pStr = inString + endPos;
+    while (*pStr)
+    {
+        if (len <= 0) {
+            if (IsWordSep(*pStr))
+                break;
+        }
+        --len;
+        ++pStr;
+        ++endPos;
+    }
+    return lstring(inString + startPos, endPos - startPos);
 }
 
 // Integrate ParseWords to content search

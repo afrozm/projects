@@ -73,7 +73,7 @@ void Logger::LogSummary()
 {
 	Log(_T("-------------------------------------- Summary --------------------------------------"));
 	Log(mSummary.c_str());
-	Log(kLogLevelInfo, _T(" - %d fatal error(s), %d error(s),  warning(s)"), m_nErros[0], m_nErros[1], m_nErros[2]);
+	Log(kLogLevelInfo, _T(" - %d fatal error(s), %d error(s), %d warning(s)"), m_nErros[0], m_nErros[1], m_nErros[2]);
 	if (!mSummary.empty())
 		Log(_T("Please search the above error/warning string(s) to find when the error occurred."));
 	mSummary.clear();

@@ -29,13 +29,20 @@ int CRefCountObj::DecrementRefCount(CRefCountObj **objThis /* = NULL */)
 	ASSERT(objThis == NULL || *objThis == this);
 	if (this == NULL)
 		return 0;
-	CAutoLock al(m_Lock);
-	++m_uRefCount;
-	if (m_uRefCount == 0) {
-		if (objThis && *objThis == this)
-			*objThis = NULL;
-		delete this;
-	}
-	return m_uRefCount;
+    CRefCountObj *pObjToDelte(nullptr);
+    int outRefCount(0);
+    {
+        CAutoLock al(m_Lock);
+        --m_uRefCount;
+        outRefCount = m_uRefCount;
+        if (m_uRefCount == 0) {
+            if (objThis && *objThis == this)
+                *objThis = NULL;
+            pObjToDelte = this;
+        }
+    }
+    if (pObjToDelte)
+        delete pObjToDelte;
+	return outRefCount;
 }
 

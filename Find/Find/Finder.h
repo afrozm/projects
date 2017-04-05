@@ -146,11 +146,12 @@ class CFinder
 {
 public:
 	enum MatchType {
+        AutoDetect,
 		WildCard,
 		RegularExp,
 		Phonetic
 	};
-	CFinder(LPCTSTR lpExpression = NULL, FindCallBack fcb = NULL, bool recurse = true, void *pUserParam = NULL, MatchType mt = WildCard);
+	CFinder(LPCTSTR lpExpression = NULL, FindCallBack fcb = NULL, bool recurse = true, void *pUserParam = NULL, MatchType mt = AutoDetect);
 	~CFinder(void);
 	int Find(CString lpDirectory, bool bSearchZip = false);
 	bool IsAborted() {return m_bAborted;}

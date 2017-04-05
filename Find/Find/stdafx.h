@@ -39,7 +39,6 @@
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
-#include <atlrx.h>
 #include <afxole.h>
 
 #include <afxdisp.h>        // MFC Automation classes
@@ -58,6 +57,7 @@
 
 #include <vector>
 #include <map>
+#include <regex>
 #include "STLUtils.h"
 #include <afxdisp.h>
 #include "resource.h"		// main symbols

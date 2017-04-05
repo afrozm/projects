@@ -8,8 +8,8 @@ class CFindDlg;
 class CListResItemData
 {
 public:
-	CListResItemData(const CFileMetaDataProvider &fileMetaDataProvider, int matchWeight = 0)
-		: m_ullFileSize(fileMetaDataProvider.GetFileSize()), mMatchWeight(matchWeight)
+	CListResItemData(const CFileMetaDataProvider &fileMetaDataProvider, int matchWeight = 0, LPCTSTR path = nullptr)
+		: m_ullFileSize(fileMetaDataProvider.GetFileSize()), mMatchWeight(matchWeight), mPath(path?path:L"")
 	{
 		try {fileMetaDataProvider.GetCreationTime(mCreatedTime);}catch(...) {}
 		try {fileMetaDataProvider.GetLastWriteTime(mModifedTime);}catch(...) {}
@@ -22,6 +22,7 @@ public:
 	CTime mAccessedTime;
 	int mMatchWeight;
 	CString mPath;
+    CString mName;
 };
 
 // CSaveListResultCtrl

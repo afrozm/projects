@@ -30,5 +30,3 @@ private:
 };
 
 extern CFindApp theApp;
-
-CString WildCardExpToRegExp(LPCTSTR wildCardExp);

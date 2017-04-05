@@ -10,6 +10,12 @@ public:
     WordParser();
     ~WordParser();
     INT_PTR ParseWords(const BinaryData &inData, std::vector<std::wstring> &outWords);
+
+    // Utilities
+    static bool IsWordSep(wchar_t ch);
+    static bool IsCompleteWord(LPCTSTR inString, int pos, int len);
+    static lstring GetCompleteWord(LPCTSTR inString, int startPos, int len);
+
 private:
     void GetString(const BinaryData &inData, std::wstring &outStr);
     void SplitWords(const wchar_t *pStr, std::vector<std::wstring> &outWords);

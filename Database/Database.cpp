@@ -45,8 +45,10 @@ bool Database::IsOpen()
 	return db != NULL;
 }
 
-int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbFn, const char *conditions, void *pUserData, const SelectData *pData)
+int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbFn, const char *conditions, void *pUserData, const SelectData *pData) const
 {
+    if (conditions == nullptr)
+        conditions = "";
 	if (db == NULL)
 		return SQLITE_ERROR;
 	sqlite3_stmt *statement = NULL;
@@ -54,15 +56,18 @@ int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbF
 	if (pData != NULL) {
 		if (pData->bIsDistinct)
 			selectCore = "DISTINCT ";
-		const char **columns = pData->columns;
-		while(*columns) {
-			if (columns != pData->columns)
-				selectCore += ",";
-			selectCore += *columns;
-			++columns;
-		}
+        if (pData->columns) {
+            const char **columns = pData->columns;
+            while (*columns) {
+                if (columns != pData->columns)
+                    selectCore += ",";
+                selectCore += *columns;
+                ++columns;
+            }
+        }
 	}
-	else selectCore = "*";
+    if (selectCore.empty())
+	    selectCore = "*";
 	int sqlrv = PrepareStmtEx(&statement, "SELECT %s FROM %s %s", selectCore.c_str(), tableName, conditions);
 	if (SQLITE_OK != sqlrv) {
 		return sqlrv;
@@ -88,7 +93,7 @@ int Database::IterateTableRows(const char *tableName, ItrTableRowsCallback itcbF
 	sqlite3_finalize(statement);
 	return sqlrv;
 }
-int Database::IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itcbFn, void *pUserData, const SelectData *pData /* = NULL */, const char *conditions /* = NULL */, ...)
+int Database::IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itcbFn, void *pUserData, const SelectData *pData /* = NULL */, const char *conditions /* = NULL */, ...) const
 {
     va_list args;
     if (conditions == NULL)
@@ -100,10 +105,11 @@ int Database::IterateTableRowsEx(const char *tableName, ItrTableRowsCallback itc
     va_end(args);
     return retVal;
 }
-/*
+
 int 
-Database::GetTableNames(RIBS::VecRIBSStrings & outTableNamesVec)
+Database::GetTableNames(ListString &outTableNamesVec)
 {
+    outTableNamesVec.clear();
 	if (db == NULL)
 		return SQLITE_ERROR;
 	sqlite3_stmt *statement = NULL;
@@ -122,7 +128,8 @@ Database::GetTableNames(RIBS::VecRIBSStrings & outTableNamesVec)
 					if (p == NULL) {
 						p = "";
 					}
-					outTableNamesVec.push_back(STRTORIBSSTR(p));
+                    if (*p)
+					    outTableNamesVec.push_back(p);
 				}
 				break;
 			case SQLITE_DONE:
@@ -135,9 +142,14 @@ Database::GetTableNames(RIBS::VecRIBSStrings & outTableNamesVec)
 	sqlite3_finalize(statement);
 	return sqlrv;
 }
+struct TableRowCallbackData
+{
+    Database::ListString &outColText;
+    int startIndex, endIndex, currentIndex;
+};
 static int ItrTableRowsCallback_GetTableColTexts(sqlite3_stmt *statement, void *pUserData)
 {
-	RIBS::VecRIBSStrings *pOutColTexts = (RIBS::VecRIBSStrings *)pUserData;
+    TableRowCallbackData *pData = (TableRowCallbackData *)pUserData;
 	int numColumns = sqlite3_column_count(statement);
 	for (int col = 0; col < numColumns; ++col)
 	{
@@ -145,16 +157,29 @@ static int ItrTableRowsCallback_GetTableColTexts(sqlite3_stmt *statement, void *
 		if (p == NULL) {
 			p = "";
 		}
-		pOutColTexts->push_back(STRTORIBSSTR(p));
+		pData->outColText.push_back(p);
 	}
-	return 1; // Do not get next row
+    pData->currentIndex++;
+	return pData->endIndex < 0 || pData->currentIndex < pData->endIndex ? 0 : 1;
 }
-int Database::GetTableColTexts(const char *tableName, const char *conditions, RIBS::VecRIBSStrings &outColTexts)
+int Database::GetTableTexts(const char *tableName, ListString &outColTexts, const char **coulumNames /* = nullptr */, int startIndex /* = 0 */, int endIndex /* = -1 */, const char *conditions /* = NULL */, ...) const
 {
-	return IterateTableRows(tableName, ItrTableRowsCallback_GetTableColTexts,
-		conditions, &outColTexts);
+    if (conditions == nullptr)
+        conditions = "";
+    SelectData sd;
+    sd.columns = coulumNames;
+    TableRowCallbackData td = { outColTexts, startIndex, endIndex };
+    va_list args;
+    va_start(args, conditions);
+    char *q = sqlite3_vmprintf(conditions, args);
+    IterateTableRows(tableName, ItrTableRowsCallback_GetTableColTexts,
+        q, &td, &sd);
+    sqlite3_free(q);
+    va_end(args);
+
+    return td.currentIndex;
 }
-*/
+
 static int ItrTableRowsCallback_GetTableRowCount(sqlite3_stmt *statement, void *pUserData)
 {
     ++(*(unsigned long long *)pUserData);
@@ -166,9 +191,8 @@ static int ItrTableRowsCallback_GetTableRowCount2(sqlite3_stmt *statement, void 
     return 0;
 }
 
-int Database::GetTableRowCount(const char *tableName, unsigned long long &outCount, const char *conditions /* = NULL */, ...)
+int Database::GetTableRowCount(const char *tableName, unsigned long long &outCount, const char *conditions /* = NULL */, ...) const
 {
-
     va_list args;
     if (conditions == NULL)
         conditions = "";
@@ -189,6 +213,20 @@ int Database::GetTableRowCount(const char *tableName, unsigned long long &outCou
             conditions, &outCount, &sd);
     }
     return retVal;
+}
+
+bool Database::TableHasEntry(const char *tableName, const char *conditions /*= NULL*/, ...) const
+{
+    va_list args;
+    if (conditions == NULL)
+        conditions = "";
+    va_start(args, conditions);
+    char *q = sqlite3_vmprintf(conditions, args);
+    ListString texts;
+    int count(GetTableTexts(tableName, texts, nullptr, 0, 1, "%s", q));
+    sqlite3_free(q);
+    va_end(args);
+    return count > 0;
 }
 
 /*! Undo the changes made in the databse. */
@@ -221,7 +259,7 @@ int Database::Vacuum()
 	return QueryNonRows("VACUUM");
 }
 
-int Database::QueryNonRows(const char *inQuery, ...)
+int Database::QueryNonRows(const char *inQuery, ...) const
 {
 	int sqlrv = SQLITE_OK;
 	sqlite3_stmt *statement = NULL;
@@ -236,7 +274,7 @@ int Database::QueryNonRows(const char *inQuery, ...)
 	sqlrv = QueryNonRowsLoop(statement);
 	return sqlrv;
 }
-int Database::QueryNonRows2(const char *inQuery)
+int Database::QueryNonRows2(const char *inQuery) const
 {
 	int sqlrv = SQLITE_OK;
 	sqlite3_stmt *statement = NULL;
@@ -248,7 +286,7 @@ int Database::QueryNonRows2(const char *inQuery)
 	sqlrv = QueryNonRowsLoop(statement);
 	return sqlrv;
 }
-int Database::QueryNonRowsLoop(sqlite3_stmt *statement)
+int Database::QueryNonRowsLoop(sqlite3_stmt *statement) const
 {
 	int sqlrv = SQLITE_OK;
 	// Execute...
@@ -284,7 +322,7 @@ int Database::QueryNonRowsLoop(sqlite3_stmt *statement)
 
 	return sqlrv;
 }
-int Database::PrepareStmtEx(sqlite3_stmt **outStatement, const char *inQuery, ...)
+int Database::PrepareStmtEx(sqlite3_stmt **outStatement, const char *inQuery, ...) const
 {
 	va_list args;
 	va_start(args, inQuery);
@@ -293,7 +331,7 @@ int Database::PrepareStmtEx(sqlite3_stmt **outStatement, const char *inQuery, ..
 	return sqlrv;
 }
 
-int Database::PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_list args)
+int Database::PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_list args) const
 {
 	int sqlrv = SQLITE_ERROR;
 	if (db == NULL)
@@ -304,7 +342,7 @@ int Database::PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery, va_l
 	sqlite3_free(q);
 	return sqlrv;
 }
-int Database::PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery)
+int Database::PrepareStmt(sqlite3_stmt **outStatement, const char *inQuery) const
 {
 	int sqlrv = SQLITE_ERROR;
 	if (db == NULL)

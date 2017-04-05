@@ -2,7 +2,9 @@
 
 #include "FindDataBase.h"
 #include "DBCommiter.h"
-
+#include <set>
+#include "StringMatcher.h"
+#include <list>
 
 struct FileTableEntry
 {
@@ -23,6 +25,46 @@ private:
     bool bUpdated;
 };
 
+class FileIDVsPath
+{
+public:
+    FileIDVsPath();
+    typedef std::set<std::string> FileList;
+    const FileList& GetFilesFromFileId(const std::string &fileID) const;
+    void AddFileForFileID(const std::string &fileID, const std::string &file);
+    void Reset();
+private:
+    typedef std::map<std::string, FileList> MapFildIdVsPaths;
+    MapFildIdVsPaths mMapFildIdVsPaths;
+    CountTimer mClearTimer;
+};
+
+class ContentMatchCallBack
+{
+public:
+    ContentMatchCallBack();
+    ~ContentMatchCallBack();
+    void SetMatchPattern(LPCTSTR matchPattern = nullptr);
+    struct MatchCallBackData
+    {
+        MatchCallBackData();
+        bool MatchCallBackData::operator<(const MatchCallBackData &other) const;
+        std::string fileID;
+        lstring matchWord;
+        int matchCount, matchWeight;
+    };
+    virtual void MatchCallBack(MatchCallBackData &mcd);
+    bool Match(const lstring &inWord);
+    void Reset();
+    typedef std::list<MatchCallBackData*> ListResultData;
+    const ListResultData& Result();
+    virtual int StatusCheck(int /*iUpdate*/) { return 0; }
+    bool HasResult() const { return !mResult.empty(); }
+protected:
+    ListResultData mResult;
+    StringMatcher *m_pMatcher;
+};
+
 
 class ContentSearchManager
 {
@@ -37,10 +79,14 @@ public:
     bool StartContentSearch(unsigned uFlags = 0);
     void StopContentSearch(bool bCancel = false, bool bWaitForFinish = true);
     void AddFileEntry(const FileTableEntry &fte);
-    void UpdateFileEntriesFromSourceDB(FindDataBase &inDB);
     void RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped = false, const char *fileID = nullptr);
     void RemoveFileEntry(const FileTableEntry &fte);
+    
+    int GetMatchingFiles(ContentMatchCallBack &matchCallback, LPCTSTR inOptWordToMatch = nullptr, LPCTSTR inOptFile = nullptr);
+    const FileIDVsPath::FileList& GetFilePathFromFileID(const std::string &fileID, FileIDVsPath *cachedFileIDVsPath = nullptr, FileIDVsPath::FileList *outList = nullptr);
     DEFINE_FUNCTION_IS_FLAGBIT_SET(m_uFlags, SearchStarted);
+
+    bool HasContent();
 private:
     void WaitForFinish();
     FindDataBase& GetDatabase();
@@ -52,22 +98,23 @@ private:
     int ContentSearchThreadProc(LPVOID pInThreadData);
     int ItrFileTableRowsCallbackFn_SearchContent(sqlite3_stmt *statement, void *pUserData);
     int ItrFileTableRowsCallbackFn_CheckEntries(sqlite3_stmt *statement, void *pUserData);
-    int ItrCachedDataTableRowsCallbackFn_UpdateFileEntries(sqlite3_stmt *statement, void *pUserData);
+    int ItrWordTableRowsCallbackFn_SearchWord(sqlite3_stmt *statement, void *pUserData);
+    std::string GetFileIDFromFilePath(const std::string &inFilePath);
     CDBCommiter* GetDBCommitter();
     FindDataBase mContentDatabase;
     enum Flags {
         SearchStarted,
         SearchFinished,
-        SearchScheduleImmediate,
+        SearchHasJob,
         SearchForce,
     };
     DEFINE_FUNCTION_SET_FLAGBIT(m_uFlags, SearchStarted);
     DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchFinished);
-    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchScheduleImmediate);
+    DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchHasJob);
     DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, SearchForce);
     unsigned m_uFlags;
     DWORD m_dwContentSearchThreadIDManager;
     CDBCommiter *m_pDBCommitter;
-    CString m_DBSearchState; // fresh, search
+    CTime mSearchStartTime;
 };
 

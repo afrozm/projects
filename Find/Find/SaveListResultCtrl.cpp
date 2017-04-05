@@ -197,7 +197,7 @@ void CSaveListResultCtrl::OnContextMenu(CWnd *pWnd, CPoint pos)
 	CMenu *contextMenu = menu.GetSubMenu(0);
 	mContextMenu = contextMenu;
 	HMENU hExpSubMenu = NULL;
-	UINT toRemove[] = {ID_OPEN_OPEN, ID_OPEN_OPENCONTAININGFOLDER, ID_OPEN_PROPERTIES,
+	UINT toRemove[] = {ID_OPEN_OPEN, ID_OPEN_OPENCONTAININGFOLDER, ID_OPEN_SEARCHINFILE, ID_OPEN_PROPERTIES,
 		ID_OPEN_COPYFILES, ID_OPEN_EXPLORERMENU, ID_OPEN_REMOVE,
 		ID_OPEN_COPYPATH, ID_OPEN_DELETEFILES};
 	UINT toRemoveIfCountZero[] = {ID_OPEN_FILTERDUPLICATES, ID_OPEN_FIND,
@@ -221,6 +221,20 @@ void CSaveListResultCtrl::OnContextMenu(CWnd *pWnd, CPoint pos)
 		hExpSubMenu = mi.hSubMenu = m_hExplorerContextMenu;
 		if (hExpSubMenu)
 			contextMenu->SetMenuItemInfo(ID_OPEN_EXPLORERMENU, &mi);
+        bool bRemoveContentSearch(true);
+        POSITION selpos = GetFirstSelectedItemPosition();
+        while (bRemoveContentSearch)
+        {
+            if (selpos == nullptr)
+                break;
+            int item(GetNextSelectedItem(selpos));
+            if (GetItemData(item))  // is a path/file name row - null means content search result
+                continue;
+            CString itemText(GetItemText(item, 0)); // get string and compare is first char is space - already done content search
+            bRemoveContentSearch = SystemUtils::StringGetAt(itemText, 0) == ' ';
+        }
+        if (bRemoveContentSearch)
+            contextMenu->RemoveMenu(ID_OPEN_SEARCHINFILE, MF_BYCOMMAND);
 	}
 	UINT nCommandID[] = {ID_OPEN_SIZECOLUMN, ID_SELECTCOLUMNS_DATECREATED, ID_SELECTCOLUMNS_DATEMODIFIED, ID_SELECTCOLUMNS_DATEACCESSED, ID_SELECTCOLUMNS_SHOWICONS};
 	for (ListColumns lc = ListColumns_Size; lc < ListColumns_OptianlCount; lc = (ListColumns)(lc + 1)) {
@@ -838,7 +852,8 @@ int CSaveListResultCtrlBinarySOnWeight::GetAt(INT_PTR i) const
 {
 	int index((int)i);
 	index = mITemCount-1 - index;
-	return (int)((CListResItemData*)m_pList->GetItemData(index))->mMatchWeight;
+    CListResItemData *pItemData((CListResItemData*)m_pList->GetItemData(index));
+	return pItemData ? pItemData->mMatchWeight : 0;
 }
 int CSaveListResultCtrl::GetItemMatchingWeight(int matchWeight)
 {

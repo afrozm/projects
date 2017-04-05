@@ -6,6 +6,151 @@
 #include "WordParser.h"
 #include "DataReader.h"
 
+
+FileIDVsPath::FileIDVsPath()
+    : mClearTimer(1000*60*60) // 1hr
+{
+
+}
+
+const FileIDVsPath::FileList& FileIDVsPath::GetFilesFromFileId(const std::string &fileID) const
+{
+    static FileList sEmptyFileList;
+    auto cit(mMapFildIdVsPaths.find(fileID));
+    if (cit != mMapFildIdVsPaths.end())
+        return cit->second;
+    return sEmptyFileList;
+}
+
+
+void FileIDVsPath::AddFileForFileID(const std::string &fileID, const std::string &file)
+{
+    mClearTimer.UpdateTimeDuration(true);
+    mMapFildIdVsPaths[fileID].insert(file);
+}
+
+
+void FileIDVsPath::Reset()
+{
+    if (mClearTimer.UpdateTimeDuration(mMapFildIdVsPaths.size() > 10000))
+        mMapFildIdVsPaths.clear();
+}
+
+ContentMatchCallBack::MatchCallBackData::MatchCallBackData()
+    : matchCount(0), matchWeight(0)
+{
+
+}
+
+
+
+bool ContentMatchCallBack::MatchCallBackData::operator<(const MatchCallBackData &other) const
+{
+    int diff = fileID.compare(other.fileID);
+    if (!diff)
+        diff = matchWeight - other.matchWeight;
+    if (!diff)
+        diff = matchCount - other.matchCount;
+    if (!diff)
+        diff = matchWord.compare(other.matchWord);
+    return diff < 0;
+}
+
+ContentMatchCallBack::ContentMatchCallBack()
+    : m_pMatcher(nullptr)
+{
+}
+
+ContentMatchCallBack::~ContentMatchCallBack()
+{
+    Reset();
+}
+
+void ContentMatchCallBack::SetMatchPattern(LPCTSTR matchPattern /*= nullptr*/)
+{
+    if (m_pMatcher)
+        delete m_pMatcher;
+    m_pMatcher = nullptr;
+    if (matchPattern && *matchPattern)
+        m_pMatcher = StringMatcher_GetStringMatcher(matchPattern);
+}
+
+void ContentMatchCallBack::MatchCallBack(MatchCallBackData &mcd)
+{
+    if (m_pMatcher)
+        mcd.matchWeight += m_pMatcher->GetMatchWeight();
+    mResult.push_back(new MatchCallBackData(mcd));
+}
+
+bool ContentMatchCallBack::Match(const lstring &inWord)
+{
+    if (m_pMatcher)
+        return m_pMatcher->Match(inWord.c_str());
+    return true;
+}
+
+void ContentMatchCallBack::Reset()
+{
+    SetMatchPattern();
+    for (auto it : mResult)
+        delete it;
+    mResult.clear();
+}
+
+struct ResultGroupData // same file ID
+{
+    ResultGroupData(int s = 0, int e = 0, int w = 0, int mc = 0) : startPos(s), endPos(e), wt(w), matchCountInFile(mc) {}
+    int Count() const { return endPos - startPos; }
+    bool operator<(const ResultGroupData& r)const // defined a oppsite way in order to do reverse sort
+    {
+        int diff(Count() - r.Count());      // Check count
+        if (!diff)
+            diff = wt - r.wt;           // check weight
+        if (!diff)                      // check match count in file
+            diff = matchCountInFile - r.matchCountInFile;
+        return diff > 0;
+    }
+    int startPos, endPos, wt, matchCountInFile;
+};
+
+static bool CompareMatchCallBackData(const ContentMatchCallBack::MatchCallBackData *first, const ContentMatchCallBack::MatchCallBackData *second)
+{
+    return !(*first < *second); // reverse sort
+}
+
+const ContentMatchCallBack::ListResultData& ContentMatchCallBack::Result()
+{
+    mResult.sort(CompareMatchCallBackData);
+    std::list<ResultGroupData> listGroup;
+    int iStart = 0, iCurrent = 0, iWeight = 0, iMC = 0;
+    std::string *pPreviousFile = nullptr;
+    for (auto & l : mResult) {
+        if (pPreviousFile && *pPreviousFile != l->fileID) {
+            listGroup.push_back(ResultGroupData(iStart, iCurrent, iWeight, iMC));
+            iStart = iCurrent;
+            iWeight = 0;
+            iMC = 0;
+        }
+        iWeight += l->matchWeight;
+        iMC += l->matchCount;
+        pPreviousFile = &l->fileID;
+        ++iCurrent;
+    }
+    if (pPreviousFile) // push last group
+        listGroup.push_back(ResultGroupData(iStart, iCurrent, iWeight, iMC));
+    listGroup.sort();       // This does reverse sort due to < operator defined as opposite way
+    ListResultData copyData;
+    for (auto &lg : listGroup) {
+        auto sit(mResult.begin());
+        auto eit(sit);
+        std::advance(sit, lg.startPos);
+        std::advance(eit, lg.endPos);
+        copyData.insert(copyData.end(), sit, eit);
+    }
+    mResult = copyData;
+    return mResult;
+}
+
 TableItertatorClass(ContentSearchManager);
 
 ContentSearchManager::ContentSearchManager()
@@ -87,15 +232,9 @@ void ContentSearchManager::AddFileEntry(const FileTableEntry &fte)
         query.Format(_T("INSERT OR REPLACE INTO File VALUES ('%s', '%s', %I64d, %I64d, 0)"),
             fte.path, UTF8_TO_UNICODE(fte.GetFileID()).c_str(), SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
     GetDBCommitter()->AddDBQueryString(query);
-    if (bNewEntry)
+    if (bNewEntry) {
+        SetSearchHasJob();
         StartContentSearch();
-}
-
-void ContentSearchManager::UpdateFileEntriesFromSourceDB(FindDataBase &inDB)
-{
-    if (inDB.GetType() == FDB_CacheDatabase) {
-        ItrTableRowsCallbackData_ContentSearchManager iterCachedData(this, &ContentSearchManager::ItrCachedDataTableRowsCallbackFn_UpdateFileEntries);
-        iterCachedData.IterateTableRows(inDB, "CachedData");
     }
 }
 
@@ -112,7 +251,7 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         CString qpath(path);
         if (!bsqlEscaped)
             FindDataBase::MakeSQLString(qpath);
-        condition.Format(_T(" WHERE Path='%s'"), qpath);
+        condition.Format(_T("WHERE Path='%s'"), qpath);
     }
     FileTableEntry fte(filePath);
     fte.SetFileID(fileID ? fileID : "");
@@ -122,7 +261,7 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         query.Format(_T("|DELETE FROM File%s|File.|%s"), condition, condition);
         queries.Add(query);
         // delete word entries for saved file id.
-        query.Format(_T("||File?| WHERE FileID='[1]'|DELETE FROM Word WHERE FileID='[1]'"));
+        query.Format(_T("||File?|WHERE FileID='[1]'|DELETE FROM Word WHERE FileID='[1]'"));
         queries.Add(query);
         GetDBCommitter()->AddDBQueryStrings(queries);
     }
@@ -131,10 +270,85 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         GetDBCommitter()->AddDBQueryString(query);
         if (!fte.IsFileIDEmpty()) {// Delete word entries if md5 file count is zero
             CString csFileID(StringUtils::UTF8ToUnicode(fte.GetFileID()).c_str());
-            query.Format(_T("||File| WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), csFileID, csFileID);
+            query.Format(_T("||File|WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), csFileID, csFileID);
             GetDBCommitter()->AddDBQueryString(query);
         }
     }
+}
+
+int ContentSearchManager::ItrWordTableRowsCallbackFn_SearchWord(sqlite3_stmt *statement, void *pUserData)
+{
+    if (!IsSearchStarted())
+        return 1;
+    ContentMatchCallBack *pCallbackData((ContentMatchCallBack*)pUserData);
+    lstring word = UTF8_TO_UNICODE(((const char *)sqlite3_column_text(statement, Word_Word)));
+    int iUpdate(0);
+    if (pCallbackData->Match(word)) { // matched
+        ContentMatchCallBack::MatchCallBackData mcd;
+        mcd.fileID = ((const char *)sqlite3_column_text(statement, Word_FileID));
+        mcd.matchCount = sqlite3_column_int(statement, Word_Count);
+        mcd.matchWord = word;
+        pCallbackData->MatchCallBack(mcd);
+        iUpdate = 1;
+    }
+    return pCallbackData->StatusCheck(iUpdate);
+}
+
+const FileIDVsPath::FileList& ContentSearchManager::GetFilePathFromFileID(const std::string &fileID, FileIDVsPath *cachedFileIDVsPath /* = nullptr */, FileIDVsPath::FileList *outList /* = nullptr */)
+{
+    if (outList == nullptr && cachedFileIDVsPath == nullptr)
+        return FileIDVsPath().GetFilesFromFileId(fileID); // return empty
+    if (cachedFileIDVsPath) { // check cache
+        const FileIDVsPath::FileList &fileList = cachedFileIDVsPath->GetFilesFromFileId(fileID);
+        if (!fileList.empty())
+            return fileList;
+    }
+    Database::ListString filePath;
+    const char *columns[] = { "Path", nullptr };
+    GetDatabase().GetTableTexts("File", filePath, columns, 0, -1, "WHERE FileID='%s'", fileID.c_str());
+    if (filePath.size() > 0) {
+        for (auto &path : filePath) {
+            if (cachedFileIDVsPath)
+                cachedFileIDVsPath->AddFileForFileID(fileID, path);
+            else
+                outList->insert(path);
+        }
+    }
+    return cachedFileIDVsPath ? cachedFileIDVsPath->GetFilesFromFileId(fileID) : *outList;
+}
+
+bool ContentSearchManager::HasContent()
+{
+    return GetDatabase().TableHasEntry("Word");
+}
+
+std::string ContentSearchManager::GetFileIDFromFilePath(const std::string &inFilePath)
+{
+    Database::ListString filePath;
+    const char *columns[] = { "FileID", nullptr };
+    GetDatabase().GetTableTexts("File", filePath, columns, 0, 1, "WHERE Path = '%s'", inFilePath.c_str());
+    if (filePath.size() > 0)
+        return filePath.front();
+    return "";
+}
+
+int ContentSearchManager::GetMatchingFiles(ContentMatchCallBack &matchCallback, LPCTSTR inOptWordToMatch /* = nullptr */, LPCTSTR inOptFile /* = nullptr */)
+{
+    SetSearchStarted(true);
+    ItrTableRowsCallbackData_ContentSearchManager iterFile(this, &ContentSearchManager::ItrWordTableRowsCallbackFn_SearchWord, &matchCallback);
+    std::string cond;
+    if (inOptWordToMatch && *inOptWordToMatch)
+        cond = "WHERE Word LIKE '%" + UNICODE_TO_UTF8(inOptWordToMatch) + "%";
+    if (inOptFile) {
+        std::string fileID(GetFileIDFromFilePath(UNICODE_TO_UTF8(inOptFile)));
+        if (!fileID.empty()) {
+            cond = cond.empty() ? "WHERE " : cond + " AND ";
+            cond += "FileID='" + fileID + "'";
+        }
+    }
+    int retVal(iterFile.IterateTableRows(GetDatabase(), "Word", cond.c_str()));
+    SetSearchStarted(false);
+    return retVal;
 }
 
 struct ThreadData {
@@ -157,79 +371,48 @@ int ContentSearchManager::TMContentSearchManagerThreadProcFn(LPVOID pInThreadDat
     return 0;
 }
 
-static LPCTSTR GetNextDBState(const LPCTSTR inStr)
-{
-    static LPCTSTR states[]{
-        _T("fresh"),
-        _T("search")
-    };
-    if (inStr == NULL || *inStr == 0)
-        return states[0];
-    int i = 0;
-    for (; i < _countof(states); ++i)
-        if (!lstrcmpi(states[i], inStr))
-            break;
-    if (i >= _countof(states))
-        i = 0;
-    else
-        i = (i + 1) % _countof(states);
-    return states[i];
-}
+
 struct ItrFileTableCallbackData
 {
     const bool& bIsTerminated;
-    unsigned long long ullLastFileIndex, ullCurIndex;
+    unsigned long long ullStartIndex, ullEndIndex;
+    unsigned long long GetCurrenCount() const { return ullEndIndex - ullStartIndex; }
 };
 #define IsSearchContinue() (IsSearchStarted() && !bIsTerminated)
 int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
 {
-    CountTimer ct;
-    SetSearchScheduleImmediate();
-    m_DBSearchState = GetDatabase().GetProperty(_T("SearchState"));
+    CountTimer ct(2000 * 60); // 2 min
+    mSearchStartTime = SystemUtils::StringToLongLong(GetDatabase().GetProperty(_T("SearchStartTime")));
+    if (!mSearchStartTime.GetTime())
+        mSearchStartTime = CTime::GetCurrentTime();
     const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
-    ItrFileTableCallbackData cbData = { bIsTerminated,
-        (unsigned long long)SystemUtils::StringToLongLong(GetDatabase().GetProperty(_T("LastFileIndex"))) };
-    int noEntriesCount(0);
+    ItrFileTableCallbackData cbData = { bIsTerminated, 0, 0 };
+
     SystemUtils::LogMessage(_T("Content Search Manager: start"));
+    unsigned finishCount(0);
     while (IsSearchContinue())
     {
         Sleep(1000);
         // Iterate Files table
         if (ct.UpdateTimeDuration())
         {
-            cbData.ullCurIndex = 0;
-            SetSearchScheduleImmediate(false);
+            if (IsSearchHasJob())
+                finishCount = 0;
+            cbData.ullStartIndex = 0;
             ItrTableRowsCallbackData_ContentSearchManager iterFile(this, &ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent, &cbData);
             int retVal(iterFile.IterateTableRows(GetDatabase(), "File"));
-            if (501 == retVal // call did not finish completely
-                || retVal == SQLITE_OK &&
-                cbData.ullCurIndex == cbData.ullLastFileIndex) {// no entries iterated - continue again after 1 min
-                if (retVal == SQLITE_OK && IsSearchFinished()) {  // main search is finished and waiting for us to finish
-                    ++noEntriesCount;
-                    if (noEntriesCount > 3)
-                        break;
-                }
-                SystemUtils::LogMessage(_T("Content Search Manager: %s"),
-                    501 == retVal ? _T("More jobs. Waiting for worker to finish") :
-                    _T("No entry found. Waiting for entries"));
-                SetSearchScheduleImmediate(true);
-            }
-            if (IsSearchContinue()) {
-                if (IsSearchScheduleImmediate()) {
-                    // Did not finished
-                    ct.SetTimeUpdateDuration(1000 * 60); // reschedule after 1 min
-                    SetSearchScheduleImmediate(false);
-                }
-                else { // Finished one cycle search
-                    cbData.ullCurIndex = cbData.ullLastFileIndex = 0;
-                    SystemUtils::LogMessage(_T("Content Search Manager: finished one state"));
-                    ct.SetTimeUpdateDuration(1000 * 60 * 60); // reschedule after 1 hr
-                    m_DBSearchState = GetNextDBState(m_DBSearchState);
-                    if (m_DBSearchState == GetNextDBState(NULL)) // All cycles finished
-                        break;
-                }
+            if (501 == retVal) // call did not finish completely
+                SystemUtils::LogMessage(_T("Content Search Manager: More jobs. Waiting for workers to finish"));
+            else if (IsSearchHasJob())
+                SystemUtils::LogMessage(_T("Content Search Manager: More jobs to do."));
+            else {
+                cbData.ullEndIndex = 0;
+                ++finishCount;
+                SystemUtils::LogMessage(_T("Content Search Manager: finished searching"));
             }
         }
+        else if (!IsSearchHasJob() && IsSearchFinished() && finishCount > 1)
+            break;
     }
     // Wait for worker thread
     SystemUtils::LogMessage(_T("Content Search Manager: end: Waiting for workers"));
@@ -238,11 +421,11 @@ int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
         if (!IsSearchContinue()) // if canceled, terminate worker threads
             ThreadManager::GetInstance().TerminateThreads(ContentSearchThread + CM_THREAD_CLASS, 1);
     }
-    GetDatabase().SetProperty(_T("SearchState"), m_DBSearchState);
-    if (IsSearchContinue())
-        GetDatabase().RemoveProperty(_T("LastFileIndex"));
+    if (IsSearchContinue()) // not canceled
+        GetDatabase().RemoveProperty(_T("SearchStartTime"));
     else
-        GetDatabase().SetProperty(_T("LastFileIndex"), SystemUtils::LongLongToString(cbData.ullCurIndex));
+        GetDatabase().SetProperty(_T("SearchStartTime"), SystemUtils::LongLongToString(mSearchStartTime.GetTime()));
+    GetDatabase().Commit();
     m_dwContentSearchThreadIDManager = 0;
     SystemUtils::LogMessage(_T("Content Search Manager: finished. Time taken %s"), ct.GetString());
     SetSearchStarted(false);
@@ -281,18 +464,20 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
         else
             RemoveFileEntry(*fte);
     }
-    else if (filePath.IsDir() || !CTextReader(fte->path).IsValidTextFile()) { // not valid - remove its entry
+    else if (filePath.IsDir() || filePath.GetSize() == 0 || !CTextReader(fte->path).IsValidTextFile()) { // not valid - remove its entry
         RemoveFileEntry(*fte);
     }
     else {
         const bool& bIsTerminated(ThreadManager::GetInstance().GetIsTerminatedFlag());
         bool bCompute(false);
+        FileTableEntry oldEntry(*fte);
         if (fte->IsFileIDEmpty() || fte->UpdateFileModTime())
         { // compute MD5 first
             ContentMD5Callback callback(this, bIsTerminated);
             cMD5 md5(&callback);
             std::string fileID =  md5.CalcMD5FromFile(fte->path);
-            bCompute = fte->SetFileID(fileID);
+            if (!fileID.empty())
+                bCompute = fte->SetFileID(fileID);
         }
         if (bCompute) {
             SystemUtils::LogMessage(_T("Indexing file: %s"), fte->path);
@@ -332,7 +517,10 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
         if (IsSearchContinue()) {
             if (bCompute || fte->IsUpdated()) {
                 fte->UpdateFileModTime();
-                AddFileEntry(*fte);
+                if (!oldEntry.IsFileIDEmpty()
+                    && oldEntry.GetFileID() != fte->GetFileID()) // remove old entry if file is updated
+                    RemoveFileEntry(oldEntry);
+                AddFileEntry(*fte); // Add updated file entry
             }
         }
     }
@@ -403,31 +591,32 @@ int ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent(sqlite3_stmt 
     ItrFileTableCallbackData *cbData((ItrFileTableCallbackData*)pUserData);
     const bool& bIsTerminated(cbData->bIsTerminated);
     bool bSearchContent(IsSearchForce());
-    cbData->ullCurIndex++;
-    if (cbData->ullCurIndex < cbData->ullLastFileIndex) {
-        // Skip till last index
+    cbData->ullStartIndex++;
+    if (cbData->ullStartIndex < cbData->ullEndIndex)
         return IsSearchContinue() ? 0 : 1;
+    SetSearchHasJob(false);
+    {
+        CTime lastUpdatedTime = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
+        if (mSearchStartTime < lastUpdatedTime) // Already updated
+            return IsSearchContinue() ? 0 : 1;
     }
     if (!bSearchContent) {
-        if (m_DBSearchState.CompareNoCase(_T("fresh")) == 0)
-        {
-            CString line(
-                SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_FileID)));
-            if (line.IsEmpty() || line == _T("-"))
-                bSearchContent = true;
-        }
-        else // Search content
-        {
-            CTime time = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
-            CTimeSpan timeDiff = CTime::GetCurrentTime() - time;
-            bSearchContent = timeDiff.GetDays() >= 1;
-        }
+        CString line(
+            SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, File_FileID)));
+        if (line.IsEmpty() || line == _T("-"))
+            bSearchContent = true;
+    }
+    if (!bSearchContent) {
+        CTime time = SystemUtils::IntToTime(sqlite3_column_int64(statement, File_LastSearched));
+        CTimeSpan timeDiff = CTime::GetCurrentTime() - time;
+        bSearchContent = timeDiff.GetDays() >= 1;
     }
     if (bSearchContent) {
         FileTableEntry *fte = new FileTableEntry;
         fte->UpdateFromSQliteEntry(statement);
         if (!StartLimitedThreadOperation(ContentSearchThread, (LPVOID)fte, 3)) {
-            cbData->ullLastFileIndex = cbData->ullCurIndex;
+            cbData->ullEndIndex = cbData->ullStartIndex;
+            SetSearchHasJob();
             delete fte;
             return 501; // Close current iteration.
         }
@@ -439,14 +628,6 @@ int ContentSearchManager::ItrFileTableRowsCallbackFn_CheckEntries(sqlite3_stmt *
 {
     *(int *)pUserData = 1;
     return 1;
-}
-
-int ContentSearchManager::ItrCachedDataTableRowsCallbackFn_UpdateFileEntries(sqlite3_stmt *statement, void * /*pUserData*/)
-{
-    FileTableEntry fte((LPCTSTR)SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
-    fte.fileModTime = SystemUtils::IntToTime(sqlite3_column_int64(statement, CachedData_ModifiedTime));
-    AddFileEntry(fte);
-    return IsSearchStarted() ? 0 : 1;
 }
 
 CDBCommiter* ContentSearchManager::GetDBCommitter()

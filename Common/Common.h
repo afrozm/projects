@@ -6,6 +6,7 @@
 #include <tchar.h>
 #endif
 
+
 #if defined(_UNICODE) || defined(UNICODE)
 #define lprintf wprintf
 #define  lputchar putwchar

@@ -162,3 +162,42 @@ int CListCtrlUtil::GetItemIndex(LPVOID pItemData, int startIndex /* = 0 */, bool
 	}
 	return -1;
 }
+
+CListCtrlUtilITerSelection::CListCtrlUtilITerSelection(const CListCtrl &listCtrl)
+    : CListCtrlUtilITer(listCtrl)
+{
+    mCurrentSelectedPosition = mListCtrl.GetFirstSelectedItemPosition();
+}
+
+int CListCtrlUtilITerSelection::GetNextItem()
+{
+    int item(-1);
+    if (mCurrentSelectedPosition)
+        item = mListCtrl.GetNextSelectedItem(mCurrentSelectedPosition);
+    return item;
+}
+
+CListCtrlUtilITerRange::CListCtrlUtilITerRange(const CListCtrl &listCtrl, int itemRange)
+    : CListCtrlUtilITer(listCtrl), m_iStartPos(0), m_iCurrentPos(0)
+{
+    int iCount = mListCtrl.GetItemCount();
+    if (itemRange >= 0) {
+        m_iStartPos = itemRange & 0xffff0000;
+        m_iEndPos = itemRange & 0xffff;
+        m_iCurrentPos = m_iStartPos;
+    }
+    if (m_iEndPos < 0 || m_iEndPos > iCount)
+        m_iEndPos = iCount;
+    if (m_iCurrentPos < 0)
+        m_iCurrentPos = 0;
+}
+
+int CListCtrlUtilITerRange::GetNextItem()
+{
+    int item(-1);
+    if (m_iCurrentPos < m_iEndPos) {
+        item = m_iCurrentPos;
+        ++m_iCurrentPos;
+    }
+    return item;
+}

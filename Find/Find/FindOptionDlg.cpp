@@ -323,10 +323,10 @@ int CFindOptionDlg::SavePrefToFile(FindDataBase &findDb, const CString &preferen
 	std::string prefName(SystemUtils::UnicodeToUTF8(preferenceName));
 	char buffer[1024];
 	char condition[256];
-	sprintf_s(condition, 256, " where PreferenceName = '%s'", prefName.c_str());
+	sprintf_s(condition, 256, "where PreferenceName = '%s'", prefName.c_str());
 	if(m_bSizeChecked) {
 		sprintf_s(buffer, 1024,
-			"update Preferences set SizeMin=%I64d, SizeMax=%I64d, SizeCondition=%d%s",
+			"update Preferences set SizeMin=%I64d, SizeMax=%I64d, SizeCondition=%d %s",
 			m_llSize, m_llSize2, m_uSizeOperator, condition);
 		findDb.QueryNonRows(buffer);
 	}
@@ -337,7 +337,7 @@ int CFindOptionDlg::SavePrefToFile(FindDataBase &findDb, const CString &preferen
 				m_timeTo.GetYear(), m_timeTo.GetMonth(), m_timeTo.GetDay(),
 				m_timeTo.GetHour(), m_timeTo.GetMinute());
 		sprintf_s(buffer, 1024,
-			"update Preferences set DateFrom='%d %d %d %d %d', DateTo='%s', DateCondition=%d, DateType=%d%s",
+			"update Preferences set DateFrom='%d %d %d %d %d', DateTo='%s', DateCondition=%d, DateType=%d %s",
 			m_timeFrom.GetYear(), m_timeFrom.GetMonth(), m_timeFrom.GetDay(),
 			m_timeFrom.GetHour(), m_timeFrom.GetMinute(),
 			dateTo,
@@ -388,7 +388,7 @@ int CFindOptionDlg::LoadPrefFromFile(FindDataBase &findDb, const CString &prefer
 		&CFindOptionDlg::ItrPreferencesTableRowsCallbackFn);
 	std::string prefName(SystemUtils::UnicodeToUTF8(preferenceName));
 	char condition[256];
-	sprintf_s(condition, 256, " where PreferenceName = '%s'", prefName.c_str());
+	sprintf_s(condition, 256, "where PreferenceName = '%s'", prefName.c_str());
 	itSHTable.IterateTableRows(findDb, "Preferences", condition);
 
 	return 0;

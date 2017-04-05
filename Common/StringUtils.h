@@ -10,6 +10,23 @@
 #define STR_CHAR_IS_SPACE_OR_TAB(c) ((c)==' ' || (c)=='\t')
 #define STR_CHAR_IS_SPACE(c) (STR_CHAR_IS_SPACE_OR_TAB(c) || STR_CHAR_IS_LINE(c))
 #define STR_SKIP_SPACE(p) while(STR_IS_VALID_PTR(p)&&STR_CHAR_IS_SPACE(*p)) ++p
+#define STR_SKIP_TILL_LINE(p) while(STR_IS_VALID_PTR(p)&&!STR_CHAR_IS_LINE(*p)) ++p
+
+class StdString : public lstring
+{
+public:
+    StdString() : lstring() {}
+    StdString(const char *str);
+    StdString(const lstring &str) : lstring(str) {}
+    StdString(const wchar_t *str);
+    StdString(const otherstring &str);
+    operator otherstring() const;
+    operator LPCTSTR() const { return c_str(); }
+    int length() const { return (int)lstring::length(); }
+    StdString& MakeLower();
+    bool Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true);
+    StdString Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true) const;
+};
 
 
 namespace StringUtils
@@ -22,7 +39,7 @@ namespace StringUtils
 		return outStr;
 
 	}
-    typedef std::vector<lstring> VecString;
+    typedef std::vector<StdString> VecString;
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);
     long long getLLfromStr(const TCHAR *str);
@@ -50,7 +67,7 @@ namespace StringUtils
     std::string UnicodeToUTF8(const std::wstring &unicodeString, int len = -1);
     std::wstring UTF8ToUnicode(const std::string &utf8String, int len = -1);
 
-    lstring WildCardExpToRegExp(const TCHAR *wildCardExp);
+    StdString WildCardExpToRegExp(const TCHAR *wildCardExp);
     bool WildCardMatch(const lstring &inWildCardExp, const lstring &inStr);
     bool RegMatch(const lstring &inRegExp, const lstring &inStr);
 };

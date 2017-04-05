@@ -12,6 +12,35 @@
 #include "PreviewController.h"
 #include "CountTimer.h"
 #include "ComboBoxDragDrop.h"
+#include "ContentSearchManager.h"
+#include "TMessageHandler.h"
+
+class CFindDlg;
+
+class FindDlgContentMatchCallBack : public ContentMatchCallBack
+{
+public:
+    typedef STLUtils::TFunction<int, int, CFindDlg> Callback;
+    FindDlgContentMatchCallBack(Callback::ClassFunction cf, CFindDlg *pFindDlg);
+    void MatchCallBack(MatchCallBackData &mcd);
+    void SetMatchPattern(LPCTSTR matchPattern = nullptr);
+    int GetMatchingFiles(LPCTSTR inOptFile = nullptr);
+    const FileIDVsPath::FileList& GetFilePathFromFileID(const std::string &fileID);
+    void Reset();
+    void SetCurrentFileWeight(int iW) { m_iFileMatchingWeight = iW; }
+    bool HasWordContent() { return mContentSearchManager.HasContent(); }
+    bool HasMatchPattern() const;
+    int StatusCheck(int iUpdate);
+protected:
+    LPCTSTR mMatchPattern;
+    ContentSearchManager mContentSearchManager;
+    CountTimer mLastStatusCheckTimer;
+    int m_iLastUpdatedCount;
+    Callback mCallback;
+    int m_iFileMatchingWeight;
+    FileIDVsPath mCachedFileIdVsPath;
+};
+
 
 #define FINDF_SEARCH_FILE_STARTED FLAGBIT(31)
 
@@ -26,8 +55,10 @@ typedef enum {
 	THREAD_OP_DODRAG_DROP,
 	THREAD_OP_FILTER_DUPLICATES,
 	THREAD_OP_LOAD_LAST_RESULT,
-    THREAD_OP_FIND_FILE_CONTENT
+    THREAD_OP_FIND_FILE_CONTENT,
+    THREAD_OP_FIND_FILES_CONTENT // started explicitly by user from list result
 } ThreadOperation;
+
 
 
 // CFindDlg dialog
@@ -57,6 +88,7 @@ protected:
 	HACCEL m_hAccel;
 	CString mFindText;
 	CString mFileContentSearchText;
+    FindDlgContentMatchCallBack mContentMatchCallBack;
 	enum FlagBit {
 		SearchStarted,
 		SearchCancelled,
@@ -65,7 +97,6 @@ protected:
 		DisableThreadedoperation,
 		StatusTimerStarted,
 		ForceUpdateStatus,
-		PhoneticSearch
 	};
 	UINT m_uFlags;
 	DEFINE_FUNCTION_SET_FLAGBIT(m_uFlags, SearchStarted)
@@ -74,7 +105,6 @@ protected:
 	DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, DiplayFindOption)
 	DEFINE_FUNCTION_SET_FLAGBIT(m_uFlags, DisableThreadedoperation)
 	DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, StatusTimerStarted)
-	DEFINE_FUNCTION_SET_GET_FLAGBIT(m_uFlags, PhoneticSearch)
 	unsigned m_uDrapDropOpCount;
 	CControlResizer mControlResizer;
 	CFindOptionDlg mFindOptionDlg;
@@ -101,6 +131,7 @@ protected:
 	bool CheckUncheckSearchNodes(const CString &pattern, HTREEITEM hItem = NULL);
 	void Find();
 	void FindInCache(CString findText);
+    void FindFileContent(int nItems = 0);
 	void FillColOptional(ListColumns optionalColumn);
 	int SearchInNetwork(HTREEITEM hItem);
 	void SaveSearchKeyWords();
@@ -108,9 +139,11 @@ protected:
 	void StartSearchInNetworkFoder(LPNETRESOURCE lpnRes);
 	void TogglePreview();
 	void ShowPreview();
-	void SearchFileContent(CListResItemData * pItemData);
-	int UpdateResultItem(CListResItemData *pListItemData);
+	void SearchFileContent(CListResItemData * pItemData, StringMatcher *pStringMatcher = nullptr);
+	int UpdateResultItem(CListResItemData *pListItemData, int itemIndex = -1);
 	int GetIdleThreadCount();
+    void AddResultItemToList(CListResItemData *pListItemData);
+    int ContentMatchCallBack(const int &);
 public:
 	afx_msg void OnTvnItemexpandingTreeDomain(NMHDR *pNMHDR, LRESULT *pResult);
 	void RefreshDomainTree(void);

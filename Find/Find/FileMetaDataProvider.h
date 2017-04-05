@@ -12,6 +12,19 @@ public:
 	virtual BOOL GetLastUpdateTime(CTime& /*time*/) const {return FALSE;}
 };
 
+class CDiskFileMetaDataProvider : public CFileMetaDataProvider
+{
+public:
+    CDiskFileMetaDataProvider(LPCTSTR path = nullptr);
+    void SetPath(LPCTSTR path = nullptr);
+    virtual LONGLONG GetFileSize() const override;
+    virtual BOOL GetLastWriteTime(CTime &time) const override;
+    virtual BOOL GetCreationTime(CTime &time) const override;
+    virtual BOOL GetLastAccessTime(CTime &time) const override;
+private:
+    Path mFilePath;
+};
+
 class CFileFindExMetaDataProvider : public CFileMetaDataProvider {
 	const CFileFindEx &mFileFindEx;
 public:

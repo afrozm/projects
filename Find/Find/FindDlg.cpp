@@ -137,6 +137,65 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
 
+
+FindDlgContentMatchCallBack::FindDlgContentMatchCallBack(Callback::ClassFunction cf, CFindDlg *pFindDlg)
+    : mCallback(cf, pFindDlg), m_iLastUpdatedCount(0), mMatchPattern(nullptr)
+{
+
+}
+
+void FindDlgContentMatchCallBack::MatchCallBack(MatchCallBackData &mcd)
+{
+    mcd.matchWeight += m_iFileMatchingWeight;
+    return __super::MatchCallBack(mcd);
+}
+
+void FindDlgContentMatchCallBack::SetMatchPattern(LPCTSTR matchPattern /*= nullptr*/)
+{
+    mMatchPattern = nullptr;
+    if (StringMatcher_IsSimpleMatch(matchPattern) && matchPattern && *matchPattern == '%') {
+        mMatchPattern = matchPattern + 1; // skip %
+        matchPattern = nullptr;
+    }
+    __super::SetMatchPattern(matchPattern);
+}
+
+int FindDlgContentMatchCallBack::GetMatchingFiles(LPCTSTR inOptFile /*= nullptr*/)
+{
+    return mContentSearchManager.GetMatchingFiles(*this, mMatchPattern, inOptFile);
+}
+
+const FileIDVsPath::FileList& FindDlgContentMatchCallBack::GetFilePathFromFileID(const std::string &fileID)
+{
+    return mContentSearchManager.GetFilePathFromFileID(fileID, &mCachedFileIdVsPath);
+}
+
+void FindDlgContentMatchCallBack::Reset()
+{
+    __super::Reset();
+    m_iFileMatchingWeight = 0;
+    m_iLastUpdatedCount = 0;
+    mCachedFileIdVsPath.Reset();
+}
+
+bool FindDlgContentMatchCallBack::HasMatchPattern() const
+{
+    return mMatchPattern != nullptr || m_pMatcher != nullptr;
+}
+
+int FindDlgContentMatchCallBack::StatusCheck(int iUpdate)
+{
+    int retVal(0);
+    if (mLastStatusCheckTimer.UpdateTimeDuration(iUpdate < 0)) {
+        int newEntriesAdded((int)mResult.size() - m_iLastUpdatedCount);
+        retVal = mCallback(newEntriesAdded);
+        if (newEntriesAdded)
+            m_iLastUpdatedCount = (int)mResult.size();
+    }
+    return retVal;
+}
+
+
 // CFindDlg dialog
 
 
@@ -147,7 +206,8 @@ CFindDlg::CFindDlg(CWnd* pParent /*=NULL*/)
 m_uFlags(0), mControlResizer(this),
 m_uDrapDropOpCount(0), mResizeBar(NULL),
 mFindOptionDlg(this),
-m_pPreviewController(NULL)
+m_pPreviewController(NULL),
+mContentMatchCallBack(&CFindDlg::ContentMatchCallBack, this)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_hAccel = LoadAccelerators(AfxGetApp()->m_hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
@@ -554,6 +614,10 @@ BOOL CFindDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	case ID_OPEN_FIND:
 		mListResult->Find();
 		break;
+    case ID_OPEN_SEARCHINFILE:
+        if (ThreadManager::GetInstance().GetAllThreadCount() <= GetIdleThreadCount())
+            StartThreadOperation(THREAD_OP_FIND_FILES_CONTENT);
+        break;
 	}
 	return CDialog::OnCommand(wParam, lParam);
 }
@@ -699,7 +763,6 @@ void CFindDlg::Find() // Start Find
 	SetSearchStartedImpl();
 	mFindText.Empty();
 	mFileContentSearchText.Empty();
-	SetPhoneticSearch(false);
 	GetDlgItemText(IDC_COMBO_FIND, mFindText);
 	CArrayCString outStr;
 	if (SystemUtils::SplitString(mFindText, outStr) > 1) {
@@ -736,22 +799,18 @@ void CFindDlg::Find() // Start Find
 		GetFindList();
 		mListResult->DeleteAllItems();
 		mCommitResultTimer.DoCommit(CRTCF_REMOVE | CRTCF_FORCE);
-		if (mFindText[0] == '?') {
-			mFindText.Remove('?');
-			SetPhoneticSearch(true);
-		}
-		if (mSearchList.empty()) {
+        if (!mFindText.IsEmpty()) {
+            CArrayCString outStrArr;
+            SystemUtils::SplitString(mFindText, outStrArr, _T(":"));
+            if (outStrArr.GetCount() > 2) {
+                mFileContentSearchText = SystemUtils::CombineString(outStrArr, _T(":"), 2, -1, false);
+                mFindText = SystemUtils::CombineString(outStrArr, _T(":"), 0, 2, false);
+            }
+        }
+        if (mSearchList.empty()) {
 			FindInCache(mFindText);
 		}
 		else {
-			if (!mFindText.IsEmpty()) {
-				CArrayCString outStrArr;
-				SystemUtils::SplitString(mFindText, outStrArr, _T(":"));
-				if (outStrArr.GetCount() > 2) {
-					mFileContentSearchText = SystemUtils::CombineString(outStrArr, _T(":"), 2);
-					mFindText = SystemUtils::CombineString(outStrArr, _T(":"), 0, 2);
-				}
-			}
 			if (mFindText.IsEmpty()) {
 				mFindText.SetString(_T("*")); // Search everything
 			}
@@ -780,16 +839,15 @@ int CFindDlg::ItrSearchCachedDataTableRowsCallbackFn(sqlite3_stmt *statement, vo
 {
 	if (IsSearchCancelled())
 		return 1; // Abort
-	Path path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
-	Path fileName(path.FileName());
+	const Path path(SystemUtils::UTF8ToUnicodeCString((const char *)sqlite3_column_text(statement, CachedData_Path)));
+	const Path fileName(path.FileName());
 	CString fileSize;
 	LONGLONG llFileSize;
 	bool bAdd(true);
 	int matchWeight(0);
-	StringMatcher *pStringMatcher(NULL);
-	if (pUserData)
+	StringMatcher *pStringMatcher((StringMatcher *)pUserData);
+	if (pStringMatcher)
 	{
-		pStringMatcher = (StringMatcher *)pUserData;
 		bAdd = pStringMatcher->Match(fileName);
 		if (bAdd)
 			matchWeight += 5;
@@ -806,70 +864,137 @@ int CFindDlg::ItrSearchCachedDataTableRowsCallbackFn(sqlite3_stmt *statement, vo
 	}
 	if (bAdd)
 	{
-		int item(mListResult->GetItemMatchingWeight(matchWeight));
-		if (item < 0)
-			item = 0x7fffffff;
-		int maxCountLimit(pStringMatcher && pStringMatcher->GetMatchWeight() > 0 ? 200 : 0);
-		if (maxCountLimit ==0  || item < maxCountLimit) {
-			item = mListResult->InsertItem(item , fileName);
-			CListResItemData *pListItemData = new CListResItemData(fileMetaDataProvider, matchWeight);
-			mListResult->SetItemData(item, (DWORD_PTR)pListItemData);
-			mListResult->SetItemText(item, 1, path);
-			mListResult->SetOptionalColumnItemText(item, ListColumns_Size, fileSize);
-			mListResult->UpdateOptionalDateColumns(item);
-			if (maxCountLimit) {
-				int totoalItemCount(mListResult->GetItemCount());
-				if (totoalItemCount > maxCountLimit)
-					mListResult->DeleteItem(totoalItemCount-1);
-			}
-		}
+        if (mContentMatchCallBack.HasMatchPattern()) {// do content search in this file from cache
+            mContentMatchCallBack.SetCurrentFileWeight(matchWeight);
+            mContentMatchCallBack.GetMatchingFiles(path);
+        }
+        else {
+            int item(mListResult->GetItemMatchingWeight(matchWeight));
+            if (item < 0)
+                item = 0x7fffffff;
+            int maxCountLimit(pStringMatcher && pStringMatcher->GetMatchWeight() > 0 ? 200 : 0);
+            if (maxCountLimit == 0 || item < maxCountLimit) {
+                item = mListResult->InsertItem(item, fileName);
+                CListResItemData *pListItemData = new CListResItemData(fileMetaDataProvider, matchWeight);
+                mListResult->SetItemData(item, (DWORD_PTR)pListItemData);
+                mListResult->SetItemText(item, 1, path);
+                mListResult->SetOptionalColumnItemText(item, ListColumns_Size, fileSize);
+                mListResult->UpdateOptionalDateColumns(item);
+                if (maxCountLimit) {
+                    int totoalItemCount(mListResult->GetItemCount());
+                    if (totoalItemCount > maxCountLimit)
+                        mListResult->DeleteItem(totoalItemCount - 1);
+                }
+            }
+        }
 	}
 	return 0;
+}
+static bool IsPathSearchString(const LPCTSTR inString)
+{
+    return (inString && inString[0] == '\\')
+        || (StringMatcher_IsPhonetic(inString) && IsPathSearchString(inString + 1));
 }
 void CFindDlg::FindInCache(CString findText)
 {
 	FindDataBase fdbCacheDB(FDB_CacheDatabase, true);
-	if (!findText.IsEmpty() && findText.Find('\\', 3) < 0
-		&& fdbCacheDB.Open() == 0) {
+    mContentMatchCallBack.Reset();
+    bool bDoContentSearch(mContentMatchCallBack.HasWordContent());
+    if (bDoContentSearch) {
+        if (!mFileContentSearchText.IsEmpty())
+            mContentMatchCallBack.SetMatchPattern(mFileContentSearchText);
+        else if (!IsPathSearchString(findText))
+            mContentMatchCallBack.SetMatchPattern(findText);
+        else
+            bDoContentSearch = false;
+    }
+    bool bDoFileSearch(!bDoContentSearch || !findText.IsEmpty() && !mFileContentSearchText.IsEmpty()
+                            || IsPathSearchString(findText));
+    if (bDoContentSearch && !bDoFileSearch) {
+        mContentMatchCallBack.GetMatchingFiles();
+        if (!mContentMatchCallBack.HasResult()) {// no result - do file search
+            mContentMatchCallBack.Reset();
+            bDoFileSearch = true;
+        }
+    }
+    if (bDoFileSearch && findText.Find('\\', 3) < 0
+        && fdbCacheDB.Open() == 0) {
+        if (findText[0] == '\\' && SystemUtils::StringGetAt(findText, 1) != '\\')
+            findText.Delete(0, 1);
+        else if (StringMatcher_IsPhonetic(findText) && SystemUtils::StringGetAt(findText, 1) == '\\')
+            findText.Delete(1, 1);
 		SetStatusMessage(_T("Searching in cache..."));
-		CRegExpMatcher stringMatcher;
-		CStringMatcherList stringMatcherList(findText);
-		CPhoneticStringMatcherList phoneticStringMatcherList(findText);
-		StringMatcher *pStringMatcher(NULL);
+		StringMatcher *pStringMatcher(StringMatcher_IsSimpleMatch(findText) ? nullptr : StringMatcher_GetStringMatcher(findText));
 		CString condition(mFindOptionDlg.GetCatogoryQueryCondition());
-		if (IsWildCardExp(findText)) {
-			pStringMatcher = &stringMatcher;
-			stringMatcher.SetExpression(findText);
-		}
-		else {
-			if (IsPhoneticSearch()) {
-				pStringMatcher = &phoneticStringMatcherList;
-			}
-			else if (stringMatcherList.GetWordCount() < 2) {
-				if (!condition.IsEmpty())
-					condition += _T(" AND ");
-				CString pathCond;
-				pathCond.Format(_T("Path LIKE '%%%s%%'"), findText);
-				condition += pathCond;
-			}
-			else
-				pStringMatcher = &stringMatcherList;
+	    if (pStringMatcher == nullptr) { // simple match
+			if (!condition.IsEmpty())
+				condition += _T(" AND ");
+			CString pathCond;
+			pathCond.Format(_T("Path LIKE '%%%s%%'"), findText);
+			condition += pathCond;
 		}
 		if (!condition.IsEmpty())
-			condition = _T(" WHERE ") + condition;
+			condition = _T("WHERE ") + condition;
 		ItrTableRowsCallbackData_CFindDlg itSHTable(this,
 			&CFindDlg::ItrSearchCachedDataTableRowsCallbackFn,
 			pStringMatcher);
 
 		itSHTable.IterateTableRows(fdbCacheDB, "CachedData",
 			SystemUtils::UnicodeToUTF8(condition).c_str());
-		fdbCacheDB.Close();
-		SetStatusMessage(_T("%d files found."), mListResult->GetItemCount());
+        if (pStringMatcher)
+            delete pStringMatcher;
 	}
 	else {
 		SetStatusMessage(_T("Nothing checked. Please check the desired location to search."));
 	}
+    if (bDoContentSearch) {
+        mContentMatchCallBack.StatusCheck(-1); // update final result
+        if (mContentMatchCallBack.HasResult())
+            FindFileContent(10); // expand first 10 items
+    }
 }
+
+void CFindDlg::FindFileContent(int nItems /* = 0 */)
+{
+    SetSearchStartedImpl();
+    CListCtrlUtilITerSelection iterSel(*mListResult);
+    CListCtrlUtilITerRange iterRange(*mListResult, nItems);
+    CListCtrlUtilITer *iterList(nullptr);
+    if (nItems == 0)
+        iterList = &iterSel;
+    else
+        iterList = &iterRange;
+    std::list<CListResItemData *> listItemData;
+    // 2 step process
+    // 1. fill file path meta
+    while (!IsSearchCancelled())
+    {
+        int nextITem(iterList->GetNextItem());
+        if (nextITem < 0)
+            break;
+        if (mListResult->GetItemData(nextITem)) // already has file entry
+            continue;
+        CString matchString = mListResult->GetItemText(nextITem, 0);
+        if (matchString.IsEmpty() || matchString[0] == ' ')
+            continue; // already searched
+        CString filePath(mListResult->GetItemText(nextITem, 1));
+        CDiskFileMetaDataProvider diskFile(filePath);
+        CListResItemData *pItemData = new CListResItemData(diskFile, 0, filePath);
+        UpdateResultItem(pItemData, nextITem);
+        pItemData->mPath = filePath;
+        pItemData->mName = matchString;
+        listItemData.push_back(pItemData);
+    }
+    // search content - it will expand the list
+    for (auto i : listItemData) {
+        CSimpleStringMatcher sm(i->mName, true, true);
+        i->mName.Empty();
+        if (!IsSearchCancelled())
+            SearchFileContent(i, &sm);
+        i->mPath.Empty();
+    }
+}
+
 void CFindDlg::OnBnClickedOk() // Start/Stop Find
 {
 	if (!IsSearchStarted()) {
@@ -897,8 +1022,7 @@ int CFindDlg::SearchInNetwork(HTREEITEM hItem)
 int CFindDlg::SearchInFolder(CString pathToSearch)
 {
 	CString statusText(_T("Searching in "));
-	CFinder cf(mFindText, FindCallBackFolders, true, this,
-		IsPhoneticSearch() ? CFinder::Phonetic : CFinder::WildCard);
+	CFinder cf(mFindText, FindCallBackFolders, true, this);
 	SetStatusMessage(_T("%s"), statusText + pathToSearch);
 	bool bSearchZip(mFindOptionDlg.IsSearchZipEnabled());
 	cf.Find(pathToSearch, bSearchZip);
@@ -956,6 +1080,9 @@ int CFindDlg::DoThreadOperation(ThreadOperation threadOp, LPVOID pThreadData)
 	case THREAD_OP_FIND_FILE_CONTENT:
 		SearchFileContent((CListResItemData *)pThreadData);
 		break;
+    case THREAD_OP_FIND_FILES_CONTENT:
+        FindFileContent();
+        break;
     case THREAD_OP_EXPAND_TREE_NODE:
     {
         CString *pPath((CString*)pThreadData);
@@ -1002,7 +1129,6 @@ void CFindDlg::FillColOptional(ListColumns optionalColumn)
 }
 void CFindDlg::OnNMDblclkListResult(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	// TODO: Add your control notification handler code here
 	*pResult = 0;
 	LPNMITEMACTIVATE lp = (LPNMITEMACTIVATE)pNMHDR;
 	POINT pt = lp->ptAction;
@@ -1090,7 +1216,7 @@ void CFindDlg::LoadSearchKeyWords()
 		if (pComboBox->GetCount() > 0)
 			pComboBox->InsertString(-1, _T("Clear List..."));
 		CArrayCString prefName;
-		prefDataBase.GetTableColTexts("Property", " WHERE Name='Preferences'", prefName);
+		prefDataBase.GetTableColTexts("Property", "WHERE Name='Preferences'", prefName);
 		if (prefName.GetCount() >= 2)
 			mPreferenceName = prefName.GetAt(1);
 		mFindOptionDlg.LoadDefault(prefDataBase);
@@ -1274,13 +1400,20 @@ void CFindDlg::SetSearchStartedImpl()
 	SetDlgItemText(IDOK, buttonText);
 }
 
-int CFindDlg::UpdateResultItem( CListResItemData *pListItemData )
+int CFindDlg::UpdateResultItem(CListResItemData *pListItemData, int item /* = -1 */)
 {
 	CAutoLock al(mListUpdateLock);
-	int item(mListResult->GetItemMatchingWeight(pListItemData->mMatchWeight));
+    bool bAddNew(item < 0);
+    if (!bAddNew)
+        bAddNew = mListResult->GetItemText(item, 1) != pListItemData->mPath;
+    if (item < 0)
+	    item = mListResult->GetItemMatchingWeight(pListItemData->mMatchWeight);
 	if (item < 0)
 		item = 0x7fffffff;
-	item = mListResult->InsertItem(item, Path(pListItemData->mPath).FileName(), !pListItemData->HasSize());
+    if (bAddNew)
+        item = mListResult->InsertItem(item, Path(pListItemData->mPath).FileName(), !pListItemData->HasSize());
+    else
+        mListResult->SetItemText(item, 0, Path(pListItemData->mPath).FileName());
 	mListResult->SetItemData(item, (DWORD_PTR)pListItemData);
 	mListResult->SetItemText(item, 1, pListItemData->mPath);
 	pListItemData->mPath.Empty();
@@ -1288,22 +1421,47 @@ int CFindDlg::UpdateResultItem( CListResItemData *pListItemData )
 	mListResult->UpdateOptionalDateColumns(item);
 	return item;
 }
+void CFindDlg::AddResultItemToList(CListResItemData *pListItemData)
+{
+    if (mFileContentSearchText.IsEmpty())
+        UpdateResultItem(pListItemData);
+    else { // search content
+        if (!Path(pListItemData->mPath).IsDir())
+            StartLimitedThreadOperation(THREAD_OP_FIND_FILE_CONTENT, pListItemData, THREAD_OP_FIND_FILE_CONTENT, FIND_MAX_THREAD_COUNT >> 1);
+        else
+            delete pListItemData;
+    }
+}
+
+int CFindDlg::ContentMatchCallBack(const int & iUpdate)
+{
+    if (IsSearchCancelled())
+        return 1;
+    if (iUpdate) {
+        mListResult->DeleteAllItems();
+        const ContentMatchCallBack::ListResultData &contentMatchResult(mContentMatchCallBack.Result());
+        for (auto &res : contentMatchResult) {
+            auto &result(*res);
+            const FileIDVsPath::FileList &filePaths(mContentMatchCallBack.GetFilePathFromFileID(result.fileID));
+            for (auto &file : filePaths) {
+                if (IsSearchCancelled())
+                    break;
+                int item = mListResult->InsertItem(0x7fffffff, result.matchWord.c_str());
+                mListResult->SetItemText(item, 1, UTF8_TO_UNICODE(file).c_str());
+                mListResult->SetItemText(item, 2, SystemUtils::IntToString(result.matchCount));
+            }
+        }
+    }
+    return IsSearchCancelled() ? 1 : 0;
+}
 
 int CFindDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bFileMatched)
 {
 	CFileFindExMetaDataProvider fileMetaDataProvider(*pFindFile);
 	bFileMatched = bFileMatched && mFindOptionDlg.CheckFileSatisfies(fileMetaDataProvider);
 	if (bFileMatched) { // Files & Folders
-		CListResItemData *pListItemData(new CListResItemData(fileMetaDataProvider, pFindFile->GetMatchWeight()));
-		pListItemData->mPath = pFindFile->GetFilePath();
-		if (mFileContentSearchText.IsEmpty())
-			UpdateResultItem(pListItemData);
-		if (!mFileContentSearchText.IsEmpty()) {
-			if (!pFindFile->IsDirectory())
-				StartLimitedThreadOperation(THREAD_OP_FIND_FILE_CONTENT, pListItemData, THREAD_OP_FIND_FILE_CONTENT, FIND_MAX_THREAD_COUNT >> 1);
-			else
-				delete pListItemData;
-		}
+		CListResItemData *pListItemData(new CListResItemData(fileMetaDataProvider, pFindFile->GetMatchWeight(), pFindFile->GetFilePath()));
+        AddResultItemToList(pListItemData);
 	}
 	if (pFindFile->GetDirectory()) {
 		SetStatusMessage(_T("Searching in %s"), pFindFile->GetDirectory());
@@ -1371,7 +1529,7 @@ int CFindDlg::LoadPrefFromFile(FindDataBase &findDb, const CString &preferenceNa
 		&CFindDlg::ItrPreferencesTableRowsCallbackFn);
 	std::string prefName(SystemUtils::UnicodeToUTF8(preferenceName));
 	char condition[256];
-	sprintf_s(condition, 256, " where PreferenceName = '%s'", prefName.c_str());
+	sprintf_s(condition, 256, "where PreferenceName = '%s'", prefName.c_str());
 	itSHTable.IterateTableRows(findDb, "Preferences", condition);
 	itSHTable.SetCallbackFn(&CFindDlg::ItrPrefSearchLocTableRowsCallbackFn);
 	itSHTable.IterateTableRows(findDb, "PrefSearchLocations", condition);
@@ -1419,7 +1577,7 @@ void CFindDlg::ShowPreview()
 			int nItem = mListResult->GetItemIndex(NULL, nSelItem, false, false);
 			CString path = mListResult->GetItemText(nItem, 1);
 			CRefCountObj *pExtraData(NULL);
-			if (!mFileContentSearchText.IsEmpty() && nItem != nSelItem) {
+			if (!mListResult->GetItemData(nSelItem) && nItem != nSelItem) {
 				CPreviewExtraDataFileContentSearch *pExtraSelData(new CPreviewExtraDataFileContentSearch);
 				pExtraSelData->nLineToScroll = SystemUtils::StringToLongLong(mListResult->GetItemText(nSelItem, 2));
 				pExtraSelData->textToSel = mListResult->GetItemText(nSelItem, 1);
@@ -1468,10 +1626,11 @@ CFileContentFinderCallbackFindDlg::CFileContentFinderCallbackFindDlg( CFindDlg *
 
 }
 
-void CFindDlg::SearchFileContent( CListResItemData * pItemData)
+void CFindDlg::SearchFileContent(CListResItemData * pItemData, StringMatcher *pStringMatcher /* = nullptr */)
 {
 	CFileContentFinderCallbackFindDlg fDlg(this, pItemData);
 	CFileContentFinder cf(&fDlg);
+    cf.SetMatcher(pStringMatcher);
 	cf.Find(pItemData->mPath, mFileContentSearchText);
 	if (mListResult->GetItemIndex(pItemData) < 0)
 		delete (CListResItemData *)pItemData;
@@ -1485,9 +1644,9 @@ void CFindDlg::FileContentSearchCallback( CListResItemData *pItemData, LPCVOID p
 		int index(mListResult->GetItemIndex(pItemData));
 		if (index < 0)
 			index = UpdateResultItem(pItemData);
-		CString fileName(mListResult->GetItemText(index, 0));
+		CString matchString(p_inMatchData->matchString);
 		index += p_inMatchData->iMatchCount;
-		mListResult->InsertItem(index, _T("   ")+fileName);
+		mListResult->InsertItem(index, _T("   ")+ matchString);
 		mListResult->SetItemText(index, 1, p_inMatchData->strLine);
 		mListResult->SetItemText(index, 2, SystemUtils::IntToString(p_inMatchData->iLineNo));
 	}

@@ -81,11 +81,12 @@ void CDBCommiter::DoCommit()
             if (queryString[0] == '|') {
                 SystemUtils::SplitString(queryString, arrQueryStr, _T("|"));
                 if (StrRemoveLastCharFromString(arrQueryStr[2], '.')) { // save
+                    mSavedRowValue.RemoveAll();
                     m_pDB->GetTableColTexts(SystemUtils::UnicodeToUTF8(arrQueryStr[2]).c_str(),
                         SystemUtils::UnicodeToUTF8(arrQueryStr[3]).c_str(), mSavedRowValue);
                 }
                 else if (StrRemoveLastCharFromString(arrQueryStr[2], '?')) { // replace
-                    for (INT_PTR j = 0; i < mSavedRowValue.GetCount(); ++j) {
+                    for (INT_PTR j = 0; j < mSavedRowValue.GetCount(); ++j) {
                         CString repStr;
                         repStr.Format(_T("[%d]"), j);
                         arrQueryStr[1].Replace(repStr, mSavedRowValue[j]);
