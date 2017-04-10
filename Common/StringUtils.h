@@ -2,7 +2,6 @@
 
 #include "Common.h"
 #include <vector>
-#include <algorithm>
 
 #define STR_IS_VALID_PTR(p) (p&&*p)
 #define STR_INR_PTR(p) if(STR_IS_VALID_PTR(p)) ++p
@@ -24,6 +23,7 @@ public:
     operator LPCTSTR() const { return c_str(); }
     int length() const { return (int)lstring::length(); }
     StdString& MakeLower();
+	StdString ToLower() const;
     bool Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true);
     StdString Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true) const;
 };
@@ -31,14 +31,6 @@ public:
 
 namespace StringUtils
 {
-	template<typename T>
-	std::basic_string<T> ToLower(const std::basic_string<T> &inStr)
-	{
-		std::basic_string<T> outStr(inStr);
-		std::transform(outStr.begin(), outStr.end(), outStr.begin(), ::tolower);
-		return outStr;
-
-	}
     typedef std::vector<StdString> VecString;
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);

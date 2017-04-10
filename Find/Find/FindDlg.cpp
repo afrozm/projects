@@ -325,7 +325,7 @@ LRESULT CFindDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case TIMER_UPDATESTATUS:
             SetForceUpdateStatus();
-            SetStatusMessage(_T("%s"), CString(mStatusMsg));
+            SetStatusMessage(_T("%s"), (LPCTSTR)mStatusMsg);
             KillTimer(TIMER_UPDATESTATUS);
             SetStatusTimerStarted(false);
             break;
@@ -720,7 +720,7 @@ HTREEITEM CFindDlg::SearchForNetWorkPC(const CString &inFullPath)
 		CString networkName = networkPath.Right(networkPath.GetLength()-2);
 		statusText = (_T("Searching "));
 		statusText += networkPath + _T(" in tree control");
-		SetStatusMessage(_T("%s"), statusText);
+		SetStatusMessage(_T("%s"), (LPCTSTR)statusText);
 		hItem = mTreeCtrlDomain->FindAddNetworkPath(fullPath);
 	}
 	else {
@@ -736,7 +736,7 @@ HTREEITEM CFindDlg::SearchForNetWorkPC(const CString &inFullPath)
 	else {
 		statusText += networkPath + _T(" not found.");
 	}
-	SetStatusMessage(_T("%s"), statusText);
+	SetStatusMessage(_T("%s"), (LPCTSTR)statusText);
 	return hItem;
 }
 bool CFindDlg::CheckUncheckSearchNodes(const CString &pattern, HTREEITEM hItem /* = NULL */)
@@ -930,7 +930,7 @@ void CFindDlg::FindInCache(CString findText)
 			if (!condition.IsEmpty())
 				condition += _T(" AND ");
 			CString pathCond;
-			pathCond.Format(_T("Path LIKE '%%%s%%'"), findText);
+			pathCond.Format(_T("Path LIKE '%%%s%%'"), (LPCTSTR)findText);
 			condition += pathCond;
 		}
 		if (!condition.IsEmpty())
@@ -1023,7 +1023,7 @@ int CFindDlg::SearchInFolder(CString pathToSearch)
 {
 	CString statusText(_T("Searching in "));
 	CFinder cf(mFindText, FindCallBackFolders, true, this);
-	SetStatusMessage(_T("%s"), statusText + pathToSearch);
+	SetStatusMessage(_T("%s"), (LPCTSTR)(statusText + pathToSearch));
 	bool bSearchZip(mFindOptionDlg.IsSearchZipEnabled());
 	cf.Find(pathToSearch, bSearchZip);
 	SetStatusMessage(_T(""));
@@ -1322,7 +1322,7 @@ bool CFindDlg::StartThreadToSearchInNetwork(LPNETRESOURCE lpnRes)
 void CFindDlg::StartSearchInNetworkFoder(LPNETRESOURCE lpnRes)
 {
 	CString statusText(_T("Searching in "));
-	SetStatusMessage(_T("%s"), statusText + lpnRes->lpRemoteName);
+	SetStatusMessage(_T("%s"), (LPCTSTR)(statusText + lpnRes->lpRemoteName));
 	CNetWorkFinder cnf(NetWorkFindShared, false, this);
 	cnf.StartFind(lpnRes);
 	if (lpnRes->lpComment == kNETRESOURCEComment)
@@ -1350,7 +1350,7 @@ void CFindDlg::OnLvnItemchangedListResult(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 		else {
 			CString totalSize(SystemUtils::GetReadableSize(mListResult->GetFileSize(-2)));
-			SetStatusMessage(_T("%d files selected. Size: %s"), selCount, totalSize);
+			SetStatusMessage(_T("%d files selected. Size: %s"), selCount, (LPCTSTR)totalSize);
 		}
 	}
 	*pResult = 0;

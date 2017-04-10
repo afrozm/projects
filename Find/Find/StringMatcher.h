@@ -27,15 +27,10 @@ public:
 	~CRegExpMatcher(void);
 	bool Match(LPCTSTR matchString);
 	void SetExpression(LPCTSTR lpExpression, bool bExpressionIsRegExp = false, BOOL bCaseSensitive = FALSE);
-	void SetCaseSensitive(BOOL bCaseSensitive = TRUE)
-	{
-		mbCaseSensitive = bCaseSensitive;
-	}
 protected:
 	void Free();
 	std::wregex *mRegExp;
     std::wregex *mRegExpException;
-	BOOL mbCaseSensitive;
 };
 
 class CPhoneticStringMatcher : public StringMatcher {

@@ -141,7 +141,7 @@ CString FindDataBase::GetProperty(const CString &propName)
 	CString retVal;
 	CArrayCString arrString;
 	CString condition;
-	condition.Format(_T("WHERE Name='%s'"), propName);
+	condition.Format(_T("WHERE Name='%s'"), (LPCTSTR)propName);
 	GetTableColTexts("Property", SystemUtils::UnicodeToUTF8(condition).c_str(), arrString);
 	if (arrString.GetCount() > 0)
 		retVal = arrString.GetAt(1);
@@ -150,7 +150,7 @@ CString FindDataBase::GetProperty(const CString &propName)
 bool FindDataBase::RemoveProperty(const CString &propName)
 {
 	CString query;
-	query.Format(_T("DELETE FROM Property WHERE Name = '%s'"), propName);
+	query.Format(_T("DELETE FROM Property WHERE Name = '%s'"), (LPCTSTR)propName);
 	return QueryNonRows2(SystemUtils::UnicodeToUTF8(query).c_str()) == 0;
 }
 bool FindDataBase::SetProperty(const CString &propName, const CString &propValue)

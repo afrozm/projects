@@ -11,7 +11,7 @@ CArrayCString& GetQueryRemoveFromSearchHistory(const CString &searchHistory, CAr
 	CString srchHis(Path(searchHistory).GetRoot());
 	FindDataBase::MakeSQLString(srchHis);
 	CString query;
-	query.Format(_T("DELETE FROM SearchHistory WHERE SearchKeys='%s'"), srchHis);
+	query.Format(_T("DELETE FROM SearchHistory WHERE SearchKeys='%s'"), (LPCTSTR)srchHis);
 	queryArray.Add(query);
 	return queryArray;
 }
@@ -23,9 +23,9 @@ CArrayCString& GetQueryAddToSearchHistory(const CString &searchHistory, CArrayCS
 	srchPath = Path(srchPath).RemoveRoot();
 	CString query;
 	query.Format(_T("INSERT OR REPLACE INTO SearchHistory VALUES ('%s', %d, %d, '%s', %d)"),
-		srchKeys,
+		(LPCTSTR)srchKeys,
 		SystemUtils::TimeToInt(CTime::GetCurrentTime()),
-		misscount, srchPath, flags);
+		misscount, (LPCTSTR)srchPath, flags);
 	queryArray.Add(query);
 	return queryArray;
 }
@@ -96,7 +96,7 @@ int CSearchHistoryArray::ItrCachedDataTableRowsCallbackFn(sqlite3_stmt *statemen
 		CArrayCString queryArray;
 		GetQueryAddToSearchHistory(newCSearchHistory.GetRootKey(), queryArray);
 		m_pFindServerDlg->AddDBQueryStrings(queryArray);
-		SystemUtils::LogMessage(_T("Adding missing entry (%s) in search history"), newCSearchHistory.GetRootKey());
+		SystemUtils::LogMessage(_T("Adding missing entry (%s) in search history"), (LPCTSTR)newCSearchHistory.GetRootKey());
 	}
 	return 0;
 }

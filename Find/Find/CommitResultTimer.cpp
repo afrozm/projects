@@ -43,8 +43,8 @@ bool CCommitResultTimer::DoCommit(unsigned int uFlags)
 						FindDataBase::MakeSQLString(text);
 						CListResItemData *pListData((CListResItemData *)mListCtrl->GetItemData(startIndex));
 						ASSERT(pListData != NULL);
-						values.Format(_T("'%s', '%s', '%I64d', '%I64d', '%I64d'"), text,
-							SystemUtils::GetReadableSize(pListData->m_ullFileSize),
+						values.Format(_T("'%s', '%s', '%I64d', '%I64d', '%I64d'"), (LPCTSTR)text,
+							(LPCTSTR)SystemUtils::GetReadableSize(pListData->m_ullFileSize),
 							SystemUtils::TimeToInt(pListData->mCreatedTime),
 							SystemUtils::TimeToInt(pListData->mModifedTime),
 							SystemUtils::TimeToInt(pListData->mAccessedTime));

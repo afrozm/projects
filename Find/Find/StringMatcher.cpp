@@ -94,31 +94,36 @@ int StringMatcher::GetWordIndex( const StdString& inStr, int startPos /*= 0*/)
 }
 
 CRegExpMatcher::CRegExpMatcher(LPCTSTR lpExpression, bool bExpressionIsRegExp, BOOL bCaseSensitive)
-: mRegExp(NULL), mRegExpException(NULL), mbCaseSensitive(bCaseSensitive)
+: mRegExp(NULL), mRegExpException(NULL)
 {
 	SetExpression(lpExpression, bExpressionIsRegExp, bCaseSensitive);
 }
 void CRegExpMatcher::SetExpression(LPCTSTR lpExpression, bool bExpressionIsRegExp, BOOL bCaseSensitive)
 {
-	SetCaseSensitive(bCaseSensitive);
 	Free();
 	if (lpExpression == NULL)
 		lpExpression = _T("*");
 	if (lstrcmp(lpExpression, _T("*"))) {
 		StdString expr(lpExpression);
 		StdString excp;
-		size_t exceptPos = expr.find(':');
-		if (exceptPos != StdString::npos) {
-			excp = expr.substr(expr.length()-(exceptPos+1));
-			expr = expr.substr(0,exceptPos);
+		{
+			StringUtils::VecString vecStr;
+			StringUtils::SplitString(vecStr, expr, _T(":"));
+			if (!vecStr.empty())
+				expr = vecStr[0];
+			if (vecStr.size() > 1)
+				excp = vecStr[1];
 		}
+		std::regex_constants::syntax_option_type flags(std::regex_constants::ECMAScript);
+		if (!bCaseSensitive)
+			flags |= std::regex_constants::icase;
 		if (expr.length() > 0) {
 			mRegExp = new std::wregex(bExpressionIsRegExp ? expr : StringUtils::WildCardExpToRegExp(expr.c_str()),
-                mbCaseSensitive ? std::regex_constants::icase : std::regex_constants::ECMAScript);
+				flags);
 		}
 		if (excp.length() > 0) {
             mRegExpException = new std::wregex(bExpressionIsRegExp ? excp : StringUtils::WildCardExpToRegExp(excp.c_str()),
-                mbCaseSensitive ? std::regex_constants::icase : std::regex_constants::ECMAScript);
+				flags);
 		}
 	}
 }
@@ -138,14 +143,23 @@ void CRegExpMatcher::Free(void)
 bool CRegExpMatcher::Match(LPCTSTR matchString)
 {
 	bool bMatched(true);
+	mMatchString.clear();
+	mMatchWeight = 0;
     if (mRegExp) {
         std::wcmatch m;
-        bMatched = std::regex_match(matchString, m, *mRegExp);
-        if (bMatched)
-            mMatchString= m[0].first;
+        bMatched = std::regex_search(matchString, m, *mRegExp);
+		if (bMatched) {
+			mMatchString = m[0].first;
+			if (!m.prefix().matched)
+				mMatchWeight += 2;
+			if (!m.suffix().matched)
+				mMatchWeight += 1;
+		}
     }
 	if (bMatched && mRegExpException)
-        bMatched = !std::regex_match(matchString, *mRegExpException);
+        bMatched = !std::regex_search(matchString, *mRegExpException);
+	if (mMatchString.empty())
+		mMatchString = matchString;
 	return bMatched;
 }
 

@@ -641,7 +641,7 @@ void CSaveListResultCtrl::FindNext(bool bUp, bool bAll)
 		}
 	}
 	if (!bFound) {
-		GetFindDlg()->SetStatusMessage(_T("The specified text was not found: %s"), findText);
+		GetFindDlg()->SetStatusMessage(_T("The specified text was not found: %s"), (LPCTSTR)findText);
 	}
 }
 LRESULT CSaveListResultCtrl::OnFindReplace(WPARAM wParam, LPARAM lParam)

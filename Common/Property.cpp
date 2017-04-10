@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Property.h"
 #include "TextReader.h"
-#include "StringUtils.h"
 #include <assert.h>
 
 Property::Property()
@@ -13,34 +12,34 @@ Property::~Property()
 {
 }
 
-static const lstring kStringPropertyEmptyString;
+static const StdString kStringPropertyEmptyString;
 
-const lstring & Property::GetValue(const lstring & inKey) const
+const StdString & Property::GetValue(const StdString & inKey) const
 {
-    auto cit(mProperties.find(StringUtils::ToLower(inKey)));
+    auto cit(mProperties.find(inKey.ToLower()));
     if (cit != mProperties.end())
         return cit->second;
     return kStringPropertyEmptyString;
 }
 
-bool Property::HasKey(const lstring & inKey) const
+bool Property::HasKey(const StdString & inKey) const
 {
-    return mProperties.find(StringUtils::ToLower(inKey)) != mProperties.end();
+    return mProperties.find(inKey.ToLower()) != mProperties.end();
 }
 
-bool Property::SetValue(const lstring & inKey, const lstring & inValue, bool bOverwrite)
+bool Property::SetValue(const StdString & inKey, const StdString & inValue, bool bOverwrite)
 {
     bool bAdded(bOverwrite || !HasKey(inKey));
 
     if (bAdded)
-        mProperties[StringUtils::ToLower(inKey)] = inValue;
+        mProperties[inKey.ToLower()] = inValue;
 
     return bAdded;
 }
 
-bool Property::RemoveKey(const lstring & inKey)
+bool Property::RemoveKey(const StdString & inKey)
 {
-    size_t nElemmetsRemoved(mProperties.erase(StringUtils::ToLower(inKey)));
+    size_t nElemmetsRemoved(mProperties.erase(inKey.ToLower()));
     return nElemmetsRemoved > 0;
 }
 
@@ -86,12 +85,12 @@ PropertySet::~PropertySet()
 {
 }
 
-const lstring & PropertySet::GetValue(const lstring & inSection, const lstring & inKey) const
+const StdString & PropertySet::GetValue(const StdString & inSection, const StdString & inKey) const
 {
     return GetProperty(inSection).GetValue(inKey);
 }
 
-bool PropertySet::SetValue(const lstring & inSection, const lstring & inKey, const lstring & inValue, bool bOverwrite)
+bool PropertySet::SetValue(const StdString & inSection, const StdString & inKey, const StdString & inValue, bool bOverwrite)
 {
     if (bOverwrite && !HasSection(inSection))
         mMapProperty[inSection];
@@ -101,7 +100,7 @@ bool PropertySet::SetValue(const lstring & inSection, const lstring & inKey, con
     return false;
 }
 
-bool PropertySet::RemoveKey(const lstring & inSection, const lstring & inKey)
+bool PropertySet::RemoveKey(const StdString & inSection, const StdString & inKey)
 {
     Property *prop(GetPropertyInt(inSection));
     if (prop)
@@ -109,7 +108,7 @@ bool PropertySet::RemoveKey(const lstring & inSection, const lstring & inKey)
     return false;
 }
 
-const Property & PropertySet::GetProperty(const lstring & inSection) const
+const Property & PropertySet::GetProperty(const StdString & inSection) const
 {
     static const Property kPropertyEmptyProperty;
     auto cit(mMapProperty.find(inSection));
@@ -117,12 +116,12 @@ const Property & PropertySet::GetProperty(const lstring & inSection) const
         return cit->second;
     return kPropertyEmptyProperty;
 }
-bool PropertySet::HasSection(const lstring & inSection) const
+bool PropertySet::HasSection(const StdString & inSection) const
 {
     return mMapProperty.find(inSection) != mMapProperty.end();
 }
 
-bool PropertySet::RemoveSection(const lstring &inSection)
+bool PropertySet::RemoveSection(const StdString &inSection)
 {
     size_t nElemmetsRemoved(mMapProperty.erase(inSection));
     return nElemmetsRemoved > 0;
@@ -153,7 +152,7 @@ PropertySet::MapProperty & PropertySet::GetMapProperty()
     return mMapProperty;
 }
 
-Property* PropertySet::GetPropertyInt(const lstring & inSection)
+Property* PropertySet::GetPropertyInt(const StdString & inSection)
 {
     auto cit(mMapProperty.find(inSection));
     if (cit != mMapProperty.end())
@@ -174,7 +173,7 @@ PropertySetStreamer::~PropertySetStreamer()
 {
 }
 
-bool PropertySetStreamer::ReadFromFile(const lstring & inFile)
+bool PropertySetStreamer::ReadFromFile(const StdString & inFile)
 {
     bool bSuccess(false);
     if (m_pPropertySet != NULL) {
@@ -182,7 +181,7 @@ bool PropertySetStreamer::ReadFromFile(const lstring & inFile)
         bSuccess = !!textReader;
         while (true)
         {
-            lstring lineStr(textReader.ReadLine());
+            StdString lineStr(textReader.ReadLine());
             if (lineStr.empty())
                 break;
             bSuccess |= ReadFromString(lineStr);
@@ -190,13 +189,13 @@ bool PropertySetStreamer::ReadFromFile(const lstring & inFile)
     }
     return bSuccess;
 }
-static void RemoveComment(lstring &str, TCHAR commentChar = '#')
+static void RemoveComment(StdString &str, TCHAR commentChar = '#')
 {
     size_t pos(0);
     while (true)
     {
         pos = str.find(commentChar, pos);
-        if (pos != lstring::npos) {
+        if (pos != StdString::npos) {
             if (str[pos + 1] == commentChar) {// Skip
                 str.erase(pos, 1);
                 ++pos;
@@ -209,7 +208,7 @@ static void RemoveComment(lstring &str, TCHAR commentChar = '#')
         else break;
     }
 }
-bool PropertySetStreamer::ReadFromString(const lstring & inString)
+bool PropertySetStreamer::ReadFromString(const StdString & inString)
 {
     bool bRead(false);
     if (m_pPropertySet != NULL) {
@@ -234,7 +233,7 @@ bool PropertySetStreamer::ReadFromString(const lstring & inString)
             if (keyVal.size() > 0) {
                 StringUtils::TrimString(keyVal[0]);
                 assert(!keyVal[0].empty());
-                const lstring *valueStr(&kStringPropertyEmptyString);
+                const StdString *valueStr(&kStringPropertyEmptyString);
                 if (keyVal.size() > 1) {
                     StringUtils::TrimString(keyVal[1]);
                     valueStr = &keyVal[1];
@@ -256,7 +255,7 @@ void PropertySetStreamer::SetPropertySetStream(const PropertySet &inWriteInSet)
     SetPropertySetStream((PropertySet&)inWriteInSet);
 }
 
-bool PropertySetStreamer::WrtieToString(lstring &outString)
+bool PropertySetStreamer::WrtieToString(StdString &outString)
 {
     bool bWritten(false);
     if (m_pPropertySet != NULL) {

@@ -47,7 +47,7 @@ CString TMThreadData::GetStr() const
 	if (this != NULL) {
 		CountTimer timeTaken;
 		timeTaken.SetTimeDuration(GetThreadTime());
-		retval.Format(_T("ThreadName:%s ThreadClass: %d Time: %s"), mThreadName, miThreadClass, timeTaken.GetString());
+		retval.Format(_T("ThreadName:%s ThreadClass: %d Time: %s"), (LPCTSTR)mThreadName, miThreadClass, (LPCTSTR)timeTaken.GetString());
 	}
 	else retval = _T("{null}");
 	return retval;
@@ -110,7 +110,7 @@ ThreadManager& ThreadManager::GetInstance()
 }
 static void LogThreadData(TMThreadData *pThread)
 {
-	LoggerFacory::GetInstance().GetLogger(_T("")).Log(Logger::kLogLevelError, _T("Thread crashed!!!\nThread Data=%s"), pThread->GetStr());
+	LoggerFacory::GetInstance().GetLogger(_T("")).Log(Logger::kLogLevelError, _T("Thread crashed!!!\nThread Data=%s"), (LPCTSTR)pThread->GetStr());
 }
 static DWORD WINAPI ThreadManagerThreadProc(LPVOID lpParameter)
 {

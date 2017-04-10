@@ -227,10 +227,10 @@ void ContentSearchManager::AddFileEntry(const FileTableEntry &fte)
     bool bNewEntry(fte.IsFileIDEmpty());
     if (bNewEntry)
         query.Format(_T("INSERT OR IGNORE INTO File VALUES ('%s', '-', %I64d, 0, 0)"),
-            fte.path, SystemUtils::TimeToInt(fte.fileModTime));
+		(LPCTSTR)fte.path, SystemUtils::TimeToInt(fte.fileModTime));
     else
         query.Format(_T("INSERT OR REPLACE INTO File VALUES ('%s', '%s', %I64d, %I64d, 0)"),
-            fte.path, UTF8_TO_UNICODE(fte.GetFileID()).c_str(), SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
+		(LPCTSTR)fte.path, UTF8_TO_UNICODE(fte.GetFileID()).c_str(), SystemUtils::TimeToInt(fte.fileModTime), SystemUtils::TimeToInt(fte.lastUpdatedTime));
     GetDBCommitter()->AddDBQueryString(query);
     if (bNewEntry) {
         SetSearchHasJob();
@@ -251,14 +251,14 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         CString qpath(path);
         if (!bsqlEscaped)
             FindDataBase::MakeSQLString(qpath);
-        condition.Format(_T("WHERE Path='%s'"), qpath);
+        condition.Format(_T("WHERE Path='%s'"), (LPCTSTR)qpath);
     }
     FileTableEntry fte(filePath);
     fte.SetFileID(fileID ? fileID : "");
     if (fileID == NULL) {
         CArrayCString queries;
         // save file id and delete file entry
-        query.Format(_T("|DELETE FROM File%s|File.|%s"), condition, condition);
+        query.Format(_T("|DELETE FROM File%s|File.|%s"), (LPCTSTR)condition, (LPCTSTR)condition);
         queries.Add(query);
         // delete word entries for saved file id.
         query.Format(_T("||File?|WHERE FileID='[1]'|DELETE FROM Word WHERE FileID='[1]'"));
@@ -266,11 +266,11 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         GetDBCommitter()->AddDBQueryStrings(queries);
     }
     else {
-        query.Format(_T("DELETE FROM File%s"), condition);
+        query.Format(_T("DELETE FROM File%s"), (LPCTSTR)condition);
         GetDBCommitter()->AddDBQueryString(query);
         if (!fte.IsFileIDEmpty()) {// Delete word entries if md5 file count is zero
             CString csFileID(StringUtils::UTF8ToUnicode(fte.GetFileID()).c_str());
-            query.Format(_T("||File|WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), csFileID, csFileID);
+            query.Format(_T("||File|WHERE FileID='%s'|DELETE FROM Word WHERE FileID='%s'"), (LPCTSTR)csFileID, (LPCTSTR)csFileID);
             GetDBCommitter()->AddDBQueryString(query);
         }
     }
@@ -427,7 +427,7 @@ int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
         GetDatabase().SetProperty(_T("SearchStartTime"), SystemUtils::LongLongToString(mSearchStartTime.GetTime()));
     GetDatabase().Commit();
     m_dwContentSearchThreadIDManager = 0;
-    SystemUtils::LogMessage(_T("Content Search Manager: finished. Time taken %s"), ct.GetString());
+    SystemUtils::LogMessage(_T("Content Search Manager: finished. Time taken %s"), (LPCTSTR)ct.GetString());
     SetSearchStarted(false);
     return 0;
 }
@@ -480,7 +480,7 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
                 bCompute = fte->SetFileID(fileID);
         }
         if (bCompute) {
-            SystemUtils::LogMessage(_T("Indexing file: %s"), fte->path);
+            SystemUtils::LogMessage(_T("Indexing file: %s"), (LPCTSTR)fte->path);
             FileDataReader fdr;
             BinaryData fileData(NULL, 64 * 1024 * 1024); // 64k buffer
             WordParser wp;
@@ -502,7 +502,7 @@ int ContentSearchManager::ContentSearchThreadProc(LPVOID pInThreadData)
                     CString query, word(words.first.c_str());
                     FindDataBase::MakeSQLString(word);
                     int count(words.second);
-                    query.Format(_T("INSERT OR REPLACE INTO Word VALUES ('%s', '%s', '%d')"), word, fileID, count);
+                    query.Format(_T("INSERT OR REPLACE INTO Word VALUES ('%s', '%s', '%d')"), (LPCTSTR)word, (LPCTSTR)fileID, count);
                     queryList.Add(query);
                     if (!IsSearchContinue())
                         break;

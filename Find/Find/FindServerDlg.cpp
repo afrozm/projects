@@ -755,7 +755,7 @@ bool CFindServerDlg::RemoveObsoleteSearchHistory(const CSearchHistory &searchHis
 		UINT missCount(searchHistory.GetMissCount()+1);
 		if (missCount > 3) {
 			GetQueryRemoveFromSearchHistory(searchHistoryKey, queryArray);
-			SystemUtils::LogMessage(_T("Removing host %s"), searchHistoryKey);
+			SystemUtils::LogMessage(_T("Removing host %s"), (LPCTSTR)searchHistoryKey);
 			bRemove = true;
 		}
 		else {
@@ -763,7 +763,7 @@ bool CFindServerDlg::RemoveObsoleteSearchHistory(const CSearchHistory &searchHis
 			CString query;
 			query.Format(_T("UPDATE SearchHistory SET LastUpdated=%I64d, MissCount=%d WHERE SearchKeys='%s'"),
 			SystemUtils::TimeToInt(CTime::GetCurrentTime()),
-			missCount, searchHistoryKey);
+			missCount, (LPCTSTR)searchHistoryKey);
 			queryArray.Add(query);
 		}
 		AddDBQueryStrings(queryArray);
@@ -855,7 +855,7 @@ void CFindServerDlg::StartSearchInNetworkFoder(LPNETRESOURCE lpnRes)
 			}
 		}
 		if (ct.GetTimeDuration() >= 1000*60)
-			SystemUtils::LogMessage(_T("End: Searching in %s: Time taken: %s "), lpnRes->lpRemoteName, ct.GetString());
+			SystemUtils::LogMessage(_T("End: Searching in %s: Time taken: %s "), lpnRes->lpRemoteName, (LPCTSTR)ct.GetString());
 	}
 	if (lpnRes->lpComment == kNETRESOURCEComment)
 		FreeLPNetResource(lpnRes);
@@ -956,28 +956,28 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 			CString query, rootPath(Path(path).GetRoot());
 			INT_PTR curTime(SystemUtils::TimeToInt(CTime::GetCurrentTime()));
 			query.Format(_T("INSERT OR REPLACE INTO CachedData VALUES ('%s', '%s', %I64d, 0, '%d', '%s', '%I64d', '%I64d', '%I64d', %I64d)"),
-				path,
+				(LPCTSTR)path,
 				bIsDir ? _T("") : SystemUtils::LongLongToString(pFindFile->GetFileSize()),
 				curTime,
 				pCatagotyMatched->catagoryNum,
-                rootPath,
+				(LPCTSTR)rootPath,
 				SystemUtils::TimeToInt(ct),
 				SystemUtils::TimeToInt(mt),
 				SystemUtils::TimeToInt(at),
 				curTime);
 			CString query2;
 			CString condition;
-			condition.Format(_T("WHERE Path='%s'"), path);
+			condition.Format(_T("WHERE Path='%s'"), (LPCTSTR)path);
 			query2.Format(_T("UPDATE CachedData SET Path='%s', Size='%s', LastUpdated=%I64d, MissCount=0, CatagoryNumber=%d, Root='%s', CreatedTime=%I64d, ModifiedTime=%I64d, AccessedTime=%I64d WHERE Path='%s'"),
-				path,
+				(LPCTSTR)path,
 				bIsDir ? _T("") : SystemUtils::LongLongToString(pFindFile->GetFileSize()),
 				curTime,
 				pCatagotyMatched->catagoryNum,
-                rootPath,
+				(LPCTSTR)rootPath,
 				SystemUtils::TimeToInt(ct),
 				SystemUtils::TimeToInt(mt),
 				SystemUtils::TimeToInt(at),
-				path);
+				(LPCTSTR)path);
 			query = _T("|")+query2+_T("|CachedData|")+condition+_T("|")+query;
 			pFFCD->dbQueryString.Add(query);
             if (!bIsDir) {
@@ -998,7 +998,7 @@ int CFindServerDlg::FindFolderCallback(CFileFindEx *pFindFile, bool bMatched, vo
 		pFFCD->dbQueryString.RemoveAll();
 	}
 	if (pFFCD->mTimeElapsed.UpdateTimeDuration()) {
-		ThreadManager::GetInstance().SetThreadStatusStr(_T("Searching %s"), path);
+		ThreadManager::GetInstance().SetThreadStatusStr(_T("Searching %s"), (LPCTSTR)path);
 	}
 	return retVal;
 }
@@ -1040,7 +1040,7 @@ int CFindServerDlg::ItrVerifyCacheDataTableRowsCallbackFn(sqlite3_stmt *statemen
     CString qpath(path);
     {
 		FindDataBase::MakeSQLString(qpath);
-		condition.Format(_T(" WHERE Path='%s'"), qpath);
+		condition.Format(_T(" WHERE Path='%s'"), (LPCTSTR)qpath);
 	}
 	VerifyData *pVerifyData((VerifyData*)pUserData);
 	if (pVerifyData->timer.UpdateTimeDuration())
@@ -1074,7 +1074,7 @@ void CFindServerDlg::Verify(CSearchHistory *rootPath, bool bRemove /* = false */
 	if (rootPath == NULL)
 		return;
 	const CString &rootKey(rootPath->GetRootKey());
-	SystemUtils::LogMessage(_T("Verifying %s"), rootKey);
+	SystemUtils::LogMessage(_T("Verifying %s"), (LPCTSTR)rootKey);
 	if (IsMirrorServer(rootKey)) {
 		bRemove = true;
 		rootPath->ResetMissCount(~(1<<((sizeof(UINT)<<3)-1)));
@@ -1103,7 +1103,7 @@ void CFindServerDlg::Verify(CSearchHistory *rootPath, bool bRemove /* = false */
 	}
 	if (rootPath->IsAvailable() && !IsSearchCancelled(true))
 		AddDBQueryString(_T("UPDATE SearchHistory SET LastUpdated=%I64d, MissCount=0 WHERE SearchKeys='%s'"),
-			SystemUtils::TimeToInt(CTime::GetCurrentTime()), rootPath->GetRootKey());
+			SystemUtils::TimeToInt(CTime::GetCurrentTime()), (LPCTSTR)rootPath->GetRootKey());
 }
 void CFindServerDlg::StartIpEnum()
 {
@@ -1148,7 +1148,7 @@ void CFindServerDlg::Find(bool bForce) // Start Find
 	{
 		int retVal(mDataBase.Open());
 		if (retVal != 0) {
-			GetLogger().Log(Logger::kLogLevelFatal, _T("Cannot open database %s. Error: %d"), mDataBase.GetDBPath(), retVal);
+			GetLogger().Log(Logger::kLogLevelFatal, _T("Cannot open database %s. Error: %d"), (LPCTSTR)mDataBase.GetDBPath(), retVal);
 			return;
 		}
         CString started(mDataBase.GetProperty(_T("StartedByUser")));
@@ -1596,15 +1596,15 @@ void CFindServerDlg::EnumerateIps(DWORD_PTR ipRange)
 	}
 	if (ipRange == ~0) {
 		// update timer
-		ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: time  %s"), mIPEnumTime.GetString());
+		ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: time  %s"), (LPCTSTR)mIPEnumTime.GetString());
 		while (!IsSearchCancelled(true) && ThreadManager::GetInstance().GetThreadCount(SERVER_THREAD_OP_IPENUM) > 1) {
 			Sleep(10000);
 			if (mIPEnumTime.UpdateTimeDuration()) {
-				ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: time  %s"), mIPEnumTime.GetString());
+				ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: time  %s"), (LPCTSTR)mIPEnumTime.GetString());
 				AddDBPropertyKeyValue(_T("EnumIP_Time"), SystemUtils::LongLongToString(mIPEnumTime.GetTimeDuration()));
 			}
 		}
-		SystemUtils::LogMessage(_T("Server: ipenumerator: End. Time taken %s"), mIPEnumTime.GetString());
+		SystemUtils::LogMessage(_T("Server: ipenumerator: End. Time taken %s"), (LPCTSTR)mIPEnumTime.GetString());
 	}
 	else if (ipRange != 0) {
 		DWORD startIp(ipRange >> 32);
@@ -1613,7 +1613,7 @@ void CFindServerDlg::EnumerateIps(DWORD_PTR ipRange)
 		ipe_cb_data.pDlg = this;
 		ipe_cb_data.startIP = SocketUtil::GetIpV4StrFromAddr(startIp);
 		ipe_cb_data.endIp = SocketUtil::GetIpV4StrFromAddr(endIp);
-		ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: %s to %s"), ipe_cb_data.startIP, ipe_cb_data.endIp);
+		ThreadManager::GetInstance().SetThreadStatusStr(_T("ipenumerator: %s to %s"), (LPCTSTR)ipe_cb_data.startIP, (LPCTSTR)ipe_cb_data.endIp);
 		IPEnumerator ipEnumerator(Srv_IPEnumerator_Callback, &ipe_cb_data);
 		ipEnumerator.Enumerate(startIp, endIp);
 		if (!ipe_cb_data.endIp.IsEmpty())
@@ -1628,7 +1628,7 @@ void CFindServerDlg::UpdateIpEnumStatusInDB(LPCTSTR propertyName)
 }
 void CFindServerDlg::AddDBPropertyKeyValue(const CString& key, const CString &value)
 {
-	AddDBQueryString(_T("INSERT OR REPLACE INTO Property VALUES ('%s', '%s') "), key, value);
+	AddDBQueryString(_T("INSERT OR REPLACE INTO Property VALUES ('%s', '%s') "), (LPCTSTR)key, (LPCTSTR)value);
 }
 
 

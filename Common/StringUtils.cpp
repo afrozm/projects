@@ -4,6 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <algorithm>
 
 
 StdString::StdString(const char *str)
@@ -52,8 +53,15 @@ StdString::operator otherstring() const
 
 StdString& StdString::MakeLower()
 {
-    *this = StringUtils::ToLower(*this);
+	std::transform(begin(), end(), begin(), [](TCHAR c) { return (TCHAR)::tolower((int)c); });
     return *this;
+}
+
+StdString StdString::ToLower() const
+{
+	StdString outString(*this);
+	outString.MakeLower();
+	return outString;
 }
 
 bool StdString::Trim(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLeft /*= true*/, bool bTrimRight /*= true*/)

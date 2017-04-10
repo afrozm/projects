@@ -483,7 +483,7 @@ static int ExpandTreeThreadProcFn(LPVOID pThread)
 	fcbData->threadID = GetCurrentThreadId();
 	CTreeCtrlDomain *mTreeCtrlDomain(fcbData->pTreeCtrl);
 	CString statusText;
-	statusText.Format(_T("Searching %s..."), mTreeCtrlDomain->GetItemText(fcbData->hItem));
+	statusText.Format(_T("Searching %s..."), (LPCTSTR)mTreeCtrlDomain->GetItemText(fcbData->hItem));
 	if (fcbData->folderOrNetWork == 1) { // Local Disk
 		mTreeCtrlDomain->SetItemData(fcbData->hItem, 0);
 		mTreeCtrlDomain->DeleteItem(mTreeCtrlDomain->GetChildItem(fcbData->hItem));
