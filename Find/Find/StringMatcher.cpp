@@ -108,7 +108,7 @@ void CRegExpMatcher::SetExpression(LPCTSTR lpExpression, bool bExpressionIsRegEx
 		StdString excp;
 		{
 			StringUtils::VecString vecStr;
-			StringUtils::SplitString(vecStr, expr, _T(":"));
+			StringUtils::SplitString(vecStr, expr, _T(":"), true);
 			if (!vecStr.empty())
 				expr = vecStr[0];
 			if (vecStr.size() > 1)
