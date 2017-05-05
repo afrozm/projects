@@ -764,6 +764,7 @@ void CFindDlg::Find() // Start Find
 	mFindText.Empty();
 	mFileContentSearchText.Empty();
 	GetDlgItemText(IDC_COMBO_FIND, mFindText);
+	mFindText = StdString(mFindText).GetTrimString();
 	CArrayCString outStr;
 	if (SystemUtils::SplitString(mFindText, outStr) > 1) {
 		CPhoneticStringMatcher pm(outStr[0]);

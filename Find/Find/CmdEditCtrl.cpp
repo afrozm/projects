@@ -27,7 +27,8 @@ void CCmdEditCtrl::AddCommand(const CString &cmd, bool bUpdate)
 }
 void CCmdEditCtrl::RemoveCommand(const CString &cmd, bool bUpdate)
 {
-	GetLines();
+    if (bUpdate)
+	    GetLines();
 	while (1) {
 		int iCmd(FindCommand(cmd));
 		if (iCmd >= 0)

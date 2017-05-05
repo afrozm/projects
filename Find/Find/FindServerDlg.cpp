@@ -87,22 +87,21 @@ static struct Condtion
 {
     enum CondtionType {
         NoCondition,
-        LessThan,
         LessThanOrEqual,
+        GreaterThanOrEqual,
+        LessThan,
         Equal,
         GreaterThan,
-        GreaterThanOrEqual,
         Between
     } conditionType;
     LPCTSTR name;
     static CondtionType ConditionFromString(const CString &cond);
 } scondition[] = {
-    Condtion::NoCondition, _T(""),
-    Condtion::LessThan,_T("<"),
     Condtion::LessThanOrEqual,_T("<="),
+    Condtion::GreaterThanOrEqual,_T(">="),
+    Condtion::LessThan,_T("<"),
     Condtion::Equal,_T("="),
     Condtion::GreaterThan,_T(">"),
-    Condtion::GreaterThanOrEqual,_T(">="),
     Condtion::Between,_T("in")
 };
 
@@ -236,25 +235,22 @@ struct Catagory {
 
 Condtion::CondtionType Condtion::ConditionFromString(const CString &cond)
 {
-	for (int i = 0; i < sizeof(scondition)/sizeof(LPCTSTR); ++i)
-		if (cond == scondition[i].name) {
+	for (int i = 0; i < sizeof(scondition)/sizeof(scondition[0]); ++i)
+		if (cond.Find(scondition[i].name) == 0) {
 			return scondition[i].conditionType;
 		}
 	return NoCondition;
 }
-//#define DISTRIBUTE_BUILD
 void CFindServerDlg::LoadDefault()
 {
-	Catagory catagories[] = {
-#ifdef DISTRIBUTE_BUILD
-		_T("Documents"), _T(".doc;.xsl;.pdf;.txt"), _T(""), true,
-		_T("Code"), _T(".c;.h;.vcproj;.sln;.xcode"), _T(""), true,
-		_T("Images"), _T(".jpg;.jpeg;.bmp;.gif;.tif;.png;.dib"), true,
-#else
-        _T("Movies"), _T(".mp4;.mov;.mpg;.mpeg;.div;.avi;.vlc;.vob;.wmv;.flv"), _T("Condition.Size=Size>=300M"), true,
-		_T("Music"), _T(".mp3"), _T("Condition.Size=Size>=2M"), true,
-#endif
-		_T("Softwares"), _T(".msi;.dmg;.exe;.zip;.rar"), _T(""), false,
+    Catagory catagories[] = {
+        _T("Documents"), _T(".doc;.xsl;.pdf;.txt"), _T(""), false,
+        _T("Code"), _T(".c;.h;.m;.py;.xml;.java;.swift"), _T(""), false,
+        _T("Images"), _T(".jpg;.jpeg;.bmp;.gif;.tif;.png;.dib"), _T(""),  false,
+        _T("Movies"), _T(".mp4;.mov;.mpg;.mpeg;.div;.avi;.vlc;.vob;.wmv;.flv"), _T("Condition=Size>=300M"), false,
+        _T("Music"), _T(".mp3"), _T("Condition=Size>=2M"), false,
+        _T("Softwares"), _T(".msi;.dmg;.exe;.zip;.rar;.7z;.tar"), _T(""), false,
+        _T("Content"), _T(""), _T("Content=true, Condition=Size<100M"), true
 	};
 	mCatagoryEmbedListCtrl->DeleteAllItems();
 	for (int i = 0 ; i < sizeof(catagories) / sizeof(Catagory); ++i) {
@@ -264,14 +260,11 @@ void CFindServerDlg::LoadDefault()
 		mCatagoryEmbedListCtrl->CheckRowColCheckBox(0, iTem, catagories[i].bEnabled);
 	}
 	mCmdEditCtrl->Clear();
-#ifdef DISTRIBUTE_BUILD
-	mCmdEditCtrl->AddCommand(_T("check:[mydocuments]"), true);
-	mCmdEditCtrl->AddCommand(_T("check:[mypictures]"), true);
-	mCmdEditCtrl->AddCommand(_T("check:[programfiles]"), true);
-#else
-	mCmdEditCtrl->SetWindowText(_T("check:[domain]"));
-	mCmdEditCtrl->AddCommand(_T("ip:"), true);
-#endif
+    mCmdEditCtrl->AddCommand(_T("#check:[documents]"));
+    mCmdEditCtrl->AddCommand(_T("#check:[pictures]"));
+    mCmdEditCtrl->AddCommand(_T("#check:[programfiles]"));
+    mCmdEditCtrl->AddCommand(_T("#check:[domain]"));
+    mCmdEditCtrl->AddCommand(_T("#ip:"), true);
 	//Execute();
 }
 TableItertatorClass(CFindServerDlg);
@@ -367,8 +360,8 @@ static CString GetPropertyValue(const CString &propName)
 	propVal = propVal.MakeLower();
 	static std::map<CString, int> sTokenMap;
 	if (sTokenMap.empty()) {
-		sTokenMap[_T("mydocuments")] = CSIDL_MYDOCUMENTS;
-		sTokenMap[_T("mypictures")] = CSIDL_MYPICTURES;
+		sTokenMap[_T("documents")] = CSIDL_MYDOCUMENTS;
+		sTokenMap[_T("pictures")] = CSIDL_MYPICTURES;
 		sTokenMap[_T("programfiles")] = CSIDL_PROGRAM_FILES;
 		sTokenMap[_T("windows")] = CSIDL_WINDOWS;
 	}
@@ -680,7 +673,7 @@ void CFindServerDlg::FindCatagory::Init(int num, CEmbedListCtrl *pList)
     Property prop;
     {
         PropertySet ps;
-        PropertySetStreamer pss;
+        PropertySetStreamer pss(_T(",\r\n"));
         pss.SetPropertySetStream(ps);
         pss.ReadFromString((LPCTSTR)text);
         prop = ps.GetProperty(_T(""));
@@ -696,18 +689,15 @@ void CFindServerDlg::FindCatagory::Init(int num, CEmbedListCtrl *pList)
         CArrayCString arrCond;
         SystemUtils::SplitString(text, arrCond, _T("&"));
         if (arrCond.GetCount() > 0) {
-            sizeCond = Condtion::ConditionFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("<>=")));
+            mSizeMin = SystemUtils::GetSizeFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("0123456789")));
             if (arrCond.GetCount() > 1) {
                 sizeCond = Condtion::Between; // in
                 mSizeMax = SystemUtils::GetSizeFromString(SystemUtils::StringFindOneOf(arrCond[1], _T("0123456789")));
+                if (mSizeMin > mSizeMax)
+                    std::swap(mSizeMin, mSizeMax);
             }
             else
-                mSizeMax = -1;
-            mSizeMin = SystemUtils::GetSizeFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("0123456789")));
-            
-            if (sizeCond == Condtion::Between // in
-                && mSizeMin > mSizeMax)
-                std::swap(mSizeMin, mSizeMax);
+                sizeCond = Condtion::ConditionFromString(SystemUtils::StringFindOneOf(arrCond[0], _T("<>=")));
         }
 	}
     text = prop.GetValue(_T("content")).c_str();

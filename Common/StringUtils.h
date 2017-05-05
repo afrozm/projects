@@ -25,7 +25,7 @@ public:
     StdString& MakeLower();
 	StdString ToLower() const;
     bool Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true);
-    StdString Trim(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true) const;
+    StdString GetTrimString(const StdString & inTrimChars = " \t\r\n", bool bTrimLeft = true, bool bTrimRight = true) const;
 };
 
 

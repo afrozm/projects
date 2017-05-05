@@ -258,7 +258,7 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
     if (fileID == NULL) {
         CArrayCString queries;
         // save file id and delete file entry
-        query.Format(_T("|DELETE FROM File%s|File.|%s"), (LPCTSTR)condition, (LPCTSTR)condition);
+        query.Format(_T("|DELETE FROM File %s|File.|%s"), (LPCTSTR)condition, (LPCTSTR)condition);
         queries.Add(query);
         // delete word entries for saved file id.
         query.Format(_T("||File?|WHERE FileID='[1]'|DELETE FROM Word WHERE FileID='[1]'"));
@@ -266,7 +266,7 @@ void ContentSearchManager::RemoveFileEntry(LPCTSTR filePath, bool bsqlEscaped /*
         GetDBCommitter()->AddDBQueryStrings(queries);
     }
     else {
-        query.Format(_T("DELETE FROM File%s"), (LPCTSTR)condition);
+        query.Format(_T("DELETE FROM File %s"), (LPCTSTR)condition);
         GetDBCommitter()->AddDBQueryString(query);
         if (!fte.IsFileIDEmpty()) {// Delete word entries if md5 file count is zero
             CString csFileID(StringUtils::UTF8ToUnicode(fte.GetFileID()).c_str());
@@ -381,7 +381,7 @@ struct ItrFileTableCallbackData
 #define IsSearchContinue() (IsSearchStarted() && !bIsTerminated)
 int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
 {
-    CountTimer ct(2000 * 60); // 2 min
+    CountTimer ct(2000 * 60); // 2 min - db commit schedule at every 1 min, lets give 1 min to finish db, so total 2 min
     mSearchStartTime = SystemUtils::StringToLongLong(GetDatabase().GetProperty(_T("SearchStartTime")));
     if (!mSearchStartTime.GetTime())
         mSearchStartTime = CTime::GetCurrentTime();
@@ -396,20 +396,25 @@ int ContentSearchManager::ManagerThreadProc(LPVOID /*pInThreadData*/)
         // Iterate Files table
         if (ct.UpdateTimeDuration())
         {
-            if (IsSearchHasJob())
+            if (IsSearchHasJob()) {
                 finishCount = 0;
-            cbData.ullStartIndex = 0;
-            ItrTableRowsCallbackData_ContentSearchManager iterFile(this, &ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent, &cbData);
-            int retVal(iterFile.IterateTableRows(GetDatabase(), "File"));
-            if (501 == retVal) // call did not finish completely
-                SystemUtils::LogMessage(_T("Content Search Manager: More jobs. Waiting for workers to finish"));
-            else if (IsSearchHasJob())
-                SystemUtils::LogMessage(_T("Content Search Manager: More jobs to do."));
-            else {
-                cbData.ullEndIndex = 0;
-                ++finishCount;
-                SystemUtils::LogMessage(_T("Content Search Manager: finished searching"));
+                cbData.ullStartIndex = 0;
+                ItrTableRowsCallbackData_ContentSearchManager iterFile(this, &ContentSearchManager::ItrFileTableRowsCallbackFn_SearchContent, &cbData);
+                int retVal(iterFile.IterateTableRows(GetDatabase(), "File"));
+                if (501 == retVal) // call did not finish completely
+                    SystemUtils::LogMessage(_T("Content Search Manager: More jobs. Waiting for workers to finish"));
+                else if (IsSearchHasJob())
+                    SystemUtils::LogMessage(_T("Content Search Manager: More jobs to do."));
+                else {
+                    cbData.ullEndIndex = 0;
+                    SystemUtils::LogMessage(_T("Content Search Manager: finished jobs"));
+                }
             }
+            else {
+                ++finishCount;
+                SystemUtils::LogMessage(_T("Content Search Manager: No more jobs. Waiting for more jobs..."));
+            }
+            ct.UpdateTimeDuration(true);
         }
         else if (!IsSearchHasJob() && IsSearchFinished() && finishCount > 1)
             break;

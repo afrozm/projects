@@ -88,7 +88,7 @@ bool StdString::Trim(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLe
     return bUpdated;
 }
 
-StdString StdString::Trim(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLeft /*= true*/, bool bTrimRight /*= true*/) const
+StdString StdString::GetTrimString(const StdString & inTrimChars /*= " \t\r\n"*/, bool bTrimLeft /*= true*/, bool bTrimRight /*= true*/) const
 {
     StdString outStr(*this);
     outStr.Trim(inTrimChars, bTrimLeft, bTrimRight);

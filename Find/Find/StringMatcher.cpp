@@ -10,14 +10,17 @@ bool IsWildCardExp(LPCTSTR wildCardExp)
 
 StringMatcher* StringMatcher_GetStringMatcher(LPCTSTR inString)
 {
+	StdString strToMatch(inString);
     if (IsWildCardExp(inString))
         return new CRegExpMatcher(inString);
     if (StringMatcher_IsPhonetic(inString))
         return new CPhoneticStringMatcherList(inString+1);
-    if (StdString(inString).find(' ') != StdString::npos) // has spaces
+    if (strToMatch.find(' ') != StdString::npos
+		&& strToMatch[0] != '"') // has spaces
         return new CStringMatcherList(inString);
-    if (inString != nullptr && *inString)
-        return new CSimpleStringMatcher(inString);
+	strToMatch.Trim("\"");
+    if (!strToMatch.empty())
+        return new CSimpleStringMatcher(strToMatch);
     return nullptr;
 }
 bool StringMatcher_IsSimpleMatch(LPCTSTR inString)
@@ -178,7 +181,7 @@ void CStringMatcherList::SetExpression(LPCTSTR lpExpression /* = NULL */)
 		StringUtils::SplitString(mStrListToMatch, exp, _T(" "));
         
 		for (auto it = mStrListToMatch.begin(); it != mStrListToMatch.end();) {
-            ((StdString&)(*it)).Trim();
+            it->Trim();
             if (it->empty())
                 it = mStrListToMatch.erase(it);
             else
