@@ -30,6 +30,7 @@ void CDialogPreviewImages::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDialogPreviewImages, CDialogPreviewBase)
 	ON_WM_PAINT()
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 ULONG_PTR           gdiplusToken(0);
@@ -60,9 +61,16 @@ void CDialogPreviewImages::OnPaint( )
 {
 	PAINTSTRUCT ps;
 	CDC* pDC = BeginPaint(&ps);
-	Graphics g(pDC->m_hDC);
-	RECT cr;
-	GetClientRect(&cr);
+    CDC MemDC;
+    MemDC.CreateCompatibleDC(pDC);
+    CRect cr;
+    GetClientRect(&cr);
+    CBitmap bmp;
+    bmp.CreateCompatibleBitmap(pDC, cr.Width(), cr.Height());
+    MemDC.SelectObject(&bmp);
+    Graphics g(MemDC);
+    Gdiplus::SolidBrush br((ARGB)Gdiplus::Color::White);
+    g.FillRectangle(&br, cr.left, cr.top, cr.Width(), cr.Height());
 	Image *pImage((Image*)m_pImage);
 	RectF destRect(0.0f, 0.0f, (REAL)(cr.right - cr.left), (REAL)(cr.bottom - cr.top));
 	REAL srcwidth = (REAL)pImage->GetWidth();
@@ -83,5 +91,11 @@ void CDialogPreviewImages::OnPaint( )
 	}
 	// Draw the image.
 	g.DrawImage(pImage, destRect, 0.0f, 0.0f, srcwidth, srcheight, srcunit);
+    pDC->BitBlt(0, 0, cr.Width(), cr.Height(), &MemDC, 0, 0, SRCCOPY);
 	EndPaint(&ps);
+}
+
+BOOL CDialogPreviewImages::OnEraseBkgnd(CDC* /*pDC*/)
+{
+    return TRUE;
 }

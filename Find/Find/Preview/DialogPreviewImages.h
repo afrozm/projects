@@ -15,6 +15,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_DIALOG_PREVIEW_IMAGES };
 	afx_msg void OnPaint( );
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
