@@ -27,49 +27,39 @@ bool PrimeDatabase::IsPrime(unsigned long long number)
     GetTableRowCount(PRIME_TABLE_NAME, count, "WHERE Number = %llu", number);
     return count == 1;
 }
+struct ComputeRootIndexData {
+    unsigned long long pn;
+    unsigned long long rootPN;
+    unsigned long long rootIndex;
+};
 unsigned long long PrimeDatabase::GetPrimeNumber(unsigned long long * inOutIndex, unsigned long long * outRoot)
 {
-    unsigned long long pn[3] = { 0 };
-    ItrTableRowsCallbackData_PrimeDatabase itcb(this, &PrimeDatabase::IteratePrimeTable_Callback, pn);
+    unsigned long long pn =  0 ;
+    ItrTableRowsCallbackData_PrimeDatabase itcb(this, &PrimeDatabase::IteratePrimeTable_Callback, &pn);
     unsigned long long idx(inOutIndex && *inOutIndex != -1 ? *inOutIndex : TotalCount()-1);
-    std::string cond(StringUtils::UnicodeToUTF8(StringUtils::Format(_T("WHERE PrimeIndex = %llu"), idx).c_str()));
+    std::string cond(StringUtils::UnicodeToUTF8(StringUtils::Format(_T("LIMIT 1 OFFSET %llu"), idx).c_str()));
     itcb.IterateTableRows(*this, PRIME_TABLE_NAME, cond.c_str());
     if (inOutIndex)
-        *inOutIndex = pn[0];
-    if (outRoot)
-        *outRoot = pn[2];
-    return pn[1];
+        *inOutIndex = idx;
+    if (outRoot) {
+        ComputeRootIndexData cData = { pn, 0, 0 };
+        itcb.ItrTableRowsCallbackFn = &PrimeDatabase::IteratePrimeTable_Callback_ComputeRootIndex;
+        itcb.mpUserData = &cData;
+        itcb.IterateTableRows(*this, PRIME_TABLE_NAME);
+        *outRoot = cData.rootIndex;
+    }
+    return pn;
 }
 
-struct IterPrimeTableData_GetPrimeNumbers
-{
-    unsigned long long * pInOutArray;
-    unsigned long long nLength, totalCount;
-};
-unsigned long long PrimeDatabase::GetPrimeNumbers(unsigned long long * pInOutArray, unsigned long long nLength, unsigned long long startIndex)
-{
-    IterPrimeTableData_GetPrimeNumbers data = { pInOutArray, nLength };
-    ItrTableRowsCallbackData_PrimeDatabase itcb(this, &PrimeDatabase::IteratePrimeTable_Callback_GetPrimeNumbers, &data);
-    std::string cond(StringUtils::UnicodeToUTF8(StringUtils::Format(_T("WHERE PrimeIndex >= %llu"), startIndex).c_str()));
-    itcb.IterateTableRows(*this, PRIME_TABLE_NAME, cond.c_str());
-    return data.totalCount;
-}
-
-unsigned long long PrimeDatabase::AddPrimeNumber(unsigned long long idx,
-    unsigned long long nextHighestPrimeNumber, unsigned long long rootIndex)
+unsigned long long PrimeDatabase::AddPrimeNumber(unsigned long long nextHighestPrimeNumber)
 {
 #ifdef _DEBUG
-    assert(idx == TotalCount());
     assert(nextHighestPrimeNumber > GetPrimeNumber());
-    unsigned long long ri(rootIndex);
-    ri = GetPrimeNumber(&ri);
-    assert(nextHighestPrimeNumber <= 2 || ri*ri >= nextHighestPrimeNumber);
 #endif // _DEBUG
 
-    mTotalCount++;
-    QueryNonRows("INSERT OR REPLACE INTO Prime VALUES(%llu,%llu,%llu)", idx, nextHighestPrimeNumber, rootIndex);
+    QueryNonRows("INSERT OR REPLACE INTO Prime VALUES(%llu)", nextHighestPrimeNumber);
     Commit();
-    return idx;
+    return mTotalCount++;
 }
 
 unsigned long long PrimeDatabase::TotalCount()
@@ -129,7 +119,7 @@ bool PrimeDatabase::RemoveProperty(const lstring &propName)
 bool PrimeDatabase::SetProperty(const lstring &propName, const lstring &propValue)
 {
     lstring propVals(propValue);
-    StringUtils::Replace(propVals, _T("'"), _T("''"));
+    StringUtils::Replace<wchar_t>(propVals, _T("'"), _T("''"));
     propVals = _T("'") + propName + _T("','") + propVals + _T("'");
     return QueryNonRows("INSERT OR REPLACE INTO Property VALUES(%s)",
         StringUtils::UnicodeToUTF8(propVals.c_str()).c_str()) == 0;
@@ -163,9 +153,7 @@ void PrimeDatabase::Init()
 
     const char *kPrimeDatabaseSchema[] = {
         "CREATE TABLE `Prime` (\
-        `PrimeIndex`	INTEGER NOT NULL UNIQUE,\
             `PrimeNumber`	INTEGER NOT NULL UNIQUE,\
-            `RootIndex`	INTEGER NOT NULL,\
             PRIMARY KEY(PrimeNumber) );",
         "CREATE TABLE Property ( Name TEXT NOT NULL,Value TEXT NOT NULL ,PRIMARY KEY (Name) );",
     };
@@ -174,9 +162,8 @@ void PrimeDatabase::Init()
         for (int i = 0; i < _countof(kPrimeDatabaseSchema); ++i)
             QueryNonRows(kPrimeDatabaseSchema[i]);
         long long initialPrime[] = { 1, 2, 3, 5, 7 };
-        long long initialPrimeRoot[] = { 0, 0, 1, 2, 2 };
         for (int i = 0; i < _countof(initialPrime); i++)
-            AddPrimeNumber(i, initialPrime[i], initialPrimeRoot[i]);
+            AddPrimeNumber(initialPrime[i]);
         Commit(true);
     }
 }
@@ -184,16 +171,18 @@ void PrimeDatabase::Init()
 int PrimeDatabase::IteratePrimeTable_Callback(sqlite3_stmt * statement, void * pUserData)
 {
     unsigned long long *pULLNumber((unsigned long long *)pUserData);
-    int numColumns = sqlite3_column_count(statement);
-    for (int col = 0; col < numColumns; ++col)
-        pULLNumber[col] = sqlite3_column_int64(statement, col);
+    *pULLNumber = sqlite3_column_int64(statement, 0);
     return 1;
 }
 
-int PrimeDatabase::IteratePrimeTable_Callback_GetPrimeNumbers(sqlite3_stmt * statement, void * pUserData)
+int PrimeDatabase::IteratePrimeTable_Callback_ComputeRootIndex(sqlite3_stmt *statement, void *pUserData)
 {
-    IterPrimeTableData_GetPrimeNumbers *pData((IterPrimeTableData_GetPrimeNumbers*)pUserData);
-    *pData->pInOutArray++ = sqlite3_column_int64(statement, 1);
-    pData->totalCount++;
-    return pData->totalCount >= pData->nLength;
+    ComputeRootIndexData *pData((ComputeRootIndexData *)pUserData);
+    unsigned long long curPN = sqlite3_column_int64(statement, 0);
+    if (curPN * curPN >= pData->pn) {
+        pData->rootPN = curPN;
+        return 1; // stop
+    }
+    pData->rootIndex++;
+    return 0;
 }

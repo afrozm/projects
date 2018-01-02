@@ -3,6 +3,7 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include "StringUtils.h"
+#include "STLUtils.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -186,8 +187,8 @@ Path Path::TempFile(const Path & inPath, LPCTSTR preFix, LPCTSTR ext, unsigned l
 
     do {
         path = inPath.Append(preFix);
-        CString num;
-        num.Format(_T("%u"), startNum++);
+        lstring num;
+        STLUtils::ChangeType(startNum++, num);
         path += num;
         path = path.RenameExtension(ext);
     } while (path.Exists());

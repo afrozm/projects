@@ -133,7 +133,7 @@ bool PrimeNumber::CheckIfPrime()
 
 void PrimeNumber::AddPrime()
 {
-    m_ullIndex = mPrimeDatabase.AddPrimeNumber(m_ullIndex + 1, m_ullNumber, m_ullRootIdx);
+    m_ullIndex = mPrimeDatabase.AddPrimeNumber(m_ullNumber);
     if (m_ullIndex < mCachedPrime.size())
         mCachedPrime[m_ullIndex] = m_ullNumber;
 }
