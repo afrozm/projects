@@ -573,6 +573,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
+    if (!lstrcmpi(lpCmdLine, _T("startup")))
+        Sleep(1000 * 60); // for startup work after 1 min
 	int retVal(CRegisterSelf().Register());
 	if (retVal)
 		return retVal;
