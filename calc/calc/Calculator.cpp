@@ -8,7 +8,8 @@
 #include "stdafx.h"
 #include "Calculator.h"
 #include <cmath>
-#include "stlutils.h"
+#include "STLUtils.h"
+#include "StringUtils.h"
 
 #define PI 3.14159265358979323846
 #define E 2.71828182845904523536
@@ -691,7 +692,7 @@ Number Calculator::EvaluateExpression(const char * expression)
 		const char *whiteSpaces[] = { " ", "\t", "\r", "\n" };
 		for (auto whiteSpace : whiteSpaces)
 			StringUtils::Replace(str, std::string(whiteSpace), std::string(""));
-		expr = StringUtils::ToLower(str);
+		expr = StdString(str).ToLower();
 	}
 	//printf("%s\n", expr.c_str());
 	VecExpressionEntity postFix;
