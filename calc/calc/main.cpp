@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "Calculator.h"
-#include "stlutils.h"
+#include "STLUtils.h"
 
 static void printHelp()
 {
