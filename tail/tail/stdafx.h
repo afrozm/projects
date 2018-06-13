@@ -19,25 +19,4 @@
 
 #include <string>
 #include <shlwapi.h>
-
-#if defined(UNICODE) || (_UNICODE)
-typedef std::wstring lstring;
-#else
-typedef std::string lstring;
-#endif
-
-#if defined(_UNICODE) || defined(UNICODE)
-#define lprintf wprintf
-#define  lputchar putwchar
-//#define lputs _putws
-#define lstrncmp wcsncmp
-#define lstrncmpi wcsnicmp
-#define lfopen _wfopen
-#else
-#define lprintf printf
-#define  lputchar putchar
-//#define lputs puts
-#define lstrncmp strncmp
-#define lstrncmpi strnicmp
-#define lfopen fopen
-#endif
+#include "Common.h"

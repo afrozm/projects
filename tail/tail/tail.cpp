@@ -63,10 +63,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		if (_kbhit() && _getch() == 27) { // ESC pressed
 			break;
 		}
-		lstring line(textReader.ReadLine());
-		if (!line.empty()) {
-			_tprintf(_T("%s\n"), line.c_str());
-		}
+		lstring line(textReader.ReadLine(_T("\n")));
+		if (!line.empty())
+			_tprintf(_T("%s"), line.c_str());
 		else Sleep(100);
 		textReader.SetFilePos(0, FILE_CURRENT);
 	}

@@ -18,7 +18,7 @@ public:
     BOOL SetInput(LPCTSTR fileName = NULL, const BinaryData *pData = NULL);
     virtual BOOL SetFile(LPCTSTR fileName) { return SetInput(fileName); }
 	TCHAR ReadChar();
-	lstring ReadLine();
+	lstring ReadLine(LPCTSTR includeLineFeed = nullptr);
 	lstring ReadLine(LONGLONG atPos);
     lstring Read(DWORD nBytes = 64*1024);
 	LONGLONG GetFilePos();
@@ -28,7 +28,7 @@ public:
 	int LineCount();
     BOOL IsValidTextFile();
 private:
-	lstring ReadLineUTF8();
+	lstring ReadLineUTF8(LPCTSTR includeLineFeed = nullptr);
     DataReader *m_pDataReader;
     BinaryDataReader mBinaryDataReader;
     FileDataReader mFileDataReader;

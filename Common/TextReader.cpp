@@ -109,10 +109,10 @@ API_EXIT:
 	return tch;
 }
 
-lstring CTextReader::ReadLine()
+lstring CTextReader::ReadLine(LPCTSTR includeLineFeed /* = nullptr */)
 {
 	if (mFileEncoding == FileEncoding_UTF8)
-		return ReadLineUTF8();
+		return ReadLineUTF8(includeLineFeed);
 	TCHAR line[1024];
 	lstring str;
 	int c = 0;
@@ -133,14 +133,16 @@ lstring CTextReader::ReadLine()
 	}
 	line[c] = 0;
 	str += line;
-	return str;
+    if (!str.empty() && (ch == '\n' || ch == '\r') && includeLineFeed != nullptr)
+        str += includeLineFeed;
+    return str;
 }
 lstring CTextReader::ReadLine(LONGLONG atPos)
 {
 	SetFilePos(atPos);
 	return ReadLine();
 }
-lstring CTextReader::ReadLineUTF8()
+lstring CTextReader::ReadLineUTF8(LPCTSTR includeLineFeed /* = nullptr */)
 {
 	int len = 1024;
 	char *line = (char *)malloc(len);
@@ -176,6 +178,8 @@ lstring CTextReader::ReadLineUTF8()
 			delete[] convString;
 	}
 	free(line);
+    if (!str.empty() && (ch == '\n' || ch == '\r') && includeLineFeed != nullptr)
+        str += includeLineFeed;
 	return str;
 }
 
