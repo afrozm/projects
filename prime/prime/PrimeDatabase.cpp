@@ -24,7 +24,7 @@ PrimeDatabase::~PrimeDatabase()
 bool PrimeDatabase::IsPrime(unsigned long long number)
 {
     unsigned long long count(0);
-    GetTableRowCount(PRIME_TABLE_NAME, count, "WHERE Number = %llu", number);
+    GetTableRowCount(PRIME_TABLE_NAME, count, "WHERE PrimeNumber = %llu", number);
     return count == 1;
 }
 struct ComputeRootIndexData {

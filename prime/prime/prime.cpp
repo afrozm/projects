@@ -30,18 +30,23 @@ static void BuildPrime()
     }
 }
 
-bool IsPrime(unsigned long long number)
+static bool IsPrime(unsigned long long number)
 {
     return PrimeNumber().IsPrime(number);
 }
-
+static unsigned long long NthPrimeNumber(unsigned long long number)
+{
+    return PrimeNumber().GetNthPrime(number);
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
     if (argc > 1) {
         for (int i = 1; i < argc; ++i) {
-            unsigned long long number(StringUtils::getLLfromStr(argv[i]));
-            _tprintf(_T("%llu:%d"), number, IsPrime(number));
+            bool nNth(!isdigit(argv[i][0]));
+            unsigned long long number(StringUtils::getLLfromStr(argv[i]+nNth));
+            _tprintf(_T("%llu%s:%llu\n"), number, nNth ? _T("th") : _T(""),
+                nNth ? NthPrimeNumber(number) : IsPrime(number));
         }
     }
     else
