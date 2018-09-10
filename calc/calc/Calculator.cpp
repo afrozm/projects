@@ -3,13 +3,14 @@
 //  calc
 //
 //  Created by Afroz Muzammil on 23/11/16.
-//  Copyright © 2016 Afroz Muzammil. All rights reserved.
+//  Copyright © 2018 Afroz Muzammil. All rights reserved.
 //
 #include "stdafx.h"
 #include "Calculator.h"
 #include <cmath>
 #include "STLUtils.h"
 #include "StringUtils.h"
+#include <algorithm>
 
 #define PI 3.14159265358979323846
 #define E 2.71828182845904523536
@@ -133,7 +134,27 @@ void Number::SetNumber(const char *number, int *outIndex /*= NULL*/)
 		}
 		SetNumber(binNumber);
 	}
-	else {
+    // hex
+    if (number[0] == '0'
+        && number[1] == 'x') {
+        idx += 2;
+        number += 2;
+        long long hexNumber(0);
+        char chNumber(*number);
+        while ((chNumber >= 'a' && chNumber <= 'f')
+            || (chNumber >= '0' && chNumber <= '9')) {
+            hexNumber <<= 4;
+            if ((chNumber >= 'a' && chNumber <= 'f'))
+                hexNumber |= 0xA + chNumber - 'a';
+            else
+                hexNumber |= chNumber - '0';
+            ++number;
+            ++idx;
+            chNumber = *number;
+        }
+        SetNumber(hexNumber);
+    }
+    else {
 		try {
 			long long np(std::stoll(number, &idx, 0));
 			if (bMinus)
