@@ -1,14 +1,15 @@
 #pragma once
 
 #include "PrimeDatabase.h"
-#include <vector>
+#include "Number.h"
 
 class PrimeNumber
 {
 public:
     PrimeNumber();
     ~PrimeNumber();
-    bool IsPrime(unsigned long long number);
+    unsigned long long IsPrime(unsigned long long number);
+    Number IsPrime(const Number& number);
     void StartCompute();
     bool ComputeNextPrime();
     void EndCompute();
@@ -16,6 +17,7 @@ public:
     bool Completed() const;
     // start from index 0
     unsigned long long GetNthPrime(unsigned long long n);
+    Number GetNthPrime(const Number&  n);
 private:
     void ComputeRootPN();
     bool CheckIfPrime();

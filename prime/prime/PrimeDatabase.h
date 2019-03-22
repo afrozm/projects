@@ -10,7 +10,7 @@ class PrimeDatabase :
 public:
     PrimeDatabase(bool bReadOnly = false);
     ~PrimeDatabase();
-    bool IsPrime(unsigned long long number);
+    bool IsPrime(unsigned long long number, bool *bNotFound = nullptr);
     unsigned long long GetPrimeNumber(unsigned long long *inOutIndex = NULL, unsigned long long *outRoot = NULL);
     unsigned long long AddPrimeNumber(unsigned long long nextHighestPrimeNumber);
     unsigned long long TotalCount();

@@ -8,11 +8,29 @@ BinaryData::BinaryData(const void * pBuffer, size_t bufLen, bool bStore)
 }
 
 
-void BinaryData::SetData(const void *pBuffer /*= NULL*/, size_t bufLen /*= 0*/, bool bStore /*= true*/)
+BinaryData::BinaryData(BinaryData&& other)
+    : mBuffer(std::move(other.mBuffer)), m_pBuffer(other.m_pBuffer), mBufferSize(other.mBufferSize), mDataSize(other.mDataSize)
 {
-    mBuffer.clear();
+    
+}
+
+BinaryData& BinaryData::operator=(BinaryData &&other)
+{
+    SetData();
+    mBuffer = std::move(other.mBuffer);
+    std::swap(m_pBuffer, other.m_pBuffer);
+    std::swap(mBufferSize, other.mBufferSize);
+    std::swap(mDataSize, other.mDataSize);
+    return *this;
+}
+
+void BinaryData::SetData(const void *pBuffer /* = NULL */, size_t bufLen /* = 0 */, bool bStore /* = true */, bool bClear /* = true */)
+{
+    if (bClear || bufLen == 0) {
+        mBuffer.clear();
+        mDataSize = 0;
+    }
     mBufferSize = bufLen;
-    mDataSize = 0;
     bool bSetDataSize(true);
     if (!bStore) {
         m_pBuffer = pBuffer;
@@ -89,6 +107,16 @@ unsigned char BinaryData::operator[](size_t index) const
     if (index < DataSize())
         ch = ((const unsigned char *)((const void *)*this))[index];
     return ch;
+}
+
+unsigned char& BinaryData::operator[](size_t index)
+{
+    if (index >= Size()) {
+        if (index > Size() + 4096)
+            index = Size();
+        SetData(m_pBuffer ? m_pBuffer : nullptr, index + 1, true, false);
+    }
+    return ((unsigned char *)((void *)*this))[index];
 }
 
 const void* BinaryData::operator+(size_t inOffset) const

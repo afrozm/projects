@@ -34,7 +34,7 @@ namespace StringUtils
     typedef std::vector<StdString> VecString;
     int SplitString(VecString &outStrings, const lstring &inStr, const lstring &inSepChars = _T(","), bool bIncludeEmpty = false, int maxCount = -1);
     bool TrimString(lstring &inOutStr, const lstring &inTrimChars = _T(" \t\r\n"), bool bTrimLeft = true, bool bTrimRight = true);
-    long long getLLfromStr(const TCHAR *str);
+    long long getLLfromStr(const TCHAR *str, bool *bError = nullptr);
     lstring Format(const TCHAR *fmt, ...);
 	template<typename T>
 	void Replace(std::basic_string<T> &inOutStr, const std::basic_string<T> &inFindStr, const std::basic_string<T> &inReplaceStr, size_t pos = 0)

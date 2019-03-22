@@ -145,15 +145,23 @@ bool StringUtils::TrimString(lstring & inOutStr, const lstring & inTrimChars, bo
     return bUpdated;
 }
 
-long long StringUtils::getLLfromStr(const TCHAR *str)
+long long StringUtils::getLLfromStr(const TCHAR *str, bool *bError /* = nullptr */)
 {
+    if (bError)
+        *bError = true;
     if (str == NULL || *str == 0)
         return 0;
     bool bMinus(*str == '-');
     if (bMinus)
         ++str;
     long long retVal = 0;
-    try { retVal = std::stoll(str, NULL, 0); } catch (...) {}
+    try {
+        retVal = std::stoll(str, NULL, 0);
+    } catch (...)
+    {
+        if (bError)
+            *bError = true;
+    }
     if (bMinus)
         retVal = -retVal;
     return retVal;

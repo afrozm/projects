@@ -21,12 +21,18 @@ PrimeDatabase::~PrimeDatabase()
     Commit(true);
 }
 
-bool PrimeDatabase::IsPrime(unsigned long long number)
+bool PrimeDatabase::IsPrime(unsigned long long number, bool *bNotFound /* = nullptr */)
 {
+    if (number > GetPrimeNumber()) {
+        if (bNotFound)
+            *bNotFound = true;
+        return false;
+    }
     unsigned long long count(0);
     GetTableRowCount(PRIME_TABLE_NAME, count, "WHERE PrimeNumber = %llu", number);
     return count == 1;
 }
+
 struct ComputeRootIndexData {
     unsigned long long pn;
     unsigned long long rootPN;

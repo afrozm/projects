@@ -12,7 +12,9 @@ class BinaryData
 {
 public:
     BinaryData(const void *pBuffer = NULL, size_t bufLen = 0, bool bStore = true);
-    void SetData(const void *pBuffer = NULL, size_t bufLen = 0, bool bStore = true);
+    BinaryData(BinaryData&& other);
+    BinaryData& operator=(BinaryData &&other);
+    void SetData(const void *pBuffer = NULL, size_t bufLen = 0, bool bStore = true, bool bClear = true);
     ~BinaryData();
     operator const void*() const;
     operator void*() const;
@@ -22,6 +24,7 @@ public:
     bool operator < (const BinaryData &inData) const;
     int Compare(const BinaryData &inData) const;
     unsigned char operator[](size_t index) const;
+    unsigned char& operator[](size_t index);
     const void* operator + (size_t inOffset) const;
     size_t BuildFromString(const TCHAR *pStr, bool asString = false);
     size_t ReadFromFile(FILE *pFile, size_t nBytesToRead = 0, long long fileOffset = -1);

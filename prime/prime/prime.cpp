@@ -5,6 +5,7 @@
 #include "PrimeNumber.h"
 #include <conio.h>
 #include "StdConsole.h"
+#include "Number.h"
 
 static void BuildPrime()
 {
@@ -30,23 +31,25 @@ static void BuildPrime()
     }
 }
 
-static bool IsPrime(unsigned long long number)
-{
-    return PrimeNumber().IsPrime(number);
-}
-static unsigned long long NthPrimeNumber(unsigned long long number)
-{
-    return PrimeNumber().GetNthPrime(number);
-}
-
 int _tmain(int argc, _TCHAR* argv[])
 {
     if (argc > 1) {
         for (int i = 1; i < argc; ++i) {
             bool nNth(!isdigit(argv[i][0]));
-            unsigned long long number(StringUtils::getLLfromStr(argv[i]+nNth));
-            _tprintf(_T("%llu%s:%llu\n"), number, nNth ? _T("th") : _T(""),
-                nNth ? NthPrimeNumber(number) : IsPrime(number));
+            Number number(UNICODE_TO_UTF8(argv[i]+nNth).c_str());
+            printf("%s ", number.ToString().c_str());
+            if (nNth)
+                printf("prime number is %s", PrimeNumber().GetNthPrime(number).ToString().c_str());
+            else {
+                number = PrimeNumber().IsPrime(number);
+                if (!number)
+                    printf("cannot determine prime number");
+                else if (number > Number(1LL))
+                    printf("is not a prime number - divisible by %s", number.ToString().c_str());
+                else
+                    printf("is a prime number");
+            }
+            printf("\n");
         }
     }
     else

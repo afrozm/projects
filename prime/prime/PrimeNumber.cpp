@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "PrimeNumber.h"
 #include "CountTimer.h"
-
+static unsigned CumulitiveSum(unsigned long long n);
 PrimeNumber::PrimeNumber()
     : m_ullRootIdx(0), m_ullIndex(-1), m_ullNumber(0), m_uIncrIndex(0),
     m_ullSQOfRootPN(0), // Square of root prime number
@@ -15,9 +15,53 @@ PrimeNumber::~PrimeNumber()
 {
 }
 
-bool PrimeNumber::IsPrime(unsigned long long number)
+unsigned long long PrimeNumber::IsPrime(unsigned long long number)
 {
-    return mPrimeDatabase.IsPrime(number);
+    bool bNotFound(false);
+    bool bIsPrime(mPrimeDatabase.IsPrime(number, &bNotFound));
+    if (!bIsPrime && bNotFound) { // compute
+        if (!(number & 1)) // 2
+            return false;
+        m_ullNumber = 5;
+        m_uNumberCumulitiveSum = CumulitiveSum(number);
+        // divisible by 3
+        if (m_uNumberCumulitiveSum == 3 || m_uNumberCumulitiveSum == 6 || m_uNumberCumulitiveSum == 9)
+            return false;
+        if (number % 5 == 0)
+            return false;
+        m_uIncrIndex = 5;
+        m_uNumberCumulitiveSum = 5;
+        m_ullRootIdx = 7;
+        m_ullSQOfRootPN = 49;
+        while (m_ullSQOfRootPN <= number)
+        {
+            // increment to next number
+            while (true) {
+                NextNumber();
+                if (m_uNumberCumulitiveSum == 3 || m_uNumberCumulitiveSum == 6 || m_uNumberCumulitiveSum == 9) continue;
+                else break;
+            }
+            if (!(number % m_ullNumber))
+                return m_ullNumber;
+            if (m_ullRootIdx < m_ullNumber) {
+                m_ullSQOfRootPN = m_ullNumber * m_ullNumber;
+                m_ullRootIdx = m_ullNumber;
+            }
+        }
+        bIsPrime = true;
+    }
+    return bIsPrime;
+}
+
+Number PrimeNumber::IsPrime(const Number& number)
+{
+    bool bOverflow(false);
+    long long ll(number.ToLL(&bOverflow));
+    if (!bOverflow)
+        bOverflow = number >= Number(0xafffffffLL * 0xafffffffLL);
+    if (!bOverflow)
+        return IsPrime(ll);
+    return 0LL;
 }
 
 static unsigned CumulitiveSum(unsigned long long n)
@@ -91,6 +135,8 @@ void PrimeNumber::EndCompute()
 
 unsigned long long PrimeNumber::GetCurrentHighestPrime()
 {
+    if (m_ullNumber == 0)
+        m_ullNumber = mPrimeDatabase.GetPrimeNumber(&m_ullIndex, &m_ullRootIdx);
     return m_ullNumber;
 }
 
@@ -107,6 +153,15 @@ unsigned long long PrimeNumber::GetNthPrime(unsigned long long n)
     if (*p == 0)
         *p = mPrimeDatabase.GetPrimeNumber(&n);
     return *p;
+}
+
+Number PrimeNumber::GetNthPrime(const Number& n)
+{
+    bool bOverflow(false);
+    long long ll(n.ToLL(&bOverflow));
+    if (!bOverflow)
+        return GetNthPrime(ll);
+    return Number();
 }
 
 void PrimeNumber::ComputeRootPN()
