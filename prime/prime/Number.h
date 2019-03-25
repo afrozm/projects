@@ -34,7 +34,7 @@ public:
     std::string ToString() const;
     long long ToLL(bool *bOverflowed = nullptr) const;
     Number Devide(const Number &other, Number &remainder) const;
-    Number FromRange(size_t start, size_t end) const;
+    Number SquareRoot(Number *outRemainder = nullptr) const;
 protected:
     void SetNumber(const char *n = nullptr);
     void SetNumber(long long n);
@@ -45,6 +45,8 @@ protected:
     void ResizeLeadingZeros();
     void Shift(unsigned s, bool bLeft = true);
     int GetDevide(const Number *table) const;
+    Number FromRange(size_t start, size_t end) const;
+    int SqRootGetFactor(const Number &n, Number &multResult) const;
     BinaryData mNumber;
     bool mbNegative = false;
 };

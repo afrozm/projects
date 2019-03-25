@@ -2,6 +2,7 @@
 #include "PrimeNumber.h"
 #include "CountTimer.h"
 static unsigned CumulitiveSum(unsigned long long n);
+static unsigned CumulitiveSum(const Number &n);
 PrimeNumber::PrimeNumber()
     : m_ullRootIdx(0), m_ullIndex(-1), m_ullNumber(0), m_uIncrIndex(0),
     m_ullSQOfRootPN(0), // Square of root prime number
@@ -21,14 +22,14 @@ unsigned long long PrimeNumber::IsPrime(unsigned long long number)
     bool bIsPrime(mPrimeDatabase.IsPrime(number, &bNotFound));
     if (!bIsPrime && bNotFound) { // compute
         if (!(number & 1)) // 2
-            return false;
+            return 2LL;
         m_ullNumber = 5;
         m_uNumberCumulitiveSum = CumulitiveSum(number);
         // divisible by 3
         if (m_uNumberCumulitiveSum == 3 || m_uNumberCumulitiveSum == 6 || m_uNumberCumulitiveSum == 9)
-            return false;
+            return 3LL;
         if (number % 5 == 0)
-            return false;
+            return 5LL;
         m_uIncrIndex = 5;
         m_uNumberCumulitiveSum = 5;
         m_ullRootIdx = 7;
@@ -61,7 +62,31 @@ Number PrimeNumber::IsPrime(const Number& number)
         bOverflow = number >= Number(0xafffffffLL * 0xafffffffLL);
     if (!bOverflow)
         return IsPrime(ll);
-    return 0LL;
+    // divisible by 2
+    if (!(number[0] & 1))
+        return 2LL;
+    m_uNumberCumulitiveSum = CumulitiveSum(number);
+    // divisible by 3
+    if (m_uNumberCumulitiveSum == 3 || m_uNumberCumulitiveSum == 6 || m_uNumberCumulitiveSum == 9)
+        return 3LL;
+    // divisible by 5
+    if (number[0] == 5)
+        return 5LL;
+    Number sqRoot(number.SquareRoot());
+    Number numberToCheck(5LL);
+    m_uIncrIndex = 5;
+    m_uNumberCumulitiveSum = 5;
+    while (numberToCheck <= sqRoot) {
+        // increment to next number
+        while (true) {
+            NextNumber(numberToCheck);
+            if (m_uNumberCumulitiveSum == 3 || m_uNumberCumulitiveSum == 6 || m_uNumberCumulitiveSum == 9) continue;
+            else break;
+        }
+        if (!(number % numberToCheck))
+            return numberToCheck;
+    }
+    return 1LL;
 }
 
 static unsigned CumulitiveSum(unsigned long long n)
@@ -73,6 +98,18 @@ static unsigned CumulitiveSum(unsigned long long n)
         if (sum > 9)
             sum -= 9;
     }
+    return sum;
+}
+static unsigned CumulitiveSum(const Number &n)
+{
+    unsigned sum(0);
+
+    for (int i = (int)n.Size() - 1; i >= 0; --i) {
+        sum += n[i];
+        if (sum > 9)
+            sum -= 9;
+    }
+
     return sum;
 }
 static std::size_t GetRecommendedAllocSize()
@@ -197,6 +234,20 @@ void PrimeNumber::NextNumber()
 {
     const int incr(sIndices[m_uIncrIndex]);
     m_ullNumber += incr;
+    m_uIncrIndex += incr;
+    m_uNumberCumulitiveSum += incr;
+    if (m_uNumberCumulitiveSum > 9)
+        m_uNumberCumulitiveSum -= 9;
+    if (m_uIncrIndex >= _countof(sIndices))
+        m_uIncrIndex -= _countof(sIndices);
+}
+
+//                                  0,  1,  2,  3,  4,  5,  6,  7,  8,  9
+static const Number sNIndices[] = { 1LL,2LL,1LL,4LL,3LL,2LL,1LL,2LL,1LL,2LL };
+void PrimeNumber::NextNumber(Number &number)
+{
+    number += sNIndices[m_uIncrIndex];
+    const int incr(sIndices[m_uIncrIndex]);
     m_uIncrIndex += incr;
     m_uNumberCumulitiveSum += incr;
     if (m_uNumberCumulitiveSum > 9)

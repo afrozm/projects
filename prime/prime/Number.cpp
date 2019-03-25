@@ -108,6 +108,7 @@ Number Number::operator* (const Number& other) const
             int c = 0;
             for (size_t ti = 0; ti < top.Size(); ++ti) {
                 int mul = top[ti] * bottom[bi] + c;
+                c = 0;
                 if (mul > 9) {
                     c = mul / 10;
                     mul %= 10;
@@ -282,6 +283,79 @@ Number Number::Devide(const Number &other, Number &remainder) const
         result.ResizeLeadingZeros();
     }
 
+    return result;
+}
+int Number::SqRootGetFactor(const Number &n, Number &multResult) const
+{
+    int maxIndex(10), minIndex(0);
+    int mid((maxIndex + minIndex) >> 1);
+    int lastMid(mid);
+    Number base(*this + *this);
+    base <<= 1;
+    while (maxIndex - minIndex > 1) {
+        base[0] = mid;
+        multResult = base * Number(mid);
+        bool isEqual(false);
+        if (multResult.IsLesserThan(n, &isEqual))
+            minIndex = mid;
+        else if (isEqual) {
+            lastMid = mid;
+            break;
+        }
+        else
+            maxIndex = mid;
+        lastMid = mid;
+        mid = (maxIndex + minIndex) >> 1;
+    }
+    if (lastMid != mid) {
+        base[0] = mid;
+        multResult = base * Number(mid);
+    }
+    return mid;
+        //Number b((*this) << 1);
+    //unsigned i = 1;
+    //Number m;
+    //for (; i < 10; ++i) {
+    //    b[0] = i;
+    //    m = b * Number(i);
+    //    if (n < m)
+    //        break;
+    //    multResult = m;
+    //}
+    //if (i == 10)
+    //    multResult = m;
+    //return i - 1;
+}
+
+
+Number Number::SquareRoot(Number *outRemainder /*= nullptr*/) const
+{
+    Number result;
+    if (!(*this) || outRemainder && outRemainder == this)
+        return result;
+    result.mbNegative = mbNegative;
+    int startIndex((int)Size());
+    int endIndex(startIndex > 1 ? (startIndex % 2 ? startIndex - 1 : startIndex - 2) : 0);
+    Number remainder(FromRange(startIndex, endIndex));
+    while (startIndex > 0) {
+        {
+            Number r;
+            int f = result.SqRootGetFactor(remainder, r);
+            remainder -= r;
+            result <<= 1;
+            result[0] = f;
+        }
+        // bring two digits bottom
+        startIndex = endIndex - 1;
+        if (endIndex > 0) {
+            remainder <<= 2;
+            remainder[1] = (*this)[startIndex];
+            remainder[0] = (*this)[startIndex - 1];
+            endIndex = startIndex - 1;
+        }
+    }
+    if (outRemainder)
+        *outRemainder = remainder;
     return result;
 }
 

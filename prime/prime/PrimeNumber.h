@@ -23,6 +23,7 @@ private:
     bool CheckIfPrime();
     void AddPrime();
     void NextNumber();
+    void NextNumber(Number &number);
 
 
     PrimeDatabase mPrimeDatabase;
