@@ -44,7 +44,8 @@ protected:
     int GetSubstrackCarry(size_t index);
     void ResizeLeadingZeros();
     void Shift(unsigned s, bool bLeft = true);
-    int GetDevide(const Number *table) const;
+    class Table;
+    int GetDevide(const Number& other, Table &table) const;
     Number FromRange(size_t start, size_t end) const;
     int SqRootGetFactor(const Number &n, Number &multResult) const;
     BinaryData mNumber;

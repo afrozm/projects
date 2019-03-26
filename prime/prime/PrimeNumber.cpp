@@ -32,9 +32,8 @@ unsigned long long PrimeNumber::IsPrime(unsigned long long number)
             return 5LL;
         m_uIncrIndex = 5;
         m_uNumberCumulitiveSum = 5;
-        m_ullRootIdx = 7;
-        m_ullSQOfRootPN = 49;
-        while (m_ullSQOfRootPN <= number)
+        m_ullSQOfRootPN = (unsigned long long)sqrtl((long double)number);
+        while (m_ullNumber <= m_ullSQOfRootPN)
         {
             // increment to next number
             while (true) {
@@ -44,10 +43,6 @@ unsigned long long PrimeNumber::IsPrime(unsigned long long number)
             }
             if (!(number % m_ullNumber))
                 return m_ullNumber;
-            if (m_ullRootIdx < m_ullNumber) {
-                m_ullSQOfRootPN = m_ullNumber * m_ullNumber;
-                m_ullRootIdx = m_ullNumber;
-            }
         }
         bIsPrime = true;
     }

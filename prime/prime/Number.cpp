@@ -31,13 +31,16 @@ Number::Number(Number&& other)
 
 Number::operator bool() const
 {
-    const size_t size(Size());
-    if (size == 0)
-        return false;
-    for (size_t i = 0; i < size; ++i)
-        if (mNumber[i])
-            return true;
-    return false;
+    return Size() > 0;
+    // May be check this later
+    //const size_t size(Size());
+    //if (size == 0)
+    //    return false;
+    //if (size > 0)
+    //for (size_t i = 0; i < size; ++i)
+    //    if (mNumber[i])
+    //        return true;
+    //return false;
 }
 
 
@@ -223,9 +226,27 @@ long long Number::ToLL(bool *bOverflowed /* = nullptr */) const
         ll = -ll;
     return ll;
 }
-
+class Number::Table {
+public:
+    Table(const Number &n) : number(n) {}
+    const Number& operator[](int index)
+    {
+        if (index < 0 || index > 9) {
+            static Number e;
+            e = 0LL;
+            return e;
+        }
+        Number &t(table[index]);
+        if (!t)
+            t = number * Number(index + 1);
+        return t;
+    }
+private:
+    const Number &number;
+    Number table[10];
+};
 // GetDevide - Returns 1 to 9 number divisible
-int Number::GetDevide(const Number *table) const
+int Number::GetDevide(const Number& other, Table &table) const
 {
     int maxIndex(10), minIndex(0);
     int mid((maxIndex + minIndex) >> 1);
@@ -255,9 +276,7 @@ Number Number::Devide(const Number &other, Number &remainder) const
     else if (isEqual)
         result = 1LL;
     else {
-        Number table[10];
-        for (int i = 0; i < 10; ++i)
-            table[i] = other * Number(i+1);
+        Table table(other);
         int startIndex((int)Size());
         int endIndex(startIndex - (int)other.Size());
         remainder = FromRange(startIndex, endIndex);
@@ -275,7 +294,7 @@ Number Number::Devide(const Number &other, Number &remainder) const
             startIndex = endIndex;
             if (!remainder.IsLesserThan(other)) {
                 result <<= 1;
-                int mult(remainder.GetDevide(table));
+                int mult(remainder.GetDevide(other, table));
                 result[0] = mult;
                 remainder -= table[mult-1];
             }
