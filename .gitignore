@@ -1,2 +1,10 @@
 .vs/
 *.xccheckout
+*.VC.db
+*.vcxproj.user
+Debug/
+Release/
+*.ipch
+*.sdf
+*.suo
+*.aps

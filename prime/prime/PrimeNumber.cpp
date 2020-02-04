@@ -54,8 +54,6 @@ Number PrimeNumber::IsPrime(const Number& number)
     bool bOverflow(false);
     long long ll(number.ToLL(&bOverflow));
     if (!bOverflow)
-        bOverflow = number >= Number(0xafffffffLL * 0xafffffffLL);
-    if (!bOverflow)
         return IsPrime(ll);
     // divisible by 2
     if (!(number[0] & 1))
