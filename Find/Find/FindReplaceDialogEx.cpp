@@ -18,6 +18,7 @@ CFindReplaceDialogEx::CFindReplaceDialogEx(CSaveListResultCtrl *pList, FindStrin
 
 CFindReplaceDialogEx::~CFindReplaceDialogEx()
 {
+	SetFindStr();
 }
 
 
@@ -47,12 +48,7 @@ BOOL CFindReplaceDialogEx::Create(BOOL bFindDialogOnly, // TRUE for Find, FALSE 
 			DWORD dwFlags,
 			CWnd* pParentWnd)
 {
-	m_fr.wFindWhatLen = lpszFindWhat ? ((WORD)lstrlen(lpszFindWhat)+1) : 256;
-	m_fr.lpstrFindWhat = new TCHAR[m_fr.wFindWhatLen];
-	if (lpszFindWhat)
-		StringCchCopy(m_fr.lpstrFindWhat, m_fr.wFindWhatLen, lpszFindWhat);
-	else
-		m_fr.lpstrFindWhat[0] = 0;
+	SetFindStr(lpszFindWhat);
 	BOOL bRet = CFindReplaceDialog::Create(bFindDialogOnly, lpszFindWhat,
 		lpszReplaceWith, dwFlags, pParentWnd);
 	return bRet;
@@ -101,7 +97,7 @@ LRESULT CFindReplaceDialogEx::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 			{
 				CString str;
 				GetDlgItemText(IDC_FIND_EDIT_FIND, str);
-				StringCchCopy(m_fr.lpstrFindWhat, m_fr.wFindWhatLen, str);
+				SetFindStr(str);
 			}
 			SetClearFlag(m_fr.Flags, FR_MATCHCASE, IsDlgButtonChecked(IDC_FIND_CHECK_MATCH_CASE));
 			SetClearFlag(m_fr.Flags, FR_WHOLEWORD, IsDlgButtonChecked(IDC_FIND_CHECK_MATCH_WHOLE_WORD));
@@ -122,13 +118,23 @@ LRESULT CFindReplaceDialogEx::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 		break;
 		}
 		break;
-	case WM_DESTROY:
-		if (m_fr.lpstrFindWhat)
-			delete m_fr.lpstrFindWhat;
-		m_fr.lpstrFindWhat = NULL;
-		break;
 	}
 	return CFindReplaceDialog::WindowProc(message, wParam, lParam);
+}
+
+void CFindReplaceDialogEx::SetFindStr(LPCTSTR findStr)
+{
+	if (m_lpszFindStr != NULL)
+		delete[] m_lpszFindStr;
+	m_lpszFindStr = NULL;
+	m_fr.wFindWhatLen = 0;
+	m_fr.lpstrFindWhat = _T("");
+	if (findStr != NULL && *findStr != 0) {
+		m_fr.wFindWhatLen = (WORD)lstrlen(findStr) + 1;
+		m_lpszFindStr = new TCHAR[m_fr.wFindWhatLen];
+		StringCchCopy(m_lpszFindStr, m_fr.wFindWhatLen, findStr);
+		m_fr.lpstrFindWhat = m_lpszFindStr;
+	}
 }
 
 BOOL CFindReplaceDialogEx::OnInitDialog()

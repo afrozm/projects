@@ -25,8 +25,10 @@ public:
 protected:
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+	void SetFindStr(LPCTSTR findStr = NULL);
 	CSaveListResultCtrl *m_pList;
 	FindStringType mCurrentStringType;
+	LPTSTR m_lpszFindStr = NULL;
 };
 
 
