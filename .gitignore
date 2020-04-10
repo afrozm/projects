@@ -8,3 +8,5 @@ Release/
 *.sdf
 *.suo
 *.aps
+HTML/**/*.jpg
+HTML/**/*.jpeg
