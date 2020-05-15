@@ -3,18 +3,20 @@
     <head>
         <title>Calculator</title>
         <link rel="stylesheet" href="calculator.css">
+        <script src="calculator.js"></script>
     </head>
     <body>
         <h1>Welcome to Calculator</h1>
-        <span>Number 1 &nbsp;</span><input type="number"/><br>
+        <span>Number 1 &nbsp;</span><input type="number" id="number1"/><br>
         <br>
-        <span>Number 2 &nbsp;</span><input type="number"/><br>
+        <span>Number 2 &nbsp;</span><input type="number" id="number2"/><br>
         <br>
-        <button>+</button>
-        <button>-</button>
-        <button>*</button>
-        <button>/</button>
+        <button onclick="Add()">+</button>
+        <button onclick="Subtract()">-</button>
+        <button onclick="Multiply()">*</button>
+        <button onclick="Divide()">/</button>
         <br>
-        <h3>result here</h3>
+        <h3>Result:</h3>
+        <span id="result"></span>
     </body>
 </html>
