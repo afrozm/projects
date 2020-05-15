@@ -1,0 +1,57 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Style the header */
+header {
+    background-color: #666;
+    padding: 30px;
+    text-align: center;
+    font-size: 35px;
+    color: white;
+  }
+
+  /* Container for flexboxes */
+section {
+    display: flex;
+}
+
+/* Style the navigation menu */
+nav {
+    flex: 1;
+    /* width: 30%; */
+    background: #ccc;
+    padding: 20px;
+  }
+
+  /* Style the list inside the menu */
+nav ul {
+    list-style-type: none;
+    padding: 0px;
+  }
+  
+  article {
+    float: left;
+    padding: 20px;
+    width: 70%;
+    background-color: #f1f1f1;
+    height: 300px; /* only for demonstration, should be removed */
+  }
+
+  /* Style the footer */
+footer {
+  background-color: #777;
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
+
+#video_youtube {
+  width: 800px;
+  height: 600px;
+}
+
+#video_embed {
+  width: 800px;
+  height: 600px;
+}

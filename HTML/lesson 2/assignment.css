@@ -1,0 +1,37 @@
+body {
+    background-color: paleturquoise;
+}
+#myResume {
+    font-size: 30px;
+    text-align: center;
+    background-color: brown;
+    color: white;
+}
+#myImage {
+    text-align: right;
+}
+td {
+    padding-right: 50px;
+  }
+  table, th, td {
+    border: 1px solid black;
+  }
+  #myHobbiesBasketBall1 {
+    width: 400px;
+    height: 400px;
+  }
+  #myHobby2 {
+    background-image: url(travel.jpeg);
+    height: 200px; width: 400px; 
+    text-align: center; 
+    display: block; 
+    margin-left: auto; margin-right: auto; 
+    font-size: 30px; 
+    color: brown;
+  }
+  p.centerAlign {
+    text-align: center;
+  }
+  #thankYou {
+    color: darkmagenta;
+  }

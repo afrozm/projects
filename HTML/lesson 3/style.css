@@ -1,0 +1,35 @@
+body {
+    background-color: powderblue;
+}
+
+h1 {
+    color: blue;
+    font-family: Verdana;
+}
+
+p {
+    font-size: 24px;
+}
+
+p.afroz {
+    color: green;
+}
+
+#anotherPara1 {
+    color: blue;
+    font-size: 30px;
+}
+
+#anotherPara12 {
+    font-size: 30px;
+    border: black;
+    border-style: solid;
+}
+
+#id2 {
+    font-size: 60px;
+}
+
+span.red {
+    color: red;
+}

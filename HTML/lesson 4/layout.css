@@ -1,0 +1,19 @@
+
+
+.baseblock {
+    display: flex;
+    /* flex-wrap: wrap; */
+    background-color: blue;
+    justify-content: center;
+}
+
+.baseblock > div {
+    margin: 10px;
+    padding: 20px;
+    font-size: 30px;
+    background-color: cornflowerblue;
+}
+
+#div91 {
+    flex-grow: 9;
+}
