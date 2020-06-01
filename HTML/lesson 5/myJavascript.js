@@ -6,6 +6,9 @@ function calculateResult() {
 
     //console.log("calculateResult called", number1, number2, result, "is the result");
 
+    
+//number1 + "  " + number2 + " are same age"
+
     document.getElementById("result").innerText = result;
 
 }
