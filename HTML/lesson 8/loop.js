@@ -1,9 +1,8 @@
-function guessTheNumber()
-{
+function guessTheNumber() {
 
     var inputNumber = Number(document.getElementById("number").value);
     var result = "cannot guess it";
-    for (var i=1; i<=100; ++i) {
+    for (var i = 1; i <= 100; ++i) {
 
         if (i == inputNumber) { // == equal to 20==20
             result = i + "is the number";
@@ -21,8 +20,13 @@ function guessTheNumber()
 function printSum() {
     var inputNumber = Number(document.getElementById("number").value);
     var result = "sum of 1 to " + inputNumber + " is";
+    var sum = 0;
 
-    /// calc sum of 1 to inputNumber
+    for (var i = 1; i <= inputNumber; ++i) {
+        //sum = sum + i;
+        sum += i;
+        console.log(i);
+    }
 
     document.getElementById("result").innerText = result;
 }
