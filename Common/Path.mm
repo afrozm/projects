@@ -580,7 +580,7 @@ long long FindData::GetFileSize() const
     return Path(fullPath).GetSize();
 }
 
-Finder::Finder(FindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR excludePattern)
+Finder::Finder(PathFindCallBack fcb, void *pUserParam, LPCTSTR inpattern, LPCTSTR excludePattern)
 	: mExcludePattern(excludePattern)
 {
 	lstring pat;

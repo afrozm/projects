@@ -31,4 +31,16 @@ namespace ProcessUtil {
     unsigned long long GetTickCount();
 
     DWORD GetProcessExePath(DWORD pid, LPTSTR outPath, DWORD nSize);
+
+    enum Time_SecondPrecision {
+        Time_Seconds,
+        Time_MilliSeconds,
+        Time_MicroSeconds,
+        Time_NanoSeconds
+    };
+    long long GetUTCTime(Time_SecondPrecision secondPrecision = Time_NanoSeconds);
+    std::string GetLocalTimeString(Time_SecondPrecision secondPrecision = Time_NanoSeconds, long long inTime = 0);
+    long long TimeToOtherTimePrecision(long long time, Time_SecondPrecision from = Time_NanoSeconds, Time_SecondPrecision to = Time_Seconds);
+
+
 }

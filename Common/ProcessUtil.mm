@@ -1,8 +1,6 @@
 // CreateProcessAsUser.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
-
 #include "ProcessUtil.h"
 #include "Common.h"
 #include <unistd.h>

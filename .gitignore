@@ -10,3 +10,5 @@ Release/
 *.aps
 HTML/**/*.jpg
 HTML/**/*.jpeg
+build/
+xcuserdata
