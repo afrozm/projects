@@ -65,13 +65,14 @@ public:
     void DisableTempNewLine() { mbTempDisableNewLine = true; }
 private:
     Logger(void);
+    void ResetDisableTempNewLine();
 	std::map<std::string, LogTarget*> mLogTargets;
 	LogLevel mLogLevel;
 	std::string mSummary, mProcessName;
     bool mbDisableLogSummary = false;
     bool mbWriteLogLevel = true;
     bool mbWritePidAndTid = true;
-    bool mbTempDisableNewLine = false;
+    bool mbTempDisableNewLine = false, mbOldValueOfTempDisableNewLine = false;
 	int m_nErros[kLogLevelInfo - kLogLevelFatal];
     StdMutex mLock;
 };

@@ -92,7 +92,11 @@ Logger::Logger(void) : mLogLevel(Logger_GetDefaultLogLevel()),
 {
     memset(m_nErros, 0, sizeof(m_nErros));
 }
-
+void Logger::ResetDisableTempNewLine()
+{
+    mbOldValueOfTempDisableNewLine = mbTempDisableNewLine;
+    mbTempDisableNewLine = false;
+}
 
 void Logger::LogSummary(bool bLogSummaryEvenWhenEmpty /* = true */)
 {
@@ -175,7 +179,11 @@ void Logger::Log(const char *logMessage, LogLevel logLevel /* = kLogLevelInfo */
 
     std::string strLogMessage;
     if (mbWriteLogLevel || mbWritePidAndTid)
-        mbTempDisableNewLine = false;
+        ResetDisableTempNewLine();
+    if (!mbTempDisableNewLine && mbOldValueOfTempDisableNewLine) {
+        strLogMessage += "\r\n";
+        mbOldValueOfTempDisableNewLine = false;
+    }
     if (mbWriteLogLevel) {
         strLogMessage += GetLogLevelString(logLevel);
         strLogMessage += " | ";
@@ -193,7 +201,7 @@ void Logger::Log(const char *logMessage, LogLevel logLevel /* = kLogLevelInfo */
     strLogMessage += logMessage;
     if (!mbTempDisableNewLine)
         strLogMessage += "\r\n";
-    mbTempDisableNewLine = false;
+    ResetDisableTempNewLine();
     {
         {
             StdAutoMutexLock autoLock(mLock);

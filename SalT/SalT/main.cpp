@@ -48,13 +48,13 @@ myCGEventCallback(CGEventTapProxy proxy, CGEventType type,
                   CGEventRef event, void *refcon)
 {
     if (type == kCGEventTapDisabledByTimeout) {
-                CGEventTapEnable(eventTap, true);
+        CGEventTapEnable(eventTap, true);
         return event;
     }
     // Paranoid sanity check.
     if ((type != kCGEventKeyDown))
         return event;
-
+    
     // The incoming keycode.
     CGKeyCode keycode = (CGKeyCode)CGEventGetIntegerValueField(
                                                                event, kCGKeyboardEventKeycode);
@@ -68,27 +68,30 @@ myCGEventCallback(CGEventTapProxy proxy, CGEventType type,
     std::string str = MacUtil::WstringToString(wchars);
     std::string modifiers = GetModifiers(CGEventGetFlags(event));
 
-    if (modifiers.empty()) {
+    if (chars[0] < 32 && chars[1] == 0) {
+        LOGGER_LOG("%skeycode=%d, char=%s", modifiers.c_str(), keycode, str.c_str());
+    }
+    else {
         Logger::GetInstance()->DisableTempNewLine();
         LOGGER_LOG("%s", str.c_str());
     }
-    else
-        LOGGER_LOG("%skeycode=%d, char=%s", modifiers.c_str(), keycode, str.c_str());
+    
+    
     
     
     if (keycode == 53)
         CFRunLoopStop(CFRunLoopGetCurrent());
-
-//    // Swap 'a' (keycode=0) and 'z' (keycode=6).
-//    if (keycode == (CGKeyCode)0)
-//        keycode = (CGKeyCode)6;
-//    else if (keycode == (CGKeyCode)6)
-//        keycode = (CGKeyCode)0;
-//
-//    // Set the modified keycode field in the event.
-//    CGEventSetIntegerValueField(
-//                                event, kCGKeyboardEventKeycode, (int64_t)keycode);
-
+    
+    //    // Swap 'a' (keycode=0) and 'z' (keycode=6).
+    //    if (keycode == (CGKeyCode)0)
+    //        keycode = (CGKeyCode)6;
+    //    else if (keycode == (CGKeyCode)6)
+    //        keycode = (CGKeyCode)0;
+    //
+    //    // Set the modified keycode field in the event.
+    //    CGEventSetIntegerValueField(
+    //                                event, kCGKeyboardEventKeycode, (int64_t)keycode);
+    
     // We must return the event for it to be useful.
     return event;
 }
@@ -106,10 +109,10 @@ static void InitTimer()
     CFTimeInterval TIMER_INTERVAL = 0.3;
     CFAbsoluteTime FireTime = CFAbsoluteTimeGetCurrent() + TIMER_INTERVAL;
     CFRunLoopTimerRef mTimer = CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                  FireTime,
-                                  TIMER_INTERVAL, 0, 0,
-                                  ActiveSenseTimerCallback,
-                                  NULL);
+                                                    FireTime,
+                                                    TIMER_INTERVAL, 0, 0,
+                                                    ActiveSenseTimerCallback,
+                                                    NULL);
     CFRunLoopAddTimer(CFRunLoopGetCurrent(), mTimer, kCFRunLoopCommonModes);
 }
 //CGEventRef  MyCGEventTapCallBack(CGEventTapProxy  proxy,
@@ -152,28 +155,28 @@ main(void)
     //eventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionDefault,
     //                 kCGEventMaskForAllEvents, MyCGEventTapCallBack, nullptr);
     eventTap = CGEventTapCreate(kCGSessionEventTap, kCGTailAppendEventTap, kCGEventTapOptionListenOnly,
-    eventMask, myCGEventCallback, NULL);
+                                eventMask, myCGEventCallback, NULL);
     if (!eventTap) {
         LOGGER_LOG_ERROR("failed to create event tap");
         exit(1);
     }
-
+    
     // Create a run loop source.
     runLoopSource = CFMachPortCreateRunLoopSource(
                                                   kCFAllocatorDefault, eventTap, 0);
-
+    
     // Add to the current run loop.
     CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource,
                        kCFRunLoopCommonModes);
-
+    
     // Enable the event tap.
     CGEventTapEnable(eventTap, true);
     InitTimer();
     // Set it all running.
     CFRunLoopRun();
-
+    
     // In a real program, one would have arranged for cleaning up.
     CGEventTapEnable(eventTap, false);
-
+    
     exit(0);
 }
