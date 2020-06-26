@@ -23,3 +23,15 @@ function testArray() {
     pizzaPartsLength = pizzaParts.push("mushroom");
     var pizzaPartsLastElement = pizzaParts.pop();
 }
+
+function highestNumber()
+{
+    var numbers = [5 , 3, 2, 6, 4, 9];
+            //     0   1  2  3  4  5
+    var highestNum = numbers[0];
+    for (var i=1; i < numbers.length; ++i) {
+        var nextNumber = numbers[i];
+        if (highestNum < nextNumber) // if (nextNumber > highestNum)
+            highestNum = nextNumber;
+    }
+}
