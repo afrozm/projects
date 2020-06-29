@@ -35,3 +35,34 @@ function highestNumber()
             highestNum = nextNumber;
     }
 }
+
+function findInList(list,  object) {
+    for (var index=0; index <list.length; ++index) {
+        var objectInList = list[index];
+        if (object == objectInList)
+            return index;
+    }
+    // no match found return is -1 number
+    return -1;
+}
+
+function secondHighestNumber()
+{
+    var numbers = [5 , 3, 2, 6, 4, 9]; // count 6
+    var strings = ['Afroz', 'Rizwan', 'Shahnaaz', 'Anjali'];
+
+        //          0   1  2  3  4  5
+    var myIndex = findInList(numbers, 6);
+    myIndex = findInList(numbers, 7);
+    var index = numbers.indexOf(6) // search in list/array
+    index = numbers.indexOf(7);
+
+
+
+    numbers.sort();
+    numbers.reverse();
+    var smallestNumber = numbers[0];
+    var secondSmallestNumber = numbers[1]
+    var highestNum = numbers[numbers.length - 1];
+    var secondHighestNumber = numbers[numbers.length - 2];
+}
