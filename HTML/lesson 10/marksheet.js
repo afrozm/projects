@@ -1,6 +1,6 @@
 function onMarksObtainChange()
 {
-   
+   updateTotalMarksObtained();
 }
 
 function addSubject(subjectName, maxMarks)
@@ -25,16 +25,38 @@ function addSubject(subjectName, maxMarks)
     td = document.createElement("td");
     var input = document.createElement("input");
     input.oninput = onMarksObtainChange;
+    input.className = "marksObtained";
     td.appendChild(input);
     tr.appendChild(td); // add to row
+}
+
+function updateTotalMarksObtained()
+{
+    // TODO: 
+}
+
+function updateTotalMarks()
+{
+    var maximumMarksHTMLTags = document.getElementsByClassName("maximumMarks");
+    var totalMaxMarks = 0;
+
+    for (var i=0; i<maximumMarksHTMLTags.length; ++i) {
+        var maxMarks = Number(maximumMarksHTMLTags[i].innerText);
+        totalMaxMarks += maxMarks;
+    }
+    
+    // update in html
+    document.getElementById("totalMaxMarks").innerText = totalMaxMarks;
 }
 
 function loadDefaultSujects()
 {
     var subjects = ["English", "Mathematics", "Science", "Hindi", "Social Science"];
-    var maxMarks = [100, 70, 80, 100, 50];
+    var maxMarks = [100, 70, 90, 100, 50];
     for (var i=0; i<subjects.length; ++i)
         addSubject(subjects[i], maxMarks[i]);
+
+    updateTotalMarks();
 }
 
 function onHtmlLoad() {
