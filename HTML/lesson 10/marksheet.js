@@ -18,6 +18,8 @@ function updateResult()
 {
     var percentage = Number( document.getElementById("percentage").innerText );
     var result = "";
+    var resultTag = document.getElementById("result");
+    resultTag.className = null;
     if (percentage >= 75)
         result = "Passed with Distinction";
     else if (percentage >= 60)
@@ -26,9 +28,11 @@ function updateResult()
         result = "Passed with Second Division";
     else if (percentage >= 34)
         result = "Passed with Third Division";
-    else
+    else {
         result = "FAILED";
-    document.getElementById("result").innerText = result;
+        resultTag.className = "resultFailed";
+    }
+    resultTag.innerText = result;
 }
 
 function addSubject(subjectName, maxMarks)
