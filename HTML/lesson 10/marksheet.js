@@ -1,3 +1,20 @@
+function onSubjectAndMarksDoubleClick()
+{
+    console.log(this.innerText, "clicked");
+    var overlayInput = document.getElementById("overlayInput");
+    var itemClickedRect = this.getBoundingClientRect();
+    // overlayInput.style.left  = itemClickedRect.left;
+    // overlayInput.style.top  = itemClickedRect.top;
+    // overlayInput.style.right  = itemClickedRect.right;
+    // overlayInput.style.bottom  = itemClickedRect.bottom;
+    overlayInput.setAttribute("style","top:" + itemClickedRect.top + "px;" +
+    "width:" + itemClickedRect.width + " px;" +
+    "height:" + itemClickedRect.height + "px");
+    // overlayInput.style.height = itemClickedRect.height;
+    // overlayInput.style.width = itemClickedRect.width;
+    overlayInput.style.display = 'block';
+}
+
 function onMarksObtainChange()
 {
    updateTotalMarksObtained();
@@ -45,12 +62,14 @@ function addSubject(subjectName, maxMarks)
     // 1st column
     var td = document.createElement("td");
     td.innerText = subjectName; // text set
+    td.ondblclick = onSubjectAndMarksDoubleClick;
     tr.appendChild(td); // add to row
 
     // 2 nd col
     td = document.createElement("td");
     td.innerText = maxMarks; // text set
     td.className = "maximumMarks";
+    td.ondblclick = onSubjectAndMarksDoubleClick;
     tr.appendChild(td); // add to row
 
     // 3 rd col - marks obtained
