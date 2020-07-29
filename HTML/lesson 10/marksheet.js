@@ -1,5 +1,4 @@
-function onSubjectAndMarksDoubleClick()
-{
+function onSubjectAndMarksDoubleClick() {
     console.log(this.innerText, "clicked");
     var overlayInput = document.getElementById("overlayInput");
     var itemClickedRect = this.getBoundingClientRect();
@@ -7,23 +6,25 @@ function onSubjectAndMarksDoubleClick()
     // overlayInput.style.top  = itemClickedRect.top;
     // overlayInput.style.right  = itemClickedRect.right;
     // overlayInput.style.bottom  = itemClickedRect.bottom;
-    overlayInput.setAttribute("style","top:" + itemClickedRect.top + "px;" +
-    "width:" + itemClickedRect.width + " px;" +
-    "height:" + itemClickedRect.height + "px");
-    // overlayInput.style.height = itemClickedRect.height;
-    // overlayInput.style.width = itemClickedRect.width;
+    overlayInput.setAttribute("style",
+        "position: absolute;" +
+        "left:" + itemClickedRect.left + "px;" +
+        "top:" + itemClickedRect.top + "px;" +
+        "width:" + (itemClickedRect.width - 8) + "px;" +
+        "height:" + (itemClickedRect.height - 6) + "px;"
+    );
+    overlayInput.value = this.innerText;
     overlayInput.style.display = 'block';
+    overlayInput.focus();
 }
 
-function onMarksObtainChange()
-{
-   updateTotalMarksObtained();
-   updatePercentage();
-   updateResult();
+function onMarksObtainChange() {
+    updateTotalMarksObtained();
+    updatePercentage();
+    updateResult();
 }
 
-function updatePercentage()
-{
+function updatePercentage() {
     var totalMaxMarks = Number(document.getElementById("totalMaxMarks").innerText);
     var totalMarksObtained = Number(document.getElementById("totalMarksObtained").innerText);
     var percentage = totalMarksObtained * 100 / totalMaxMarks;
@@ -31,9 +32,8 @@ function updatePercentage()
     document.getElementById("percentage").innerText = percentage.toFixed(2);
 }
 
-function updateResult()
-{
-    var percentage = Number( document.getElementById("percentage").innerText );
+function updateResult() {
+    var percentage = Number(document.getElementById("percentage").innerText);
     var result = "";
     var resultTag = document.getElementById("result");
     resultTag.className = null;
@@ -52,8 +52,7 @@ function updateResult()
     resultTag.innerText = result;
 }
 
-function addSubject(subjectName, maxMarks)
-{
+function addSubject(subjectName, maxMarks) {
     var table = document.getElementById("subjects");
     // create row
     var tr = document.createElement("tr");
@@ -78,26 +77,25 @@ function addSubject(subjectName, maxMarks)
     input.oninput = onMarksObtainChange;
     input.type = "number";
     input.min = 0;
-//    input.max = maxMarks;
+    //    input.max = maxMarks;
 
     input.className = "marksObtained";
     td.appendChild(input);
     tr.appendChild(td); // add to row
 }
 
-function updateTotalMarksObtained()
-{
+function updateTotalMarksObtained() {
     var totalMarksObtained = document.getElementsByClassName("marksObtained");
     var maximumMarksHTMLTags = document.getElementsByClassName("maximumMarks");
     var totalMarks = 0;
 
-    for (var i=0; i<totalMarksObtained.length; ++i) {
+    for (var i = 0; i < totalMarksObtained.length; ++i) {
         var maxMarks = Number(maximumMarksHTMLTags[i].innerText);
         var marksObtained = checkAndUpdateMarksObtained(totalMarksObtained[i], maxMarks);
 
         totalMarks += marksObtained;
     }
-    
+
     // update in html
     document.getElementById("totalMarksObtained").innerText = Number.isInteger(totalMarks) ? totalMarks : totalMarks.toFixed(2);
 }
@@ -116,29 +114,27 @@ function checkAndUpdateMarksObtained(marksObtainedElement, maxMarks) {
         marksObtained = maxMarks;
         marksObtainedElement.value = marksObtained;
     }
-    
+
     return marksObtained;
 }
 
-function updateTotalMarks()
-{
+function updateTotalMarks() {
     var maximumMarksHTMLTags = document.getElementsByClassName("maximumMarks");
     var totalMaxMarks = 0;
 
-    for (var i=0; i<maximumMarksHTMLTags.length; ++i) {
+    for (var i = 0; i < maximumMarksHTMLTags.length; ++i) {
         var maxMarks = Number(maximumMarksHTMLTags[i].innerText);
         totalMaxMarks += maxMarks;
     }
-    
+
     // update in html
     document.getElementById("totalMaxMarks").innerText = totalMaxMarks;
 }
 
-function loadDefaultSujects()
-{
+function loadDefaultSujects() {
     var subjects = ["English", "Mathematics", "Science", "Hindi", "Social Science"];
     var maxMarks = [100, 70, 90, 100, 50];
-    for (var i=0; i<subjects.length; ++i)
+    for (var i = 0; i < subjects.length; ++i)
         addSubject(subjects[i], maxMarks[i]);
 
     updateTotalMarks();
