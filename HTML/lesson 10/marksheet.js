@@ -143,3 +143,10 @@ function loadDefaultSujects() {
 function onHtmlLoad() {
     loadDefaultSujects();
 }
+
+function onInputFocusOut()
+{
+    var overlayInput = document.getElementById("overlayInput");
+
+    overlayInput.style.display = "none";
+}
