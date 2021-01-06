@@ -14,23 +14,21 @@
     <ProjectGuid>{823BAECA-3315-4B5D-AB3E-89A05B52D427}</ProjectGuid>
     <RootNamespace>WindowFinder</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -124,6 +122,7 @@
     <ClCompile Include="..\..\Common\Path.cpp" />
     <ClCompile Include="..\..\Common\ProcessUtil.cpp" />
     <ClCompile Include="..\..\Common\StdUtils.cpp" />
+    <ClCompile Include="..\..\Common\StringUtils.cpp" />
     <ClCompile Include="IAccessibleHelper.cpp" />
     <ClCompile Include="RefreshWindowThread.cpp" />
     <ClCompile Include="stdafx.cpp">

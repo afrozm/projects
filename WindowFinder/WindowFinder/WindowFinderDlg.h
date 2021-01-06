@@ -29,6 +29,7 @@ protected:
 	HICON m_hIcon;
 	CPoint mCurPoint;
     HWND mhWndCurrent;
+    CString mStrCurrentWndText;
     CEditFindCtrl mEditWndTxt;
     enum 
     {

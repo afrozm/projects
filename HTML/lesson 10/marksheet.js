@@ -2,6 +2,7 @@ function onSubjectAndMarksDoubleClick() {
     console.log(this.innerText, "clicked");
     var overlayInput = document.getElementById("overlayInput");
     var itemClickedRect = this.getBoundingClientRect();
+    overlayInput.data = this;
     // overlayInput.style.left  = itemClickedRect.left;
     // overlayInput.style.top  = itemClickedRect.top;
     // overlayInput.style.right  = itemClickedRect.right;
@@ -146,7 +147,18 @@ function onHtmlLoad() {
 
 function onInputFocusOut()
 {
+    onEditingDone();
+}
+function onEditingDone() {
     var overlayInput = document.getElementById("overlayInput");
-
+    var newentry = document.value;
+    overlayInput.data.innerText = overlayInput.value;
     overlayInput.style.display = "none";
+    updateTotalMarks();
+}
+
+function onInputKeyDown()
+{
+    if (event.keyCode == 13)
+        onEditingDone();
 }

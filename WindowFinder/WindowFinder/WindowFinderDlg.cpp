@@ -923,12 +923,18 @@ static void ScreenToClient(_In_ HWND hWnd, _Inout_ LPRECT lpRect)
 bool CWindowFinderDlg::UpdateSelfText(WindowInfo& wi)
 {
     wi.bUpdated = (wi.hWnd != mhWndCurrent);
+    if (!wi.bUpdated && wi.hWnd != GetEditInfoWnd()) {
+        bool bHang(false);
+        CString titleText(IsCurrentWndHang() ? TEXT_WINDOW_NOT_RESPONDING : getWindowText(wi.hWnd, bHang));
+        wi.bUpdated = mStrCurrentWndText != titleText;
+    }
     if (wi.bUpdated) {
         wi.hWnd = mhWndCurrent;
         CString &text(wi.wndText);
         text.Format(_T("%s0x%x\r\n"), LINK_TEXT_HANDLE, mhWndCurrent);
         bool bHang(false);
         CString titleText(IsCurrentWndHang() ? TEXT_WINDOW_NOT_RESPONDING : getWindowText(mhWndCurrent, bHang));
+        mStrCurrentWndText = titleText;
         text += _T("Title: ") + titleText + _T("\r\n");
         {
             TCHAR className[1024] = { 0 };

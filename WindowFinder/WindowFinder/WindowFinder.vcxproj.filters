@@ -113,6 +113,9 @@
     <ClCompile Include="..\..\Common\StdUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\StringUtils.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WindowFinder.rc">
