@@ -34,14 +34,14 @@ int Value::Compare(const Value &other) const
         retVal = (int)(mNumber - other.mNumber);
         break;
     case Value::VTArray:
-        retVal = GetArrayCount() - other.GetArrayCount();
+        retVal = static_cast<int>(GetArrayCount()) - static_cast<int>(other.GetArrayCount());
         if (retVal == 0) {
             for (size_t i = 0; i < GetArrayCount() && !retVal; ++i)
                 retVal = (*this)[i].Compare(other[i]);
         }
         break;
     case Value::VTMap:
-        retVal = mMap.size() - other.mMap.size();
+        retVal = static_cast<int>(mMap.size()) - static_cast<int>(other.mMap.size());
         if (retVal == 0) {
             for (auto thisCit = mMap.begin(), oCit = other.mMap.begin(); thisCit != mMap.end(); ++thisCit, ++oCit) {
                 retVal = thisCit->first.compare(oCit->first);
