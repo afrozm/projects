@@ -374,7 +374,7 @@ Path::DeleteFile() const
 static lstring IntToString(int no)
 {
     lstring outStr;
-    STLUtils::ChangeType(outStr, no);
+    STLUtils::ChangeType(no, outStr);
 	return outStr;
 }
 

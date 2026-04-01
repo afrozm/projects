@@ -42,8 +42,6 @@ public:
         NSRunningApplication* app = [[NSWorkspace sharedWorkspace]
                                       frontmostApplication];
         pid_t pid = [app processIdentifier];
-        if (!HasPermissionForAccess())
-           return bTitleChanged; // we don't have accessibility permissions
 
         // Get the accessibility element corresponding to the frontmost application.
         AXUIElementRef appElem = AXUIElementCreateApplication(pid);

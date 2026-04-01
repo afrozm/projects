@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target")
 project(SalT LANGUAGES CXX)
 
 if(APPLE)
@@ -8,7 +9,9 @@ endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/../Common ${CMAKE_BINARY_DIR}/Common)
 add_subdirectory(${CMAKE_SOURCE_DIR}/../CommonXplat ${CMAKE_BINARY_DIR}/CommonXplat)
 
-set(SOURCES)
+set(SOURCES
+    SalT/ImgMgmtCommon.cpp
+)
 
 if(WIN32)
     list(APPEND SOURCES
@@ -23,6 +26,7 @@ elseif(APPLE)
     list(APPEND SOURCES
         SalT/main.cpp
         SalT/MacUtil.mm
+        SalT/ImgMgmtMac.mm
     )
 endif()
 
@@ -49,7 +53,7 @@ if(WIN32)
     set_target_properties(SalT PROPERTIES WIN32_EXECUTABLE TRUE)
     target_link_libraries(SalT PRIVATE shlwapi Gdiplus Version Psapi)
 elseif(APPLE)
-    set_source_files_properties(SalT/MacUtil.mm
+    set_source_files_properties(SalT/MacUtil.mm SalT/ImgMgmtMac.mm
         PROPERTIES COMPILE_FLAGS "-fobjc-arc"
     )
     find_library(COCOA_FRAMEWORK Cocoa REQUIRED)

@@ -634,8 +634,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 					lastKeyTime[i] = 0;
 			}
 		}
-		if (iSaveWndImage)
-			SaveHwndImage(hWndFocus, iSaveWndImage);
+		if (iSaveWndImage) {
+			tstring title(WindowTitle(hWndFocus));
+			if (title.empty()) {
+				TCHAR className[256] = {0};
+				GetClassName(hWndFocus, className, ARRAYSIZE(className));
+				title = className;
+			}
+			SaveWindowImage(title);
+		}
 		ProcessMessages();
 		Sleep(30);
 	}

