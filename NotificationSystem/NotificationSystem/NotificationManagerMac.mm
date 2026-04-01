@@ -9,7 +9,7 @@
 #include "NotificationManagerMac.h"
 #import <Cocoa/Cocoa.h>
 
-#define NS_DS_MSG_NAME @"comAutodeskAdsNotMgrMsg"
+#define NS_DS_MSG_NAME @"com-AdsNotMgrMsg"
 
 @interface NotificationManagerMacNotificationHandler : NSObject
 

@@ -156,7 +156,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1150;
-				ORGANIZATIONNAME = Autodesk;
+				ORGANIZATIONNAME = -;
 				TargetAttributes = {
 					3261DB9524A45262000F4B72 = {
 						CreatedOnToolsVersion = 11.5;

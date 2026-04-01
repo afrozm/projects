@@ -12,3 +12,4 @@ HTML/**/*.jpg
 HTML/**/*.jpeg
 build/
 xcuserdata
+HttpClientTest/.cache

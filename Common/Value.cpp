@@ -69,12 +69,11 @@ Value::operator bool() const
         return mNumber != 0;
     case Value::VTArray:
         return mArray.size() > 0;
-        break;
     case Value::VTMap:
         return mMap.size() > 0;
-        break;
+    default:
+        return false;
     }
-    return false;
 }
 
 Value::~Value()

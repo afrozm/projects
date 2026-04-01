@@ -49,8 +49,8 @@ std::string cMD5::CalcMD5FromFile(LPCTSTR s8_Path, bool bReset)
         
     if (h_File == NULL)
         return "";
-	if (m_pMD5Callback != NULL)
-		m_pMD5Callback->SetTotal(Path(s8_Path).GetSize());
+    if (m_pMD5Callback != NULL)
+        m_pMD5Callback->SetTotal(Path(s8_Path).GetSize());
     ::fseek(h_File, 0, SEEK_SET);
     size_t u32_Read = 0;
     BinaryData readBuffer(NULL, _ReadBufSize);

@@ -99,16 +99,13 @@ int StringUtils::SplitString(VecString &outStrings, const lstring &inStr, const 
 {
     size_t count(outStrings.size());
     size_t sp(0);
-    bool bContinue(true);
     while (true) {
         size_t pos = inStr.find_first_of(inSepChars, sp);
         if (pos != lstring::npos) {
             if (bIncludeEmpty || pos > sp) {
                 outStrings.push_back(inStr.substr(sp, pos-sp));
-                if (maxCount > 0) {
-                    --maxCount;
-                    bContinue = maxCount > 0;
-                }
+                if (maxCount > 0 && --maxCount <= 0)
+                    break;
             }
             sp = pos + 1;
         }

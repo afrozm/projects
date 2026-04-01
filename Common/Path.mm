@@ -94,7 +94,7 @@ bool Path::IsDir() const
     if (isDir)
         isDir = S_ISDIR(dStat.st_mode);
 
-	return isDir;
+    return isDir;
 }
 bool Path::CreateDir() const
 {

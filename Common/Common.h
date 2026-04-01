@@ -70,7 +70,7 @@ typedef char TCHAR;
 #define memcpy_s(d,dn,s,sn) memcpy(d,s,dn<sn?dn:sn)
 #define _fseeki64 fseeko
 #define fread_s(d,dn,ds,n,f) fread(d,dn<n?dn:n,ds,f)
-#define _stprintf_s sprintf
+#define _stprintf_s snprintf
 
 #define _TCHAR TCHAR
 #define _tmain main

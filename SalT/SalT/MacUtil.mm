@@ -3,7 +3,7 @@
 //  key2
 //
 //  Created by Afroz Muzammil on 25/6/20.
-//  Copyright © 2020 Autodesk. All rights reserved.
+//  Copyright © 2020 -. All rights reserved.
 //
 
 #include "MacUtil.h"

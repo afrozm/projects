@@ -245,7 +245,7 @@ lstring BinaryData::HexDump(long long startAddress /*= 0*/, unsigned hexWidth /*
     lstring outStr;
     const char *buf((const char *)(const void *)(*this));
     for (size_t i = 0; i < DataSize();) {
-        _stprintf_s(strData, _T("%08llX  "), startAddress + i);
+        _stprintf_s(strData, sizeof(strData), _T("%08llX  "), startAddress + i);
         outStr += strData;
         size_t s = i;
         const char *sBuf(buf);
@@ -278,7 +278,7 @@ lstring BinaryData::HexDump(long long startAddress /*= 0*/, unsigned hexWidth /*
 ////////////////////////////// BinaryFind //////////////////////////////
 
 BinaryFind::BinaryFind(const void *pBuffer /* = NULL */, size_t bufLen /* = 0 */)
-    : mOffSet(0), m_pCurrentBuffer(NULL), mCurrentBufferSize(0), mFindPatternIndex(0), mCurrentBufferIndex(0)
+    : mOffSet(0), m_pCurrentBuffer(NULL), mCurrentBufferSize(0), mCurrentBufferIndex(0), mFindPatternIndex(0)
 {
     SetFindPattern(pBuffer, bufLen);
 }

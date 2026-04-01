@@ -3,8 +3,8 @@
 #include <math.h>
 
 Progress::Progress()
-:mTotal(0), mCurrentPercentDone(0), mPercentageParticipation(0),
-mPercentagePerticipated(0), mSartPercentage(0), mCurrentDone(0), mPrevPercentDone(0)
+:mTotal(0), mCurrentDone(0), mCurrentPercentDone(0),
+mPrevPercentDone(0), mSartPercentage(0), mPercentageParticipation(0), mPercentagePerticipated(0)
 {
 }
 
